@@ -12,6 +12,9 @@ export default async function EditorialSplit() {
     return null;
   }
 
+  const secondaryCtaText = content.secondaryCta?.text || "Read buying guides";
+  const secondaryCtaHref = content.secondaryCta?.href || ROUTES.blog;
+
   return (
     <Reveal as="section" className="editorial-split" id={content ? "gear-advisors" : undefined}>
       <div className="editorial-split__inner">
@@ -23,9 +26,11 @@ export default async function EditorialSplit() {
             <Link href={content.cta.href} className="premium-btn premium-btn--primary">
               {content.cta.text}
             </Link>
-            <Link href={ROUTES.blog} className="premium-btn premium-btn--outline">
-              Read buying guides
-            </Link>
+            {secondaryCtaText ? (
+              <Link href={secondaryCtaHref} className="premium-btn premium-btn--outline">
+                {secondaryCtaText}
+              </Link>
+            ) : null}
           </div>
         </div>
         <div className="editorial-split__visual">
@@ -33,7 +38,10 @@ export default async function EditorialSplit() {
             <div className="editorial-split__orb" />
             <Image
               src={content.image.src || MARKETING_EDITORIAL_IMAGE}
-              alt={content.image.alt}
+              alt={
+                content.image.alt ||
+                "Professional electric guitar — expert gear advice for every player"
+              }
               className="editorial-split__image"
               fill
               loading="lazy"

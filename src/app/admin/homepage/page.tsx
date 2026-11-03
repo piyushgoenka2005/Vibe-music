@@ -291,6 +291,25 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     onError: (error: Error) => setFormError(error.message),
   });
 
+  const seedGearAdvisorsMutation = useMutation({
+    mutationFn: async () => {
+      return adminMutateJson<{ ok: boolean; count: number }>(
+        "/api/admin/homepage/seed/gear_advisors",
+        {
+          method: "POST",
+        },
+      );
+    },
+    onSuccess: () => {
+      setFormError(null);
+      setSaveNotice(
+        "Restored default Gear Advisors editorial section successfully. Storefront updated!",
+      );
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error: Error) => setFormError(error.message),
+  });
+
   const seedHighlightsMutation = useMutation({
     mutationFn: async () => {
       return adminMutateJson<{ ok: boolean; count: number }>(
@@ -611,10 +630,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 </p>
               </div>
             )}
-            {activeKey === "deals_of_the_day" || isBigNamesSection || isBentoSection ? (
+            {activeKey === "deals_of_the_day" ||
+            isBigNamesSection ||
+            isBentoSection ||
+            isGearAdvisorsSection ? (
               <div className="admin-form-group">
                 <label>
-                  {isBigNamesSection
+                  {isBigNamesSection || isGearAdvisorsSection
                     ? "Eyebrow"
                     : isBentoSection
                       ? "Card CTA label (Explore Category)"
@@ -624,6 +646,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.accentLabel}
+                  placeholder={isGearAdvisorsSection ? "GEAR ADVISORS, NOT A WAREHOUSE" : undefined}
                   onChange={(event) =>
                     setSectionForm((prev) => ({ ...prev, accentLabel: event.target.value }))
                   }
@@ -631,24 +654,48 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               </div>
             ) : null}
             <div className="admin-form-group">
-              <label>{isSocialRailSection ? "Newsletter button label" : "CTA Text"}</label>
+              <label>
+                {isSocialRailSection
+                  ? "Newsletter button label"
+                  : isGearAdvisorsSection
+                    ? "Primary Button Text"
+                    : "CTA Text"}
+              </label>
               <input
                 className="admin-input"
                 style={{ width: "100%" }}
                 value={form.ctaText}
-                placeholder={isSocialRailSection ? "Newsletter" : undefined}
+                placeholder={
+                  isSocialRailSection
+                    ? "Newsletter"
+                    : isGearAdvisorsSection
+                      ? "Explore studio gear"
+                      : undefined
+                }
                 onChange={(event) =>
                   setSectionForm((prev) => ({ ...prev, ctaText: event.target.value }))
                 }
               />
             </div>
             <div className="admin-form-group">
-              <label>{isSocialRailSection ? "Newsletter link" : "CTA Link"}</label>
+              <label>
+                {isSocialRailSection
+                  ? "Newsletter link"
+                  : isGearAdvisorsSection
+                    ? "Primary Button Link"
+                    : "CTA Link"}
+              </label>
               <input
                 className="admin-input"
                 style={{ width: "100%" }}
                 value={form.ctaLink}
-                placeholder={isSocialRailSection ? "#newsletter" : undefined}
+                placeholder={
+                  isSocialRailSection
+                    ? "#newsletter"
+                    : isGearAdvisorsSection
+                      ? "/category/studio-recording"
+                      : undefined
+                }
                 onChange={(event) =>
                   setSectionForm((prev) => ({ ...prev, ctaLink: event.target.value }))
                 }
@@ -736,6 +783,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   card (poster, MP4, Instagram handle, optional linked product).
                 </p>
               </div>
+            ) : isGearAdvisorsSection ? (
+              <div className="admin-form-group">
+                <p className="admin-form-hint" style={{ margin: 0 }}>
+                  Manage the editorial split card, secondary action button (&quot;Read buying
+                  guides&quot;), and guitar visual card below.
+                </p>
+              </div>
             ) : isSocialRailSection ? (
               <div className="admin-form-group">
                 <p className="admin-form-hint" style={{ margin: 0 }}>
@@ -815,6 +869,26 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     {seedHighlightsMutation.isPending ? "Restoring…" : "Restore Default Highlights"}
                   </button>
                 ) : null}
+                {isGearAdvisorsSection ? (
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn--secondary"
+                    disabled={seedGearAdvisorsMutation.isPending}
+                    onClick={() => {
+                      if (
+                        confirm(
+                          "Restore default Gear Advisors content? This will reset the section text, buttons, and image to defaults.",
+                        )
+                      ) {
+                        seedGearAdvisorsMutation.mutate();
+                      }
+                    }}
+                  >
+                    {seedGearAdvisorsMutation.isPending
+                      ? "Restoring…"
+                      : "Restore Default Gear Advisors"}
+                  </button>
+                ) : null}
               </>
             ) : null}
           </div>
@@ -831,7 +905,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   ? "Gear Reels"
                   : isSocialRailSection
                     ? "Social Links"
-                    : "Curated Items"}
+                    : isGearAdvisorsSection
+                      ? "Editorial Card & Secondary Action"
+                      : "Curated Items"}
             </h2>
           </div>
           <div className="admin-panel__body">
@@ -1074,6 +1150,67 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         Linked product ID: {itemForm.productId}
                       </p>
                     ) : null}
+                  </div>
+                </>
+              ) : isGearAdvisorsSection ? (
+                <>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <BannerImageUpload
+                      label="Visual Card Image (Upload directly to CDN)"
+                      value={itemForm.customImage}
+                      onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
+                    />
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Or Image URL / Path</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customImage}
+                      placeholder="/images/editorial-guitar.jpg or https://cdn.vibemusic.in/..."
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
+                      }
+                    />
+                    <p className="admin-form-hint">
+                      Default guitar image: <code>/images/editorial-guitar.jpg</code>
+                    </p>
+                  </div>
+                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                    <label>Image Alt Text (Accessibility & SEO)</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.badgeLabel}
+                      placeholder="Professional electric guitar — expert gear advice for every player"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, badgeLabel: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Secondary Button Text</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customTitle}
+                      placeholder="Read buying guides"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="admin-form-group">
+                    <label>Secondary Button Link</label>
+                    <input
+                      className="admin-input"
+                      style={{ width: "100%" }}
+                      value={itemForm.customHref}
+                      placeholder="/blog"
+                      onChange={(event) =>
+                        setItemForm((prev) => ({ ...prev, customHref: event.target.value }))
+                      }
+                    />
                   </div>
                 </>
               ) : isSocialRailSection ? (
@@ -1395,7 +1532,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 <button
                   type="button"
                   className="admin-btn admin-btn--primary"
-                  disabled={addItemMutation.isPending || (!editingItemId && !canAddBigNamesItem)}
+                  disabled={
+                    addItemMutation.isPending ||
+                    (!editingItemId &&
+                      (!canAddBigNamesItem || (isGearAdvisorsSection && sectionItems.length >= 1)))
+                  }
                   onClick={() => addItemMutation.mutate()}
                 >
                   <Plus size={16} />{" "}
@@ -1406,7 +1547,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         ? "Update Gear Reel"
                         : isSocialRailSection
                           ? "Update Social Link"
-                          : "Update Item"
+                          : isGearAdvisorsSection
+                            ? "Update Editorial Card"
+                            : "Update Item"
                     : isStorySection
                       ? "Add Story Banner"
                       : isGearStoriesSection
@@ -1415,7 +1558,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                           ? "Add Social Link"
                           : isBigNamesSection
                             ? "Add Guitar"
-                            : "Add Item"}
+                            : isGearAdvisorsSection
+                              ? "Add Editorial Card"
+                              : "Add Item"}
                 </button>
               ) : null}
               {canWrite && editingItemId ? (
@@ -1433,6 +1578,12 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               {isBigNamesSection && !canAddBigNamesItem && !editingItemId ? (
                 <p className="admin-form-hint" style={{ marginTop: 8, width: "100%" }}>
                   Maximum {BIG_NAMES_DEALS_MAX_ITEMS} guitars reached.
+                </p>
+              ) : null}
+              {isGearAdvisorsSection && !editingItemId && sectionItems.length >= 1 ? (
+                <p className="admin-form-hint" style={{ marginTop: 8, width: "100%" }}>
+                  The editorial split layout has 1 visual card. Edit the existing card below to
+                  update its image, alt text, or secondary button.
                 </p>
               ) : null}
             </div>
@@ -1515,6 +1666,40 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                                 {item.badgeLabel ? (
                                   <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
                                     {item.badgeLabel}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : isGearAdvisorsSection ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                              {item.customImage ? (
+                                <Image
+                                  src={item.customImage}
+                                  alt={item.badgeLabel || "Editorial Card"}
+                                  width={80}
+                                  height={80}
+                                  unoptimized
+                                  style={{
+                                    width: 50,
+                                    height: 50,
+                                    objectFit: "cover",
+                                    borderRadius: 6,
+                                    background: "#111",
+                                    border: "1px solid var(--admin-border, #333)",
+                                  }}
+                                />
+                              ) : null}
+                              <div>
+                                <div style={{ fontWeight: 600 }}>
+                                  {item.badgeLabel || "Visual Card Image"}
+                                </div>
+                                <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                                  Image: {item.customImage || "/images/editorial-guitar.jpg"}
+                                </div>
+                                {item.customTitle ? (
+                                  <div style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                                    Secondary CTA: &quot;{item.customTitle}&quot; →{" "}
+                                    {item.customHref || "/blog"}
                                   </div>
                                 ) : null}
                               </div>

@@ -45,6 +45,19 @@ export default function SiteHeader({
 
   useSiteHeaderOffset(headerRef);
 
+  const handleLogoClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      // If already on home page, scroll to top
+      if (pathname === ROUTES.home) {
+        event.preventDefault();
+        // Scroll to top smoothly
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      }
+      // Otherwise, let the link navigate naturally (which will refresh the page and go to top)
+    },
+    [pathname],
+  );
+
   useEffect(() => {
     queueMicrotask(() => setMobileOpen(false));
     window.dispatchEvent(new Event("site-header:sync"));
@@ -174,6 +187,7 @@ export default function SiteHeader({
             className="site-header__logo"
             aria-label={BRAND.name}
             scroll={false}
+            onClick={handleLogoClick}
           >
             {/* Plain img — CSS controls max dimensions; avoids Next/Image aspect-ratio dev warnings. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}

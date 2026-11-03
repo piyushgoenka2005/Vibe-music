@@ -1335,18 +1335,23 @@ export async function getShopTheHighlightsPublicData(at = new Date()): Promise<{
   }
 }
 
-/**
- * Fetch gear_advisors editorial section for storefront rendering.
- * Returns database-driven editorial content with customizable eyebrow, title, subtitle, CTA, and image.
- */
-export async function getGearAdvisorsPublicData(at = new Date()): Promise<{
+export interface PublicGearAdvisorsData {
   isActive: boolean;
   eyebrow: string;
   title: string;
   subtitle: string;
   cta: { text: string; href: string };
+  secondaryCta?: { text: string; href: string };
   image: { src: string; alt: string };
-} | null> {
+}
+
+/**
+ * Fetch gear_advisors editorial section for storefront rendering.
+ * Returns database-driven editorial content with customizable eyebrow, title, subtitle, CTA, and image.
+ */
+export async function getGearAdvisorsPublicData(
+  at = new Date(),
+): Promise<PublicGearAdvisorsData | null> {
   const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
     (section) => section.sectionKey === "gear_advisors",
   );
@@ -1362,9 +1367,9 @@ export async function getGearAdvisorsPublicData(at = new Date()): Promise<{
       sectionKey: "gear_advisors" as const,
       title: defaults?.title ?? "Gear advisors, not a warehouse",
       subtitle: defaults?.subtitle ?? "Pro gear. Honest advice. Delivered across India.",
-      accentLabel: defaults?.accentLabel ?? "Gear advisors, not a warehouse",
+      accentLabel: defaults?.accentLabel ?? "GEAR ADVISORS, NOT A WAREHOUSE",
       ctaText: defaults?.ctaText ?? "Explore studio gear",
-      ctaLink: defaults?.ctaLink ?? ROUTES.search,
+      ctaLink: defaults?.ctaLink ?? "/category/studio-recording",
       isActive: defaults?.isActive ?? true,
       sortOrder: defaults?.sortOrder ?? 12,
       sourceMode: "manual" as const,
@@ -1390,21 +1395,27 @@ export async function getGearAdvisorsPublicData(at = new Date()): Promise<{
 
     // Use configured item or defaults
     const item = items[0];
+    const fallbackImage = "/images/editorial-guitar.jpg";
 
     if (item) {
       return {
         isActive: true,
-        eyebrow: item.customTitle || config.accentLabel || "Gear advisors, not a warehouse",
-        title: config.title || "Pro gear. Honest advice. Delivered across India.",
+        eyebrow: config.accentLabel || defaults?.accentLabel || "GEAR ADVISORS, NOT A WAREHOUSE",
+        title: config.title || defaults?.title || "Gear advisors, not a warehouse",
         subtitle:
           config.subtitle ||
-          "Whether you're building your first home studio or upgrading a worship rig, our team helps you choose gear that fits your budget and your goals.",
+          defaults?.subtitle ||
+          "Pro gear. Honest advice. Delivered across India.",
         cta: {
-          text: item.offerText || config.ctaText || "Explore studio gear",
-          href: item.customHref || config.ctaLink || ROUTES.search,
+          text: config.ctaText || defaults?.ctaText || "Explore studio gear",
+          href: config.ctaLink || defaults?.ctaLink || "/category/studio-recording",
+        },
+        secondaryCta: {
+          text: item.customTitle || "Read buying guides",
+          href: item.customHref || ROUTES.blog,
         },
         image: {
-          src: item.customImage || "/images/editorial-guitar.jpg",
+          src: item.customImage || fallbackImage,
           alt:
             item.badgeLabel || "Professional electric guitar — expert gear advice for every player",
         },
@@ -1414,17 +1425,20 @@ export async function getGearAdvisorsPublicData(at = new Date()): Promise<{
     // Default fallback
     return {
       isActive: true,
-      eyebrow: config.accentLabel || "Gear advisors, not a warehouse",
-      title: config.title || "Pro gear. Honest advice. Delivered across India.",
+      eyebrow: config.accentLabel || defaults?.accentLabel || "GEAR ADVISORS, NOT A WAREHOUSE",
+      title: config.title || defaults?.title || "Gear advisors, not a warehouse",
       subtitle:
-        config.subtitle ||
-        "Whether you're building your first home studio or upgrading a worship rig, our team helps you choose gear that fits your budget and your goals.",
+        config.subtitle || defaults?.subtitle || "Pro gear. Honest advice. Delivered across India.",
       cta: {
-        text: config.ctaText || "Explore studio gear",
-        href: config.ctaLink || ROUTES.search,
+        text: config.ctaText || defaults?.ctaText || "Explore studio gear",
+        href: config.ctaLink || defaults?.ctaLink || "/category/studio-recording",
+      },
+      secondaryCta: {
+        text: "Read buying guides",
+        href: ROUTES.blog,
       },
       image: {
-        src: "/images/editorial-guitar.jpg",
+        src: fallbackImage,
         alt: "Professional electric guitar — expert gear advice for every player",
       },
     };
@@ -1432,14 +1446,16 @@ export async function getGearAdvisorsPublicData(at = new Date()): Promise<{
     // Database down: use static fallback
     return {
       isActive: true,
-      eyebrow: defaults?.accentLabel ?? "Gear advisors, not a warehouse",
-      title: defaults?.title ?? "Pro gear. Honest advice. Delivered across India.",
-      subtitle:
-        defaults?.subtitle ??
-        "Whether you're building your first home studio or upgrading a worship rig, our team helps you choose gear that fits your budget and your goals.",
+      eyebrow: defaults?.accentLabel ?? "GEAR ADVISORS, NOT A WAREHOUSE",
+      title: defaults?.title ?? "Gear advisors, not a warehouse",
+      subtitle: defaults?.subtitle ?? "Pro gear. Honest advice. Delivered across India.",
       cta: {
         text: defaults?.ctaText ?? "Explore studio gear",
-        href: defaults?.ctaLink ?? ROUTES.search,
+        href: defaults?.ctaLink ?? "/category/studio-recording",
+      },
+      secondaryCta: {
+        text: "Read buying guides",
+        href: ROUTES.blog,
       },
       image: {
         src: "/images/editorial-guitar.jpg",
@@ -1543,4 +1559,67 @@ export async function seedDefaultShopTheHighlights() {
   await invalidatePublicHomepageCacheAsync();
 
   return listSectionItems("shop_the_highlights");
+}
+
+/** Restores default Gear Advisors section and visual card item into database and invalidates storefront caches. */
+export async function seedDefaultGearAdvisors() {
+  const { prisma } = await import("@/lib/db/prisma");
+  const { invalidateHomepageCache, listSectionItems } =
+    await import("@/lib/server/homepage/homepageRepository");
+  const timestamp = new Date().toISOString();
+
+  await prisma.homepageSection.upsert({
+    where: { sectionKey: "gear_advisors" },
+    create: {
+      id: "gear_advisors",
+      sectionKey: "gear_advisors",
+      title: "Gear advisors, not a warehouse",
+      subtitle: "Pro gear. Honest advice. Delivered across India.",
+      accentLabel: "GEAR ADVISORS, NOT A WAREHOUSE",
+      ctaText: "Explore studio gear",
+      ctaLink: "/category/studio-recording",
+      isActive: true,
+      sortOrder: 12,
+      sourceMode: "manual",
+      maxItems: 1,
+      layout: "editorial_split",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    update: {
+      isActive: true,
+      title: "Gear advisors, not a warehouse",
+      subtitle: "Pro gear. Honest advice. Delivered across India.",
+      accentLabel: "GEAR ADVISORS, NOT A WAREHOUSE",
+      ctaText: "Explore studio gear",
+      ctaLink: "/category/studio-recording",
+      layout: "editorial_split",
+      sourceMode: "manual",
+      updatedAt: timestamp,
+    },
+  });
+
+  await prisma.homepageSectionItem.deleteMany({
+    where: { sectionKey: "gear_advisors" },
+  });
+
+  await prisma.homepageSectionItem.create({
+    data: {
+      id: `gear-advisors-${Date.now()}`,
+      sectionKey: "gear_advisors",
+      sortOrder: 1,
+      isActive: true,
+      customImage: "/images/editorial-guitar.jpg",
+      badgeLabel: "Professional electric guitar — expert gear advice for every player",
+      customTitle: "Read buying guides",
+      customHref: "/blog",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  });
+
+  invalidateHomepageCache();
+  await invalidatePublicHomepageCacheAsync();
+
+  return listSectionItems("gear_advisors");
 }
