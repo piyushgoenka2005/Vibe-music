@@ -203,9 +203,12 @@ async function seedCategoriesFromStatic(): Promise<AdminCategory[]> {
 /**
  * List all categories from database.
  *
- * IMPORTANT: This function returns the EXACT state of the database.
- * If you deleted all categories, it returns an empty array (NO auto-restoration).
- * If you want automatic fallback to static categories, use getCachedCategories() instead.
+ * IMPORTANT: This function ensures categories are always available.
+ * - If database has categories: returns them
+ * - If database is empty: automatically restores from Master Taxonomy
+ * - If database fails: falls back to in-memory static categories
+ *
+ * This ensures the admin panel is ALWAYS functional and never shows errors.
  */
 export async function listCategories(): Promise<AdminCategory[]> {
   if (!isPostgresConfigured()) {
@@ -216,20 +219,39 @@ export async function listCategories(): Promise<AdminCategory[]> {
   try {
     const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
 
-    // Return exactly what's in the database - NO automatic seeding
-    // This allows admins to have completely empty categories if they delete them all
-    console.debug(
-      "[categoryRepository] Returning",
-      rows.length,
-      "categories from database (NO auto-restoration)",
+    // If database has categories, return them
+    if (rows.length > 0) {
+      console.debug("[categoryRepository] Returning", rows.length, "categories from database");
+      return rows.map(mapAdminCategory);
+    }
+
+    // Database is empty - automatically restore from Master Taxonomy
+    console.info(
+      "[categoryRepository] Database is empty - automatically restoring categories from Master Taxonomy",
     );
-    return rows.map(mapAdminCategory);
+    try {
+      const restored = await seedCategoriesFromStatic();
+      console.info(
+        "[categoryRepository] Successfully restored",
+        restored.length,
+        "categories from Master Taxonomy",
+      );
+      return restored;
+    } catch (seedErr) {
+      console.error(
+        "[categoryRepository] Failed to seed categories from Master Taxonomy:",
+        seedErr,
+      );
+      // If seeding fails, fall back to static categories (in-memory)
+      console.warn("[categoryRepository] Falling back to in-memory static categories");
+      return staticCategories();
+    }
   } catch (err) {
     console.error(
       "[categoryRepository] Failed to list categories from database:",
       err instanceof Error ? err.message : String(err),
     );
-    // Only fallback to static if database query fails (connection error, not empty)
+    // Only fallback to static if database connection fails
     console.warn("[categoryRepository] Falling back to in-memory static categories");
     return staticCategories();
   }

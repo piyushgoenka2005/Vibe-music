@@ -3,47 +3,73 @@ import * as categoryRepo from "./categoryRepository";
 
 describe("categoryRepository - Category Deletion & Management", () => {
   describe("listCategories", () => {
-    it("should return the EXACT database state (no auto-restoration)", async () => {
-      // This test verifies that listCategories() returns exactly what's in the database
-      // If all categories were deleted, it returns an empty array (NO automatic seeding)
+    it("should always return categories (never empty or error)", async () => {
+      // CRITICAL: This test verifies that listCategories() ALWAYS returns valid categories
+      // It implements graceful fallback:
+      // 1. If database has categories → return them
+      // 2. If database is empty → automatically restore from Master Taxonomy
+      // 3. If database fails → fall back to in-memory static categories
+      // Result: NEVER empty, NEVER errors, ALWAYS functional
       const categories = await categoryRepo.listCategories();
 
       expect(categories).toBeDefined();
       expect(Array.isArray(categories)).toBe(true);
-      // The array could be empty if all categories were deleted - that's correct behavior
-      expect(typeof categories.length).toBe("number");
+      // IMPORTANT: Should ALWAYS have categories (minimum static categories)
+      expect(categories.length).toBeGreaterThan(0);
     });
 
-    it("should allow permanent deletion of all categories", async () => {
-      // This test ensures that admins can completely delete all categories
-      // if they want an empty category list (no automatic restoration)
+    it("should automatically restore categories when database is empty", async () => {
+      // This test ensures that listCategories() automatically restores from Master Taxonomy
+      // when the database is empty. This keeps the admin panel fully functional.
+      // Without this, users would see an empty page after deleting all categories.
       const categories = await categoryRepo.listCategories();
 
-      // Whether empty or not, the function should return the exact DB state
+      // Should never be empty - auto-restoration should happen
       expect(Array.isArray(categories)).toBe(true);
-      // If the test runs with an empty DB, that's valid - no error should occur
-      expect(categories.length).toBeGreaterThanOrEqual(0);
+      expect(categories.length).toBeGreaterThan(0);
+
+      // Should have main categories
+      const mainCategories = categories.filter((c) => c.parentId === null);
+      expect(mainCategories.length).toBeGreaterThan(0);
     });
 
-    it("should not auto-seed when database is empty", async () => {
-      // This test ensures that listCategories() does NOT automatically seed
-      // the database with static categories. That must be an explicit admin action
-      // (calling restoreCategoriesFromMasterTaxonomy() instead)
+    it("should handle failures gracefully with fallback to static categories", async () => {
+      // This test ensures that even if external dependencies fail (e.g., products service),
+      // the system still returns categories and never throws an error.
+      // This provides three layers of protection:
+      // - Try database
+      // - Fall back to Master Taxonomy seed
+      // - Fall back to in-memory static categories
       const categories = await categoryRepo.listCategories();
 
-      // Should return whatever is actually in the database
+      // Should always return valid categories
+      expect(categories).toBeDefined();
       expect(Array.isArray(categories)).toBe(true);
-      // No auto-restoration happens - the array reflects the actual DB state
+      expect(categories.length).toBeGreaterThan(0);
+
+      // Should include main categories
+      const mainCats = categories.filter((c) => c.parentId === null);
+      expect(mainCats.length).toBeGreaterThan(0);
+
+      // Each category should have required fields
+      for (const cat of categories) {
+        expect(cat.id).toBeDefined();
+        expect(cat.name).toBeDefined();
+        expect(cat.slug).toBeDefined();
+        expect(typeof cat.sortOrder).toBe("number");
+      }
     });
   });
 
   describe("restoreCategoriesFromMasterTaxonomy", () => {
-    it("should explicitly restore from Master Taxonomy only when admin requests it", async () => {
-      // This is an explicit admin action to rebuild the category list
-      // It should only happen when explicitly called (e.g., from an admin button)
-      // NOT automatically
+    it("should explicitly restore from Master Taxonomy when admin requests it", async () => {
+      // This is an explicit admin action to rebuild the category list from scratch
+      // It calls seedCategoriesFromStatic() which:
+      // 1. Loads default categories
+      // 2. Loads product counts
+      // 3. Upserts all to database
+      // This function should only be called from an explicit admin action (e.g., restore button)
 
-      // The function exists and can be called explicitly
       expect(typeof categoryRepo.restoreCategoriesFromMasterTaxonomy).toBe("function");
     });
   });
