@@ -219,13 +219,13 @@ export default function AdminBrandsPage() {
           <BrandsContent
             canWrite={
               admin.role === "super_admin" ||
-              admin.permissions.includes("categories:write") ||
-              admin.permissions.includes("brands:write")
+              (admin.permissions ?? []).includes("categories:write") ||
+              (admin.permissions ?? []).includes("brands:write")
             }
             canDelete={
               admin.role === "super_admin" ||
-              admin.permissions.includes("categories:delete") ||
-              admin.permissions.includes("brands:delete")
+              (admin.permissions ?? []).includes("categories:delete") ||
+              (admin.permissions ?? []).includes("brands:delete")
             }
           />
         </AdminShell>

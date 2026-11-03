@@ -161,7 +161,7 @@ function AttributesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
     total: attributes.length,
     filterable: attributes.filter((a) => a.isFilterable).length,
     categoriesCount: 6,
-    totalValues: attributes.reduce((acc, curr) => acc + curr.values.length, 0),
+    totalValues: attributes.reduce((acc, curr) => acc + (curr.values?.length ?? 0), 0),
   };
 
   return (
@@ -409,34 +409,39 @@ function AttributesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                       )}
                     </td>
                     <td style={{ maxWidth: "280px" }}>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
-                        {attr.values.slice(0, 3).map((v) => (
-                          <span
-                            key={v}
-                            style={{
-                              fontSize: "0.75rem",
-                              background: "var(--admin-surface-2)",
-                              border: "1px solid var(--admin-border)",
-                              borderRadius: "4px",
-                              padding: "0.1rem 0.4rem",
-                              color: "var(--admin-text)",
-                            }}
-                          >
-                            {v}
-                          </span>
-                        ))}
-                        {attr.values.length > 3 && (
-                          <span
-                            style={{
-                              fontSize: "0.75rem",
-                              color: "var(--admin-muted)",
-                              alignSelf: "center",
-                            }}
-                          >
-                            +{attr.values.length - 3} more
-                          </span>
-                        )}
-                      </div>
+                      {(() => {
+                        const vals = attr.values ?? [];
+                        return (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
+                            {vals.slice(0, 3).map((v) => (
+                              <span
+                                key={v}
+                                style={{
+                                  fontSize: "0.75rem",
+                                  background: "var(--admin-surface-2)",
+                                  border: "1px solid var(--admin-border)",
+                                  borderRadius: "4px",
+                                  padding: "0.1rem 0.4rem",
+                                  color: "var(--admin-text)",
+                                }}
+                              >
+                                {v}
+                              </span>
+                            ))}
+                            {vals.length > 3 && (
+                              <span
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "var(--admin-muted)",
+                                  alignSelf: "center",
+                                }}
+                              >
+                                +{vals.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td style={{ textAlign: "right" }}>
                       <div style={{ display: "inline-flex", gap: "0.5rem" }}>
@@ -767,14 +772,19 @@ function AttributesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
 export default function AdminAttributesPage() {
   return (
     <AdminGuard>
-      {(session) => (
-        <AdminShell admin={session} title="Product Attributes & Specs">
-          <AttributesContent
-            canWrite={session.permissions.includes("categories:write")}
-            canDelete={session.permissions.includes("categories:delete")}
-          />
-        </AdminShell>
-      )}
+      {(session) => {
+        const canWrite =
+          session.role === "super_admin" ||
+          (session.permissions ?? []).includes("categories:write");
+        const canDelete =
+          session.role === "super_admin" ||
+          (session.permissions ?? []).includes("categories:delete");
+        return (
+          <AdminShell admin={session} title="Product Attributes & Specs">
+            <AttributesContent canWrite={canWrite} canDelete={canDelete} />
+          </AdminShell>
+        );
+      }}
     </AdminGuard>
   );
 }

@@ -114,132 +114,155 @@ export async function updateHeaderSettings(
 }
 
 export async function ensureDefaultNavigationMenus(): Promise<void> {
-  const menusCount = await prisma.navigationMenu.count();
-  if (menusCount > 0) return;
-
-  const now = new Date().toISOString();
-
-  // 1. Utility bar menu
-  const utilityMenu = await prisma.navigationMenu.create({
-    data: {
-      handle: "utility_bar",
-      name: "Top Utility & Announcement Bar",
-      description: "Utility items shown in the top strip above the main header",
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-  });
-
-  const utilityItems = [
-    {
-      label: "Free Shipping on Orders Above ₹5,000*",
-      url: "/shipping-policy",
-      icon: "Truck",
-      sortOrder: 0,
-    },
-    { label: "100% Genuine Products", url: "/why-shop-with-us", icon: "ShieldCheck", sortOrder: 1 },
-    { label: "Expert Support", url: "/support", icon: "Headphones", sortOrder: 2 },
-    { label: "Track Order", url: "/account/orders", icon: "Package", sortOrder: 3 },
-    { label: "Help & Support", url: "/support", icon: "HelpCircle", sortOrder: 4 },
-  ];
-
-  for (const item of utilityItems) {
-    await prisma.navigationMenuItem.create({
-      data: {
-        menuId: utilityMenu.id,
-        label: item.label,
-        url: item.url,
-        icon: item.icon,
-        sortOrder: item.sortOrder,
-        itemType: "link",
-        isActive: true,
-        visibleDesktop: true,
-        visibleMobile: true,
-        createdAt: now,
-        updatedAt: now,
-      },
+  try {
+    const existingUtility = await prisma.navigationMenu.findUnique({
+      where: { handle: "utility_bar" },
     });
-  }
+    const now = new Date().toISOString();
 
-  // 2. Primary Navigation menu (Row 3)
-  const mainMenu = await prisma.navigationMenu.create({
-    data: {
-      handle: "main_nav",
-      name: "Primary Header Navigation",
-      description: "Primary navigation bar with All Categories trigger and departmental dropdowns",
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    },
-  });
+    if (!existingUtility) {
+      const utilityMenu = await prisma.navigationMenu.upsert({
+        where: { handle: "utility_bar" },
+        update: {},
+        create: {
+          handle: "utility_bar",
+          name: "Top Utility & Announcement Bar",
+          description: "Utility items shown in the top strip above the main header",
+          isActive: true,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
 
-  const mainNavItems = [
-    {
-      label: "All Categories",
-      url: "/categories",
-      itemType: "mega_menu",
-      badgeText: "Explore",
-      sortOrder: 0,
-    },
-    { label: "Brands", url: "/brands", itemType: "dropdown", sortOrder: 1 },
-    {
-      label: "Guitars",
-      url: "/category/guitars",
-      categoryId: "guitars",
-      itemType: "dropdown",
-      sortOrder: 2,
-    },
-    {
-      label: "Studio & Recording",
-      url: "/category/studio-recording",
-      categoryId: "studio-recording",
-      itemType: "dropdown",
-      sortOrder: 3,
-    },
-    {
-      label: "Drums & Percussion",
-      url: "/category/drums-percussion",
-      categoryId: "drums-percussion",
-      itemType: "dropdown",
-      sortOrder: 4,
-    },
-    {
-      label: "Keyboards & Synthesizers",
-      url: "/category/keyboards-pianos",
-      categoryId: "keyboards-pianos",
-      itemType: "dropdown",
-      sortOrder: 5,
-    },
-    {
-      label: "Microphones & Wireless",
-      url: "/category/microphones-wireless",
-      categoryId: "microphones-wireless",
-      itemType: "dropdown",
-      sortOrder: 6,
-    },
-    { label: "Deals", url: "/deals", itemType: "link", badgeText: "Hot", sortOrder: 7 },
-    { label: "Today Deals", url: "/deals", itemType: "link", sortOrder: 8 },
-    { label: "Grand Piano", url: "/gp9", itemType: "link", badgeText: "Flagship", sortOrder: 9 },
-  ];
+      const utilityItems = [
+        {
+          label: "Free Shipping on Orders Above ₹5,000*",
+          url: "/shipping-policy",
+          icon: "Truck",
+          sortOrder: 0,
+        },
+        {
+          label: "100% Genuine Products",
+          url: "/why-shop-with-us",
+          icon: "ShieldCheck",
+          sortOrder: 1,
+        },
+        { label: "Expert Support", url: "/support", icon: "Headphones", sortOrder: 2 },
+        { label: "Track Order", url: "/account/orders", icon: "Package", sortOrder: 3 },
+        { label: "Help & Support", url: "/support", icon: "HelpCircle", sortOrder: 4 },
+      ];
 
-  for (const item of mainNavItems) {
-    await prisma.navigationMenuItem.create({
-      data: {
-        menuId: mainMenu.id,
-        label: item.label,
-        url: item.url,
-        categoryId: item.categoryId ?? null,
-        itemType: item.itemType,
-        badgeText: item.badgeText ?? null,
-        sortOrder: item.sortOrder,
-        isActive: true,
-        visibleDesktop: true,
-        visibleMobile: true,
-        createdAt: now,
-        updatedAt: now,
-      },
-    });
+      for (const item of utilityItems) {
+        await prisma.navigationMenuItem.create({
+          data: {
+            menuId: utilityMenu.id,
+            label: item.label,
+            url: item.url,
+            icon: item.icon,
+            sortOrder: item.sortOrder,
+            itemType: "link",
+            isActive: true,
+            visibleDesktop: true,
+            visibleMobile: true,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+      }
+    }
+
+    const existingMain = await prisma.navigationMenu.findUnique({ where: { handle: "main_nav" } });
+    if (!existingMain) {
+      const mainMenu = await prisma.navigationMenu.upsert({
+        where: { handle: "main_nav" },
+        update: {},
+        create: {
+          handle: "main_nav",
+          name: "Primary Header Navigation",
+          description:
+            "Primary navigation bar with All Categories trigger and departmental dropdowns",
+          isActive: true,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+
+      const mainNavItems = [
+        {
+          label: "All Categories",
+          url: "/categories",
+          itemType: "mega_menu",
+          badgeText: "Explore",
+          sortOrder: 0,
+        },
+        { label: "Brands", url: "/brands", itemType: "dropdown", sortOrder: 1 },
+        {
+          label: "Guitars",
+          url: "/category/guitars",
+          categoryId: "guitars",
+          itemType: "dropdown",
+          sortOrder: 2,
+        },
+        {
+          label: "Studio & Recording",
+          url: "/category/studio-recording",
+          categoryId: "studio-recording",
+          itemType: "dropdown",
+          sortOrder: 3,
+        },
+        {
+          label: "Drums & Percussion",
+          url: "/category/drums-percussion",
+          categoryId: "drums-percussion",
+          itemType: "dropdown",
+          sortOrder: 4,
+        },
+        {
+          label: "Keyboards & Synthesizers",
+          url: "/category/keyboards-pianos",
+          categoryId: "keyboards-pianos",
+          itemType: "dropdown",
+          sortOrder: 5,
+        },
+        {
+          label: "Microphones & Wireless",
+          url: "/category/microphones-wireless",
+          categoryId: "microphones-wireless",
+          itemType: "dropdown",
+          sortOrder: 6,
+        },
+        { label: "Deals", url: "/deals", itemType: "link", badgeText: "Hot", sortOrder: 7 },
+        { label: "Today Deals", url: "/deals", itemType: "link", sortOrder: 8 },
+        {
+          label: "Grand Piano",
+          url: "/gp9",
+          itemType: "link",
+          badgeText: "Flagship",
+          sortOrder: 9,
+        },
+      ];
+
+      for (const item of mainNavItems) {
+        await prisma.navigationMenuItem.create({
+          data: {
+            menuId: mainMenu.id,
+            label: item.label,
+            url: item.url,
+            categoryId: item.categoryId ?? null,
+            itemType: item.itemType,
+            badgeText: item.badgeText ?? null,
+            sortOrder: item.sortOrder,
+            isActive: true,
+            visibleDesktop: true,
+            visibleMobile: true,
+            createdAt: now,
+            updatedAt: now,
+          },
+        });
+      }
+    }
+  } catch {
+    /* safely ignore concurrent initialization race conditions */
   }
 }
 
