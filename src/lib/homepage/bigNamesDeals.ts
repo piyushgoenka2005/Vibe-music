@@ -82,6 +82,7 @@ function catalogProductToBigNamesDealItem(
     customImage?: string;
     key?: string;
   },
+  brandLogoBySlug?: ReadonlyMap<string, string>,
 ): BigNamesDealItem {
   const href =
     overrides?.href && overrides.href.startsWith("/product/")
@@ -96,7 +97,7 @@ function catalogProductToBigNamesDealItem(
     key: overrides?.key ?? product.id,
     brand: product.brand,
     href,
-    logo: getBrandLogoUrl(product.brandSlug) ?? "",
+    logo: brandLogoBySlug?.get(product.brandSlug) ?? getBrandLogoUrl(product.brandSlug) ?? "",
     product: src,
     productFallback: fallbackSrc !== src ? fallbackSrc : undefined,
     productAlt: overrides?.title ?? product.name,

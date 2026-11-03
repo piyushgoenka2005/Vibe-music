@@ -10,6 +10,7 @@ export interface CatalogTaxonomyItem {
   menuLevel1?: string | null;
   menuLevel2?: string | null;
   menuLevel3?: string | null;
+  isArchived?: boolean;
   createdAt?: string | null;
   updatedAt?: string | null;
 }
@@ -25,6 +26,7 @@ export interface RawTaxonomyRow {
   menuLevel1?: string | null;
   menuLevel2?: string | null;
   menuLevel3?: string | null;
+  isArchived?: boolean;
 }
 
 export interface TaxonomyStats {

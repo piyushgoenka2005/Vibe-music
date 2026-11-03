@@ -19,6 +19,7 @@ interface BrandLike {
   id: string;
   name: string;
   slug: string;
+  logoUrl?: string;
 }
 
 export const ROLAND_BRAND_FALLBACK = {
@@ -45,7 +46,7 @@ export function buildTopBrandStripItems(brands: BrandLike[]): HomepageBrandItem[
     const brand = brandBySlug.get(slug) ?? BRAND_STRIP_FALLBACKS[slug] ?? null;
     if (!brand) return [];
 
-    const logoUrl = getBrandLogoUrl(brand.slug);
+    const logoUrl = brand.logoUrl ?? getBrandLogoUrl(brand.slug);
 
     return [
       {

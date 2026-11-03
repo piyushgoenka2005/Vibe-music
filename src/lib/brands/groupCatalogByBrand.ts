@@ -6,6 +6,7 @@ export interface BrandCatalogGroup {
   name: string;
   slug: string;
   letter: string;
+  logoUrl?: string;
   products: CatalogProduct[];
 }
 
@@ -37,6 +38,7 @@ export function groupCatalogByBrand(
       name,
       slug: meta?.slug ?? normalized,
       letter: brandIndexLetter(name),
+      ...(meta?.logoUrl ? { logoUrl: meta.logoUrl } : {}),
       products: [],
     };
     groups.set(normalized, group);

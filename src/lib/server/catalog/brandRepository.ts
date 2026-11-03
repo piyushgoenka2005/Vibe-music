@@ -47,12 +47,17 @@ export async function getBrandById(id: string): Promise<Brand | null> {
   return row ? prismaToBrand(row) : null;
 }
 
-export async function createBrand(input: { name: string; slug?: string }): Promise<Brand> {
+export async function createBrand(input: {
+  name: string;
+  slug?: string;
+  logoUrl?: string;
+}): Promise<Brand> {
   const slug = (input.slug?.trim() || slugify(input.name)).toLowerCase();
   const record: Brand = {
     id: slug,
     name: input.name.trim(),
     slug,
+    ...(input.logoUrl?.trim() ? { logoUrl: input.logoUrl.trim() } : {}),
   };
   await prisma.brand.create({ data: brandToPrisma(record) });
   await syncBrandsJson(await listBrands());
@@ -61,14 +66,21 @@ export async function createBrand(input: { name: string; slug?: string }): Promi
 
 export async function updateBrand(
   id: string,
-  patch: Partial<Pick<Brand, "name" | "slug">>,
+  patch: Partial<Pick<Brand, "name" | "slug" | "logoUrl">>,
 ): Promise<Brand> {
   const existing = await getBrandById(id);
   if (!existing) throw new Error("Brand not found");
 
   const nextSlug = patch.slug?.trim() || existing.slug;
   const nextName = patch.name?.trim() || existing.name;
-  const record: Brand = { id, name: nextName, slug: nextSlug };
+  const nextLogoUrl =
+    patch.logoUrl !== undefined ? patch.logoUrl.trim() || undefined : existing.logoUrl;
+  const record: Brand = {
+    id,
+    name: nextName,
+    slug: nextSlug,
+    ...(nextLogoUrl ? { logoUrl: nextLogoUrl } : {}),
+  };
 
   if (nextSlug !== id) {
     await prisma.$transaction([

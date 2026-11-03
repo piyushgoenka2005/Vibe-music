@@ -24,7 +24,7 @@ function buildFeatured(brands: BrandWithCount[]): MegaMenuItem["featured"] {
 
   const featured = TOP_BRAND_STRIP_SLUGS.flatMap((slug) => {
     const brand = bySlug.get(slug);
-    const image = getBrandLogoUrl(slug);
+    const image = brand?.logoUrl ?? getBrandLogoUrl(slug);
     if (!brand || !image) return [];
     return [
       {
@@ -39,13 +39,13 @@ function buildFeatured(brands: BrandWithCount[]): MegaMenuItem["featured"] {
   if (featured.length >= 2) return featured.slice(0, 2);
 
   return brands
-    .filter((brand) => getBrandLogoUrl(brand.slug))
+    .filter((brand) => brand.logoUrl || getBrandLogoUrl(brand.slug))
     .sort((a, b) => b.productCount - a.productCount || a.name.localeCompare(b.name))
     .slice(0, 2)
     .map((brand) => ({
       title: brand.name,
       href: brandPath(brand.slug),
-      image: getBrandLogoUrl(brand.slug)!,
+      image: (brand.logoUrl ?? getBrandLogoUrl(brand.slug))!,
       imageClassName: "header-mega__card-image--horizontal",
     }));
 }

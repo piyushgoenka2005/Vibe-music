@@ -4,6 +4,8 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { listReels } from "@/lib/server/gearStoryService";
 import { publicApiError } from "@/lib/server/publicApiError";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     const rl = await enforceRateLimit(request, "reels", RATE_LIMITS.publicApi);

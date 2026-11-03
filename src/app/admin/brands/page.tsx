@@ -4,14 +4,16 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
+import BannerImageUpload from "@/components/admin/BannerImageUpload";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
+import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
 import type { Brand } from "@/types/brand";
 
 function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", slug: "" });
+  const [form, setForm] = useState({ name: "", slug: "", logoUrl: "" });
   const [editId, setEditId] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -35,7 +37,7 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
     onSuccess: () => {
       setShowForm(false);
       setEditId(null);
-      setForm({ name: "", slug: "" });
+      setForm({ name: "", slug: "", logoUrl: "" });
       queryClient.invalidateQueries({ queryKey: ["admin-brands"] });
     },
   });
@@ -70,7 +72,7 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
             onClick={() => {
               setShowForm(true);
               setEditId(null);
-              setForm({ name: "", slug: "" });
+              setForm({ name: "", slug: "", logoUrl: "" });
             }}
           >
             Add Brand
@@ -99,6 +101,14 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
                   placeholder="auto-generated from name"
+                />
+              </div>
+              <div className="admin-form-group admin-form-grid--full">
+                <BannerImageUpload
+                  label="Brand logo"
+                  spec={IMAGE_SPECS.brandLogo}
+                  value={form.logoUrl}
+                  onChange={(url) => setForm({ ...form, logoUrl: url })}
                 />
               </div>
             </div>
@@ -130,6 +140,7 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
             <table className="admin-table">
               <thead>
                 <tr>
+                  <th>Logo</th>
                   <th>Name</th>
                   <th>Slug</th>
                   <th>Actions</th>
@@ -138,6 +149,25 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
               <tbody>
                 {brands.map((brand) => (
                   <tr key={brand.id}>
+                    <td>
+                      {brand.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={brand.logoUrl}
+                          alt={`${brand.name} logo`}
+                          style={{
+                            width: 80,
+                            height: 44,
+                            objectFit: "contain",
+                            background: "#fff",
+                            borderRadius: 4,
+                            border: "1px solid var(--admin-border)",
+                          }}
+                        />
+                      ) : (
+                        <span style={{ color: "var(--admin-muted)", fontSize: 12 }}>—</span>
+                      )}
+                    </td>
                     <td>{brand.name}</td>
                     <td>{brand.slug}</td>
                     <td>
@@ -148,7 +178,11 @@ function BrandsContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: 
                           style={{ padding: "0.25rem 0.5rem" }}
                           onClick={() => {
                             setEditId(brand.id);
-                            setForm({ name: brand.name, slug: brand.slug });
+                            setForm({
+                              name: brand.name,
+                              slug: brand.slug,
+                              logoUrl: brand.logoUrl ?? "",
+                            });
                             setShowForm(true);
                           }}
                         >

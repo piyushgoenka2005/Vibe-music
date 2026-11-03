@@ -18,6 +18,10 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Plus,
+  Pencil,
+  Trash2,
+  Info,
 } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
@@ -25,7 +29,44 @@ import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { CatalogTaxonomyItem, TaxonomyStats, TaxonomyImportResult } from "@/types/taxonomy";
 
-function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }) {
+interface NodeFormData {
+  category: string;
+  subcategory: string;
+  productType: string;
+  variant: string;
+  instrumentFamily: string;
+  seoSlug: string;
+  googleProductCategory: string;
+  menuLevel1: string;
+  menuLevel2: string;
+  menuLevel3: string;
+  isArchived: boolean;
+}
+
+const EMPTY_NODE_FORM: NodeFormData = {
+  category: "",
+  subcategory: "",
+  productType: "",
+  variant: "",
+  instrumentFamily: "",
+  seoSlug: "",
+  googleProductCategory: "",
+  menuLevel1: "",
+  menuLevel2: "",
+  menuLevel3: "",
+  isArchived: false,
+};
+
+function generateSlug(cat: string, sub: string, type: string, variant?: string): string {
+  return [cat, sub, type, variant]
+    .filter(Boolean)
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete: boolean }) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,6 +86,13 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
   const [showUploadPanel, setShowUploadPanel] = useState(false);
   const [isSyncing, startSyncTransition] = useTransition();
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+
+  // Node Add / Edit Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [nodeForm, setNodeForm] = useState<NodeFormData>(EMPTY_NODE_FORM);
+  const [isSaving, setIsSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   // Fetch Taxonomy Data + Stats + Filter Options
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
@@ -162,6 +210,103 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
     });
   };
 
+  // Save Node (Create or Update)
+  const handleSaveNode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setModalError(null);
+    try {
+      const payload = {
+        category: nodeForm.category.trim(),
+        subcategory: nodeForm.subcategory.trim(),
+        productType: nodeForm.productType.trim(),
+        variant: nodeForm.variant.trim() || null,
+        instrumentFamily: nodeForm.instrumentFamily.trim() || null,
+        seoSlug:
+          nodeForm.seoSlug.trim() ||
+          generateSlug(
+            nodeForm.category,
+            nodeForm.subcategory,
+            nodeForm.productType,
+            nodeForm.variant,
+          ),
+        googleProductCategory: nodeForm.googleProductCategory.trim() || null,
+        menuLevel1: nodeForm.menuLevel1.trim() || null,
+        menuLevel2: nodeForm.menuLevel2.trim() || null,
+        menuLevel3: nodeForm.menuLevel3.trim() || null,
+        isArchived: nodeForm.isArchived,
+      };
+
+      if (editingNodeId) {
+        await adminMutateJson(`/api/admin/taxonomy/${editingNodeId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await adminMutateJson("/api/admin/taxonomy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      setIsModalOpen(false);
+      setEditingNodeId(null);
+      setNodeForm(EMPTY_NODE_FORM);
+      queryClient.invalidateQueries({ queryKey: ["admin-taxonomy"] });
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : "Failed to save taxonomy node");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Delete Node
+  const handleDeleteNode = async (id: string, name: string) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete "${name}" from Master Taxonomy?\n\nStorefront categories, products, and header menus will NOT be deleted.`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await adminMutateJson(`/api/admin/taxonomy/${id}`, {
+        method: "DELETE",
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-taxonomy"] });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete node");
+    }
+  };
+
+  const openAddModal = () => {
+    setEditingNodeId(null);
+    setNodeForm(EMPTY_NODE_FORM);
+    setModalError(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item: CatalogTaxonomyItem) => {
+    setEditingNodeId(item.id);
+    setNodeForm({
+      category: item.category,
+      subcategory: item.subcategory,
+      productType: item.productType,
+      variant: item.variant || "",
+      instrumentFamily: item.instrumentFamily || "",
+      seoSlug: item.seoSlug,
+      googleProductCategory: item.googleProductCategory || "",
+      menuLevel1: item.menuLevel1 || "",
+      menuLevel2: item.menuLevel2 || "",
+      menuLevel3: item.menuLevel3 || "",
+      isArchived: Boolean(item.isArchived),
+    });
+    setModalError(null);
+    setIsModalOpen(true);
+  };
+
   if (isLoading) return <LoadingState />;
   if (isError) {
     return (
@@ -186,6 +331,42 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
 
   return (
     <>
+      {/* Functional Separation Banner */}
+      <div
+        className="admin-panel"
+        style={{
+          marginBottom: "1.25rem",
+          padding: "1rem 1.25rem",
+          background: "rgba(59, 130, 246, 0.08)",
+          borderColor: "rgba(59, 130, 246, 0.25)",
+          borderRadius: "var(--admin-radius-sm)",
+          display: "flex",
+          gap: "1rem",
+          alignItems: "flex-start",
+        }}
+      >
+        <FolderTree size={22} style={{ color: "#3b82f6", marginTop: "2px", flexShrink: 0 }} />
+        <div style={{ fontSize: "0.875rem", lineHeight: 1.5 }}>
+          <strong style={{ color: "#60a5fa" }}>Master Taxonomy Architecture:</strong> Centralized
+          product classification structure for Google Merchant mapping, catalog imports, variants,
+          and SEO.
+          <ul style={{ margin: "0.35rem 0 0 1.25rem", padding: 0, color: "var(--admin-muted)" }}>
+            <li>
+              <strong>Independent:</strong> Adding, editing, archiving, or deleting taxonomy nodes
+              does not modify or delete storefront categories, header menus, or homepage sections.
+            </li>
+            <li>
+              <strong>Menu Level 1, 2, 3:</strong> Classification and reference fields only — they
+              do not directly dictate the live storefront header navigation (manage navigation at{" "}
+              <a href="/admin/navigation" style={{ color: "#3b82f6", textDecoration: "underline" }}>
+                Header & Menu Management
+              </a>
+              ).
+            </li>
+          </ul>
+        </div>
+      </div>
+
       {/* Top Action Toolbar */}
       <div
         className="admin-toolbar"
@@ -199,9 +380,16 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
       >
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           {canWrite && (
+            <button type="button" className="admin-btn admin-btn--primary" onClick={openAddModal}>
+              <Plus size={16} />
+              Add Node
+            </button>
+          )}
+
+          {canWrite && (
             <button
               type="button"
-              className="admin-btn admin-btn--primary"
+              className="admin-btn admin-btn--secondary"
               onClick={() => setShowUploadPanel(!showUploadPanel)}
             >
               <UploadCloud size={16} />
@@ -573,16 +761,18 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
                 <th>SEO Slug</th>
                 <th>Google Product Category</th>
                 <th>Menu Path</th>
+                <th>Status</th>
+                {(canWrite || canDelete) && <th style={{ textAlign: "right" }}>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
+                  <td colSpan={9} style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
                     <EmptyState
                       message={
                         stats.totalNodes === 0
-                          ? "No catalog taxonomy loaded yet. Click 'Upload Catalog' above to import Vibe_Music_Catalog_Master.xlsx."
+                          ? "No catalog taxonomy loaded yet. Click 'Upload Catalog' or 'Add Node' above."
                           : "No taxonomy records matched your search."
                       }
                     />
@@ -621,7 +811,7 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
                       style={{
                         fontSize: "0.8rem",
                         color: "var(--admin-muted)",
-                        maxWidth: "220px",
+                        maxWidth: "180px",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -630,11 +820,69 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
                     >
                       {item.googleProductCategory || "—"}
                     </td>
-                    <td style={{ fontSize: "0.8rem" }}>
+                    <td style={{ fontSize: "0.8rem", color: "var(--admin-muted)" }}>
                       {[item.menuLevel1, item.menuLevel2, item.menuLevel3]
                         .filter(Boolean)
                         .join(" > ") || "—"}
                     </td>
+                    <td>
+                      {item.isArchived ? (
+                        <span
+                          className="admin-badge"
+                          style={{
+                            background: "rgba(239, 68, 68, 0.15)",
+                            color: "#ef4444",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                          }}
+                        >
+                          Archived
+                        </span>
+                      ) : (
+                        <span
+                          className="admin-badge"
+                          style={{
+                            background: "rgba(34, 197, 94, 0.15)",
+                            color: "#22c55e",
+                            border: "1px solid rgba(34, 197, 94, 0.3)",
+                          }}
+                        >
+                          Active
+                        </span>
+                      )}
+                    </td>
+                    {(canWrite || canDelete) && (
+                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "inline-flex", gap: "0.35rem" }}>
+                          {canWrite && (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--secondary"
+                              style={{ padding: "0.3rem 0.5rem" }}
+                              onClick={() => openEditModal(item)}
+                              title="Edit Node"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn--danger"
+                              style={{ padding: "0.3rem 0.5rem" }}
+                              onClick={() =>
+                                handleDeleteNode(
+                                  item.id,
+                                  `${item.category} > ${item.subcategory} > ${item.productType}`,
+                                )
+                              }
+                              title="Delete Node"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -686,6 +934,265 @@ function TaxonomyContent({ canWrite }: { canWrite: boolean; canDelete: boolean }
           </div>
         )}
       </div>
+
+      {/* Add / Edit Taxonomy Node Modal */}
+      {isModalOpen && (
+        <div className="admin-modal-overlay">
+          <div
+            className="admin-modal"
+            style={{ maxWidth: 640, maxHeight: "90vh", overflowY: "auto" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1rem",
+              }}
+            >
+              <h3 style={{ margin: 0 }}>
+                {editingNodeId ? "Edit Master Taxonomy Node" : "Add Master Taxonomy Node"}
+              </h3>
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                style={{ padding: "0.2rem 0.5rem" }}
+                onClick={() => setIsModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNode}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.75rem",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                <div className="admin-form-group">
+                  <label>Category *</label>
+                  <input
+                    className="admin-input"
+                    type="text"
+                    value={nodeForm.category}
+                    onChange={(e) => setNodeForm({ ...nodeForm, category: e.target.value })}
+                    placeholder="e.g. Guitars"
+                    required
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>Subcategory *</label>
+                  <input
+                    className="admin-input"
+                    type="text"
+                    value={nodeForm.subcategory}
+                    onChange={(e) => setNodeForm({ ...nodeForm, subcategory: e.target.value })}
+                    placeholder="e.g. Electric Guitars"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.75rem",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                <div className="admin-form-group">
+                  <label>Product Type *</label>
+                  <input
+                    className="admin-input"
+                    type="text"
+                    value={nodeForm.productType}
+                    onChange={(e) => setNodeForm({ ...nodeForm, productType: e.target.value })}
+                    placeholder="e.g. Solid Body"
+                    required
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>Variant (Optional)</label>
+                  <input
+                    className="admin-input"
+                    type="text"
+                    value={nodeForm.variant}
+                    onChange={(e) => setNodeForm({ ...nodeForm, variant: e.target.value })}
+                    placeholder="e.g. 6-String"
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.75rem",
+                  marginBottom: "0.75rem",
+                }}
+              >
+                <div className="admin-form-group">
+                  <label>Instrument Family (Optional)</label>
+                  <input
+                    className="admin-input"
+                    type="text"
+                    value={nodeForm.instrumentFamily}
+                    onChange={(e) => setNodeForm({ ...nodeForm, instrumentFamily: e.target.value })}
+                    placeholder="e.g. Stringed Instruments"
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>SEO Slug *</label>
+                  <input
+                    className="admin-input"
+                    type="text"
+                    value={nodeForm.seoSlug}
+                    onChange={(e) => setNodeForm({ ...nodeForm, seoSlug: e.target.value })}
+                    placeholder="e.g. guitars-electric-guitars-solid-body"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="admin-form-group" style={{ marginBottom: "0.75rem" }}>
+                <label>Google Product Category (Optional)</label>
+                <input
+                  className="admin-input"
+                  type="text"
+                  value={nodeForm.googleProductCategory}
+                  onChange={(e) =>
+                    setNodeForm({ ...nodeForm, googleProductCategory: e.target.value })
+                  }
+                  placeholder="e.g. Sporting Goods > Musical Instruments > Guitars"
+                />
+              </div>
+
+              <div
+                style={{
+                  padding: "0.85rem",
+                  background: "var(--admin-surface-2)",
+                  borderRadius: "var(--admin-radius-sm)",
+                  marginBottom: "0.75rem",
+                  border: "1px solid var(--admin-border)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    color: "var(--admin-muted)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  <Info size={13} />
+                  Classification Reference Path (Non-Navigation Reference)
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr 1fr",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <div>
+                    <label style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                      Menu Level 1
+                    </label>
+                    <input
+                      className="admin-input"
+                      type="text"
+                      value={nodeForm.menuLevel1}
+                      onChange={(e) => setNodeForm({ ...nodeForm, menuLevel1: e.target.value })}
+                      placeholder="Level 1"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                      Menu Level 2
+                    </label>
+                    <input
+                      className="admin-input"
+                      type="text"
+                      value={nodeForm.menuLevel2}
+                      onChange={(e) => setNodeForm({ ...nodeForm, menuLevel2: e.target.value })}
+                      placeholder="Level 2"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", color: "var(--admin-muted)" }}>
+                      Menu Level 3
+                    </label>
+                    <input
+                      className="admin-input"
+                      type="text"
+                      value={nodeForm.menuLevel3}
+                      onChange={(e) => setNodeForm({ ...nodeForm, menuLevel3: e.target.value })}
+                      placeholder="Level 3"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={nodeForm.isArchived}
+                    onChange={(e) => setNodeForm({ ...nodeForm, isArchived: e.target.checked })}
+                  />
+                  <span>Archive this node (hide from catalog classification suggestions)</span>
+                </label>
+              </div>
+
+              {modalError && (
+                <div
+                  style={{
+                    color: "var(--admin-danger)",
+                    fontSize: "0.875rem",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  {modalError}
+                </div>
+              )}
+
+              <div
+                className="admin-modal-actions"
+                style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}
+              >
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="admin-btn admin-btn--primary" disabled={isSaving}>
+                  {isSaving ? "Saving..." : editingNodeId ? "Save Changes" : "Create Node"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
+import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
 
 interface ProductImageUploadProps {
   categorySlug: string;
@@ -91,6 +92,16 @@ export default function ProductImageUpload({
   return (
     <div className="admin-form-group admin-form-grid--full">
       <label>Product Images</label>
+      <p className="admin-form-hint" style={{ margin: "0 0 0.625rem" }}>
+        <strong>{IMAGE_SPECS.productImage.ratioLabel}</strong> · Recommended{" "}
+        <strong>
+          {IMAGE_SPECS.productImage.recommendedWidth} × {IMAGE_SPECS.productImage.recommendedHeight}{" "}
+          px
+        </strong>{" "}
+        · JPG/PNG/WebP up to {IMAGE_SPECS.productImage.maxUploadMb} MB
+        <br />
+        {IMAGE_SPECS.productImage.hint}
+      </p>
       <div
         className={`admin-upload-zone${dragOver ? " admin-upload-zone--active" : ""}`}
         onDragOver={(e) => {

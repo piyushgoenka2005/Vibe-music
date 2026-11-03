@@ -1197,13 +1197,13 @@ export async function seedHomepageCuratedItemsIfEmpty(): Promise<void> {
     const { getBrandLogoUrl } = await import("@/lib/brandLogos");
     let brands = await prisma.brand.findMany({
       where: { slug: { in: [...TOP_BRAND_STRIP_SLUGS] } },
-      select: { id: true, slug: true, name: true },
+      select: { id: true, slug: true, name: true, logoUrl: true },
     });
     if (brands.length === 0) {
       brands = await prisma.brand.findMany({
         take: 16,
         orderBy: { name: "asc" },
-        select: { id: true, slug: true, name: true },
+        select: { id: true, slug: true, name: true, logoUrl: true },
       });
     }
     const bySlug = new Map(brands.map((brand) => [brand.slug, brand]));
@@ -1212,7 +1212,7 @@ export async function seedHomepageCuratedItemsIfEmpty(): Promise<void> {
     );
     const ordered = preferred.length > 0 ? preferred : brands;
     const rows = ordered.map((brand, index) => {
-      const logoUrl = getBrandLogoUrl(brand.slug);
+      const logoUrl = brand.logoUrl ?? getBrandLogoUrl(brand.slug);
       return {
         id: `brand-strip-${brand.slug}`,
         sectionKey: "brand_strip" as const,

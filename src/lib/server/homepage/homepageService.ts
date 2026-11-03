@@ -389,7 +389,9 @@ async function resolveBrands(
         name: item.customTitle || brand.name,
         slug: brand.slug,
         href: item.customHref || brandPath(brand.slug),
-        logoUrl: item.customImage || getBrandLogoUrl(brand.slug),
+        // Brand logo (Brands admin) is canonical; the per-item image is an optional
+        // override for brands that have no uploaded logo yet.
+        logoUrl: brand.logoUrl || item.customImage || getBrandLogoUrl(brand.slug),
       });
     }
 
@@ -414,7 +416,7 @@ async function resolveBrands(
     name: brand.name,
     slug: brand.slug,
     href: brandPath(brand.slug),
-    logoUrl: getBrandLogoUrl(brand.slug),
+    logoUrl: brand.logoUrl || getBrandLogoUrl(brand.slug),
   }));
 }
 

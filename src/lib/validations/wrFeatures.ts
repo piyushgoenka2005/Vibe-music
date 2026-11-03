@@ -24,6 +24,7 @@ export const adminReturnRequestSchema = z.object({
 export const adminBrandSchema = z.object({
   name: z.string().min(1).max(120),
   slug: z.string().min(1).max(120).optional(),
+  logoUrl: z.string().max(2048).optional(),
 });
 
 export const adminUserUpdateSchema = z.object({

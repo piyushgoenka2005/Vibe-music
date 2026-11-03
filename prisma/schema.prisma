@@ -13,9 +13,10 @@ datasource db {
 // ─── Catalog ────────────────────────────────────────────────────────────────
 
 model Brand {
-  id   String @id
-  name String
-  slug String @unique
+  id      String  @id
+  name    String
+  slug    String  @unique
+  logoUrl String? @map("logo_url")
 
   @@map("brands")
 }

@@ -26,6 +26,8 @@ import {
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import { LoadingState } from "@/components/admin/AdminUi";
+import BannerImageUpload from "@/components/admin/BannerImageUpload";
+import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type {
   HeaderSettingRecord,
@@ -641,19 +643,12 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
           </h3>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
-            <div className="admin-form-group">
-              <label>Logo Asset URL</label>
-              <input
-                className="admin-input"
-                type="text"
-                value={settingsForm.logoAsset ?? ""}
-                onChange={(e) => setSettingsForm({ ...settingsForm, logoAsset: e.target.value })}
-                placeholder="/brand/header-logo.webp"
-              />
-              <small style={{ color: "var(--admin-text-muted)" }}>
-                Default: /brand/header-logo.webp
-              </small>
-            </div>
+            <BannerImageUpload
+              label="Header logo"
+              spec={IMAGE_SPECS.headerLogo}
+              value={settingsForm.logoAsset ?? ""}
+              onChange={(url) => setSettingsForm({ ...settingsForm, logoAsset: url })}
+            />
 
             <div className="admin-form-group">
               <label>Search Placeholder Text</label>

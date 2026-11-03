@@ -14,7 +14,7 @@ async function loadBrandDirectoryUncached(): Promise<BrandDirectoryGroup[]> {
   const [brands, catalog] = await Promise.all([getCachedBrands(), getCachedHomepageProducts()]);
 
   return groupCatalogByBrand(catalog, brands).map((group) => {
-    const logoUrl = getBrandLogoUrl(group.slug) ?? group.products[0]?.image;
+    const logoUrl = group.logoUrl ?? getBrandLogoUrl(group.slug) ?? group.products[0]?.image;
     return {
       id: group.id,
       name: group.name,
@@ -41,11 +41,12 @@ export const loadBrandDirectory = cache(async function loadBrandDirectory(): Pro
 const getCachedBrandsWithCounts = unstable_cache(
   async function loadBrandsWithCountsUncached(): Promise<BrandWithCount[]> {
     const directory = await getCachedBrandDirectory();
-    return directory.map(({ id, name, slug, productCount }) => ({
+    return directory.map(({ id, name, slug, productCount, logoUrl }) => ({
       id,
       name,
       slug,
       productCount,
+      ...(logoUrl ? { logoUrl } : {}),
     }));
   },
   ["brands-with-counts-v2"],

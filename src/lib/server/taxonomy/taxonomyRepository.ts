@@ -239,6 +239,61 @@ export async function getTaxonomies(params: TaxonomyQueryParams = {}) {
   };
 }
 
+export async function getTaxonomyNodeById(id: string): Promise<CatalogTaxonomyItem | null> {
+  const row = await prisma.catalogTaxonomy.findUnique({ where: { id } });
+  return row ? (row as CatalogTaxonomyItem) : null;
+}
+
+export async function createTaxonomyNode(data: {
+  category: string;
+  subcategory: string;
+  variant?: string | null;
+  productType: string;
+  instrumentFamily?: string | null;
+  seoSlug: string;
+  googleProductCategory?: string | null;
+  menuLevel1?: string | null;
+  menuLevel2?: string | null;
+  menuLevel3?: string | null;
+  isArchived?: boolean;
+}): Promise<CatalogTaxonomyItem> {
+  const now = new Date().toISOString();
+  const created = await prisma.catalogTaxonomy.create({
+    data: {
+      ...data,
+      isArchived: data.isArchived ?? false,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+  return created as CatalogTaxonomyItem;
+}
+
+export async function updateTaxonomyNode(
+  id: string,
+  patch: Partial<CatalogTaxonomyItem>,
+): Promise<CatalogTaxonomyItem> {
+  const now = new Date().toISOString();
+  const { id: _, createdAt: __, ...rest } = patch;
+  const updated = await prisma.catalogTaxonomy.update({
+    where: { id },
+    data: {
+      ...rest,
+      updatedAt: now,
+    },
+  });
+  return updated as CatalogTaxonomyItem;
+}
+
+export async function deleteTaxonomyNode(id: string): Promise<void> {
+  // CRITICAL REQUIREMENT:
+  // Updating or deleting a taxonomy node must not automatically delete storefront categories,
+  // header menu items, or homepage sections.
+  await prisma.catalogTaxonomy.delete({
+    where: { id },
+  });
+}
+
 /**
  * Aggregate high-level statistics for the taxonomy explorer dashboard.
  */

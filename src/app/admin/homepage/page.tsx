@@ -8,6 +8,7 @@ import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
+import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
 import { EmptyState, LoadingState, StatusBadge } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import {
@@ -562,6 +563,18 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     form.sourceMode === "auto" &&
     catalogProductCount === 0;
 
+  const itemImageSpec = isBrandSection
+    ? IMAGE_SPECS.brandLogo
+    : isBentoSection
+      ? IMAGE_SPECS.bentoCategoryCard
+      : isBrowseSection
+        ? IMAGE_SPECS.browseCategoryCard
+        : isShopHighlightsSection
+          ? IMAGE_SPECS.highlightCard
+          : isCategorySection
+            ? IMAGE_SPECS.featuredCategoryTile
+            : IMAGE_SPECS.productImage;
+
   return (
     <>
       <div className="admin-toolbar" style={{ flexWrap: "wrap", gap: "0.5rem" }}>
@@ -986,21 +999,10 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 <>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
                     <BannerImageUpload
-                      label="Story Banner Image (upload directly to CDN)"
+                      label="Story banner image"
+                      spec={IMAGE_SPECS.storyBanner}
                       value={itemForm.customImage}
                       onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Or Image URL / Path</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.customImage}
-                      placeholder="/images/guitar-1.webp or https://cdn.vibemusic.in/..."
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
-                      }
                     />
                   </div>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
@@ -1032,21 +1034,10 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 <>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
                     <BannerImageUpload
-                      label="Poster / thumbnail (upload to CDN)"
+                      label="Poster / thumbnail"
+                      spec={IMAGE_SPECS.reelPoster}
                       value={itemForm.customImage}
                       onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
-                    />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Or poster URL / path</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.customImage}
-                      placeholder="/images/guitar-1.webp or https://cdn.vibemusic.in/..."
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
-                      }
                     />
                   </div>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
@@ -1268,25 +1259,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                 <>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
                     <BannerImageUpload
-                      label="Visual Card Image (Upload directly to CDN)"
+                      label="Visual card image"
+                      spec={IMAGE_SPECS.editorialVisual}
                       value={itemForm.customImage}
                       onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
                     />
-                  </div>
-                  <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
-                    <label>Or Image URL / Path</label>
-                    <input
-                      className="admin-input"
-                      style={{ width: "100%" }}
-                      value={itemForm.customImage}
-                      placeholder="/images/editorial-guitar.jpg or https://cdn.vibemusic.in/..."
-                      onChange={(event) =>
-                        setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
-                      }
-                    />
-                    <p className="admin-form-hint">
-                      Default guitar image: <code>/images/editorial-guitar.jpg</code>
-                    </p>
                   </div>
                   <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
                     <label>Image Alt Text (Accessibility & SEO)</label>
@@ -1517,10 +1494,19 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                       />
                     </div>
                   ) : null}
-                  {isCategorySection || isBrandSection ? (
+                  {!isBigNamesSection ? (
                     <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
                       <BannerImageUpload
-                        label={isBrandSection ? "Brand logo (optional)" : "Card / category image"}
+                        label={
+                          isBrandSection
+                            ? "Brand logo"
+                            : isShopHighlightsSection
+                              ? "Card image (overrides product image)"
+                              : isCategorySection
+                                ? "Card / category image"
+                                : "Custom image (optional)"
+                        }
+                        spec={itemImageSpec}
                         value={itemForm.customImage}
                         onChange={(url) => setItemForm((prev) => ({ ...prev, customImage: url }))}
                       />
@@ -1539,23 +1525,6 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         value={itemForm.customTitle}
                         onChange={(event) =>
                           setItemForm((prev) => ({ ...prev, customTitle: event.target.value }))
-                        }
-                      />
-                    </div>
-                  ) : null}
-                  {!isBigNamesSection ? (
-                    <div className="admin-form-group">
-                      <label>
-                        {isShopHighlightsSection
-                          ? "Card Image URL (Overrides product image)"
-                          : "Custom Image URL"}
-                      </label>
-                      <input
-                        className="admin-input"
-                        style={{ width: "100%" }}
-                        value={itemForm.customImage}
-                        onChange={(event) =>
-                          setItemForm((prev) => ({ ...prev, customImage: event.target.value }))
                         }
                       />
                     </div>

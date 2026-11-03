@@ -4,8 +4,24 @@ import {
   getTaxonomies,
   getTaxonomyStats,
   getTaxonomyFilterOptions,
+  createTaxonomyNode,
 } from "@/lib/server/taxonomyRepository";
 import { taxonomyApiErrorResponse } from "@/lib/server/taxonomyApiErrors";
+import { z } from "zod";
+
+const createTaxonomySchema = z.object({
+  category: z.string().min(1),
+  subcategory: z.string().min(1),
+  variant: z.string().nullable().optional(),
+  productType: z.string().min(1),
+  instrumentFamily: z.string().nullable().optional(),
+  seoSlug: z.string().min(1),
+  googleProductCategory: z.string().nullable().optional(),
+  menuLevel1: z.string().nullable().optional(),
+  menuLevel2: z.string().nullable().optional(),
+  menuLevel3: z.string().nullable().optional(),
+  isArchived: z.boolean().optional(),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,6 +48,18 @@ export async function GET(request: NextRequest) {
       ...(stats && { stats }),
       ...(filterOptions && { filterOptions }),
     });
+  } catch (error) {
+    return taxonomyApiErrorResponse(error, request);
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    await requireAdmin("categories:write", request);
+    const body = await request.json();
+    const parsed = createTaxonomySchema.parse(body);
+    const node = await createTaxonomyNode(parsed);
+    return NextResponse.json({ item: node }, { status: 201 });
   } catch (error) {
     return taxonomyApiErrorResponse(error, request);
   }

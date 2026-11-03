@@ -15,6 +15,7 @@ import {
 } from "@/components/admin/AdminUi";
 import { useAdminCursorPagination } from "@/hooks/useAdminCursorPagination";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
+import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
 import { slugify } from "@/lib/slug";
 import type { AdminSession } from "@/types/admin";
 import type { GiveawayCampaign, GiveawayCampaignStatus, GiveawayEntry } from "@/types/giveaway";
@@ -476,6 +477,7 @@ function CampaignsAdmin({ canWrite, canDelete }: { canWrite: boolean; canDelete:
               </div>
               <BannerImageUpload
                 label="Prize image"
+                spec={IMAGE_SPECS.giveawayPrize}
                 value={form.prizeImageUrl}
                 onChange={(url) => setForm({ ...form, prizeImageUrl: url })}
               />

@@ -207,11 +207,22 @@ export function brandToPrisma(brand: Brand): Prisma.BrandUncheckedCreateInput {
     id: brand.id,
     name: brand.name,
     slug: brand.slug,
+    logoUrl: brand.logoUrl ?? null,
   };
 }
 
-export function prismaToBrand(row: { id: string; name: string; slug: string }): Brand {
-  return { id: row.id, name: row.name, slug: row.slug };
+export function prismaToBrand(row: {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+}): Brand {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    ...(row.logoUrl ? { logoUrl: row.logoUrl } : {}),
+  };
 }
 
 export function orderToPrisma(order: Order): Prisma.OrderUncheckedCreateInput {

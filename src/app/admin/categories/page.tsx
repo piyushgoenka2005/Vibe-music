@@ -13,6 +13,7 @@ import {
 } from "@/components/admin/AdminQueryState";
 import type { AdminCategory } from "@/types/admin";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
+import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
 
 type CategoryForm = {
   name: string;
@@ -65,7 +66,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          imageUrl: form.imageUrl.trim() || undefined,
+          imageUrl: form.imageUrl.trim(),
           featuredImageUrls: form.featuredImageUrls.map((url) => url.trim()),
           metaTitle: form.metaTitle.trim() || undefined,
           metaDescription: form.metaDescription.trim() || undefined,
@@ -334,19 +335,12 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                 </select>
               </div>
 
-              <div className="admin-form-group">
-                <label>Storefront Image URL</label>
-                <input
-                  className="admin-input"
-                  style={{ width: "100%" }}
-                  value={form.imageUrl}
-                  onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                  placeholder="https://… or /images/…"
-                />
-                <small style={{ color: "var(--admin-text-muted, #6b7280)", marginTop: "0.35rem" }}>
-                  Used for this category&apos;s storefront tiles and featured menu cards.
-                </small>
-              </div>
+              <BannerImageUpload
+                label="Storefront image"
+                spec={IMAGE_SPECS.categoryStorefront}
+                value={form.imageUrl}
+                onChange={(url) => setForm({ ...form, imageUrl: url })}
+              />
 
               <div className="admin-form-group admin-form-grid--full">
                 <label>Featured menu card images</label>
@@ -361,6 +355,7 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
                     <BannerImageUpload
                       key={index}
                       label={`Featured card ${index + 1}`}
+                      spec={IMAGE_SPECS.categoryFeaturedCard}
                       value={form.featuredImageUrls[index] ?? ""}
                       onChange={(url) => {
                         const featuredImageUrls = [...form.featuredImageUrls];

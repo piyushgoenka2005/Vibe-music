@@ -18,8 +18,8 @@ import {
   type UpdateHomepageSectionItemInput,
 } from "@/types/homepage";
 
-/** Process-local TTL — long enough to absorb refresh storms; admin writes invalidate. */
-const CACHE_TTL_MS = 5 * 60_000;
+/** Process-local TTL — micro-cached for bursts, keeping reads virtually instant from DB. */
+const CACHE_TTL_MS = 2_000;
 
 let sectionsCache: HomepageSection[] | null = null;
 let sectionsCacheAt = 0;

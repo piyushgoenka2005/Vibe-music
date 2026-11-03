@@ -7,6 +7,7 @@ import { ArrowDown, ArrowUp, Plus } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
+import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
 import {
   AdminCursorPagination,
   EmptyState,
@@ -96,7 +97,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
         ...form,
         title: form.title || "",
         subtitle: form.subtitle || undefined,
-        mobileImage: form.mobileImage || undefined,
+        mobileImage: form.mobileImage || "",
         ctaText: form.ctaText || "",
         ctaLink: form.ctaLink || "/search",
         startDate: fromDatetimeLocal(form.startDate),
@@ -331,11 +332,13 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
               </div>
               <BannerImageUpload
                 label="Desktop Image"
+                spec={IMAGE_SPECS.heroDesktop}
                 value={form.image}
                 onChange={(url) => setForm({ ...form, image: url })}
               />
               <BannerImageUpload
                 label="Mobile Image (optional)"
+                spec={IMAGE_SPECS.heroMobile}
                 value={form.mobileImage}
                 onChange={(url) => setForm({ ...form, mobileImage: url })}
               />
