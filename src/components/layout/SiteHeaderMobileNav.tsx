@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
@@ -10,6 +10,22 @@ import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import { resolveBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
 import { useAuthStore } from "@/store/authStore";
 import { useShallow } from "zustand/react/shallow";
+
+function MobileSearchParamsWatcher({
+  onParamsChange,
+}: {
+  onParamsChange: (category: string | null, q: string | null) => void;
+}) {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
+  const q = searchParams.get("q");
+
+  useEffect(() => {
+    onParamsChange(category, q);
+  }, [category, q, onParamsChange]);
+
+  return null;
+}
 
 const MOBILE_EXTRA_LINKS = [
   {
@@ -124,9 +140,20 @@ export default function SiteHeaderMobileNav({
   categoryMegaMenus = null,
 }: SiteHeaderMobileNavProps) {
   const pathname = usePathname() ?? "";
-  const searchParams = useSearchParams();
-  const searchCategory = searchParams.get("category");
-  const searchQuery = searchParams.get("q");
+  const [searchParamsState, setSearchParamsState] = useState<{
+    category: string | null;
+    q: string | null;
+  }>({ category: null, q: null });
+
+  const handleParamsChange = useCallback((category: string | null, q: string | null) => {
+    setSearchParamsState((prev) => {
+      if (prev.category === category && prev.q === q) return prev;
+      return { category, q };
+    });
+  }, []);
+
+  const searchCategory = searchParamsState.category;
+  const searchQuery = searchParamsState.q;
 
   const effectiveCategoryMenus = useMemo(
     () =>
@@ -165,6 +192,9 @@ export default function SiteHeaderMobileNav({
 
   return (
     <div className="site-header__mobile-nav">
+      <Suspense fallback={null}>
+        <MobileSearchParamsWatcher onParamsChange={handleParamsChange} />
+      </Suspense>
       <div className="site-header__mobile-nav-scroll">
         {resolvedBrandsMegaMenu
           ? renderMegaMenuGroup(resolvedBrandsMegaMenu, {

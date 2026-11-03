@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG, type MegaMenuItem } from "@/data/headerMegaMenu";
@@ -8,6 +8,22 @@ import { BRANDS_MEGA_MENU_SLUG, resolveBrandsMegaMenu } from "@/lib/navigation/b
 import { ROUTES } from "@/lib/routes";
 import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
+
+function SearchParamsWatcher({
+  onParamsChange,
+}: {
+  onParamsChange: (category: string | null, q: string | null) => void;
+}) {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
+  const q = searchParams.get("q");
+
+  useEffect(() => {
+    onParamsChange(category, q);
+  }, [category, q, onParamsChange]);
+
+  return null;
+}
 
 interface SiteHeaderNavProps {
   brandsMegaMenu?: MegaMenuItem | null;
@@ -35,9 +51,20 @@ export default function SiteHeaderNav({
   onMegaMenuOpenChange,
 }: SiteHeaderNavProps) {
   const pathname = usePathname() ?? "";
-  const searchParams = useSearchParams();
-  const searchCategory = searchParams.get("category");
-  const searchQuery = searchParams.get("q");
+  const [searchParamsState, setSearchParamsState] = useState<{
+    category: string | null;
+    q: string | null;
+  }>({ category: null, q: null });
+
+  const handleParamsChange = useCallback((category: string | null, q: string | null) => {
+    setSearchParamsState((prev) => {
+      if (prev.category === category && prev.q === q) return prev;
+      return { category, q };
+    });
+  }, []);
+
+  const searchCategory = searchParamsState.category;
+  const searchQuery = searchParamsState.q;
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [scrollable, setScrollable] = useState(false);
@@ -197,6 +224,9 @@ export default function SiteHeaderNav({
         setHoveredKey(null);
       }}
     >
+      <Suspense fallback={null}>
+        <SearchParamsWatcher onParamsChange={handleParamsChange} />
+      </Suspense>
       <div
         ref={navShellRef}
         className={`site-header__nav-shell${scrollable ? " site-header__nav-shell--scrollable" : ""}`}

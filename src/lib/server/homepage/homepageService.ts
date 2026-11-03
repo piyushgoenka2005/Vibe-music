@@ -624,13 +624,13 @@ async function resolveGearReels(
       .map((item) => ({
         id: item.id,
         title: item.customTitle || "Gear Reel",
-        description: item.offerText,
+        description: item.categorySlug, // Modal description from categorySlug field
         posterUrl: item.customImage,
         videoUrl: item.customHref || "",
-        instagramHandle: item.categorySlug, // Using categorySlug for instagram handle
-        instagramLink: item.productId || "", // Using productId for instagram link
-        productId: item.brandId,
-        badgeLabel: item.badgeLabel,
+        instagramHandle: item.badgeLabel, // Instagram handle from badgeLabel field
+        instagramLink: item.offerText || "", // Instagram link from offerText field
+        productId: item.productId, // Linked product from productId field
+        featureBullets: item.brandId || "", // Features/bullets from brandId field
         sortOrder: item.sortOrder,
         isActive: item.isActive,
       }))

@@ -141,6 +141,7 @@ export interface GearReelItem {
   productId?: string;
   productTitle?: string;
   badgeLabel?: string;
+  featureBullets?: string;
   sortOrder: number;
   isActive: boolean;
 }
