@@ -4,3 +4,4 @@ ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "is_archived" BOOLEAN NOT NULL
 
 -- AlterTable
 ALTER TABLE "catalog_taxonomies" ADD COLUMN IF NOT EXISTS "is_archived" BOOLEAN NOT NULL DEFAULT false;
+
