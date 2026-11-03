@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -62,7 +62,9 @@ function stockTone(product: AdminProduct): "ok" | "low" | "out" {
 type ProductsQueryData = Awaited<ReturnType<typeof fetchProducts>>;
 
 type PendingDelete =
-  { type: "single"; product: AdminProduct } | { type: "bulk"; ids: string[]; label: string } | null;
+  | { type: "single"; product: AdminProduct }
+  | { type: "bulk"; ids: string[]; label: string; all?: boolean }
+  | null;
 
 function ProductsContent({
   productsWrite,
@@ -92,6 +94,8 @@ function ProductsContent({
     }
   }, [searchParams, reset]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selectAllAcrossPages, setSelectAllAcrossPages] = useState(false);
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [bulkStock, setBulkStock] = useState("");
@@ -187,7 +191,14 @@ function ProductsContent({
     onSuccess: (payload) => {
       setPendingDelete(null);
       setActionError(null);
-      if (payload.action === "delete" && Array.isArray(payload.ids)) {
+      setSelected(new Set());
+      setSelectAllAcrossPages(false);
+      if (payload.action === "delete_all") {
+        queryClient.setQueriesData<ProductsQueryData>(
+          { queryKey: ["admin-products"] },
+          (current) => (current ? { ...current, products: [], total: 0 } : current),
+        );
+      } else if (payload.action === "delete" && Array.isArray(payload.ids)) {
         removeProductsFromCache(payload.ids as string[]);
       }
       invalidate();
@@ -207,6 +218,11 @@ function ProductsContent({
     onSuccess: (id) => {
       setPendingDelete(null);
       setActionError(null);
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       removeProductsFromCache([id]);
       invalidate();
     },
@@ -220,7 +236,16 @@ function ProductsContent({
   }
 
   function requestBulkDelete() {
-    if (selected.size === 0) return;
+    if (selected.size === 0 && !selectAllAcrossPages) return;
+    if (selectAllAcrossPages) {
+      setPendingDelete({
+        type: "bulk",
+        ids: [],
+        all: true,
+        label: `all ${total} products matching current catalog filter`,
+      });
+      return;
+    }
     setPendingDelete({
       type: "bulk",
       ids: Array.from(selected),
@@ -232,6 +257,16 @@ function ProductsContent({
     if (!pendingDelete) return;
     if (pendingDelete.type === "single") {
       deleteMutation.mutate(pendingDelete.product.id);
+      return;
+    }
+    if (pendingDelete.all) {
+      bulkMutation.mutate({
+        action: "delete_all",
+        search: search || undefined,
+        status: status || undefined,
+        category: category || undefined,
+        stock: stockFilter || undefined,
+      });
       return;
     }
     bulkMutation.mutate({ action: "delete", ids: pendingDelete.ids });
@@ -287,6 +322,20 @@ function ProductsContent({
     }
   }
 
+  const products = data?.products ?? [];
+  const total = data?.total ?? 0;
+  const hasMore = data?.hasMore ?? false;
+  const selectedIds = Array.from(selected);
+
+  const isAllOnPageSelected = products.length > 0 && products.every((p) => selected.has(p.id));
+  const isSomeOnPageSelected = products.some((p) => selected.has(p.id)) && !isAllOnPageSelected;
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = isSomeOnPageSelected && !selectAllAcrossPages;
+    }
+  }, [isSomeOnPageSelected, selectAllAcrossPages]);
+
   if (isLoading) return <LoadingState />;
   if (isError) {
     return (
@@ -297,11 +346,6 @@ function ProductsContent({
       />
     );
   }
-
-  const products = data?.products ?? [];
-  const total = data?.total ?? 0;
-  const hasMore = data?.hasMore ?? false;
-  const selectedIds = Array.from(selected);
 
   return (
     <>
@@ -416,7 +460,7 @@ function ProductsContent({
                 className="admin-btn admin-btn--danger"
                 onClick={requestBulkDelete}
               >
-                Delete ({selected.size})
+                Delete ({selectAllAcrossPages ? total : selected.size})
               </button>
             ) : null}
             <input
@@ -483,6 +527,56 @@ function ProductsContent({
       ) : null}
 
       <div className="admin-panel">
+        {isAllOnPageSelected && total > products.length ? (
+          <div
+            style={{
+              padding: "0.65rem 1rem",
+              background: "rgba(59, 130, 246, 0.08)",
+              borderBottom: "1px solid rgba(59, 130, 246, 0.2)",
+              fontSize: "0.85rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "0.75rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <span>
+              {selectAllAcrossPages ? (
+                <>
+                  All <strong>{total}</strong> products matching filter are selected.
+                </>
+              ) : (
+                <>
+                  All <strong>{products.length}</strong> products on this page are selected.
+                </>
+              )}
+            </span>
+            {!selectAllAcrossPages ? (
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                style={{ padding: "0.25rem 0.65rem", fontSize: "0.8rem" }}
+                onClick={() => setSelectAllAcrossPages(true)}
+              >
+                Select all {total} products across all pages
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                style={{ padding: "0.25rem 0.65rem", fontSize: "0.8rem" }}
+                onClick={() => {
+                  setSelectAllAcrossPages(false);
+                  setSelected(new Set());
+                }}
+              >
+                Clear selection
+              </button>
+            )}
+          </div>
+        ) : null}
+
         {products.length === 0 ? (
           <EmptyState message="No products found." />
         ) : (
@@ -494,11 +588,19 @@ function ProductsContent({
                     {productsWrite || productsDelete ? (
                       <th>
                         <input
+                          ref={headerCheckboxRef}
                           type="checkbox"
+                          checked={
+                            (isAllOnPageSelected && products.length > 0) || selectAllAcrossPages
+                          }
                           aria-label="Select all"
                           onChange={(e) => {
-                            if (e.target.checked) setSelected(new Set(products.map((p) => p.id)));
-                            else setSelected(new Set());
+                            if (e.target.checked) {
+                              setSelected(new Set(products.map((p) => p.id)));
+                            } else {
+                              setSelected(new Set());
+                              setSelectAllAcrossPages(false);
+                            }
                           }}
                         />
                       </th>

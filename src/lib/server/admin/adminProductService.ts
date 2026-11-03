@@ -623,6 +623,61 @@ export async function bulkDeleteAdminProducts(ids: string[]): Promise<number> {
   return (await bulkDeleteProducts(ids)).deleted;
 }
 
+export async function deleteAllAdminProducts(filter?: {
+  search?: string;
+  status?: string;
+  category?: string;
+  stock?: "in" | "low" | "out";
+}): Promise<number> {
+  if (!isPostgresConfigured()) return 0;
+
+  const where: Prisma.ProductWhereInput = {};
+  if (filter?.status) {
+    where.status = filter.status;
+  }
+  if (filter?.category) {
+    where.OR = [{ categorySlug: filter.category }, { category: filter.category }];
+  }
+  if (filter?.search?.trim()) {
+    const q = filter.search.trim();
+    where.AND = [
+      {
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { brand: { contains: q, mode: "insensitive" } },
+          { slug: { contains: q, mode: "insensitive" } },
+          { sku: { contains: q, mode: "insensitive" } },
+        ],
+      },
+    ];
+  }
+  if (filter?.stock === "out") {
+    where.stock = { lte: 0 };
+  } else if (filter?.stock === "in") {
+    where.stock = { gt: 10 };
+  } else if (filter?.stock === "low") {
+    where.stock = { gt: 0, lte: 10 };
+  }
+
+  const products = await prisma.product.findMany({
+    where,
+    select: { id: true },
+  });
+
+  const ids = products.map((p) => p.id);
+  if (ids.length === 0) return 0;
+
+  const BATCH_SIZE = 200;
+  let totalDeleted = 0;
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    const chunk = ids.slice(i, i + BATCH_SIZE);
+    await purgeProductSideData(chunk);
+    totalDeleted += (await bulkDeleteProducts(chunk)).deleted;
+  }
+
+  return totalDeleted;
+}
+
 export async function bulkUpdateAdminStock(
   updates: Array<{ id: string; stockQuantity: number }>,
 ): Promise<number> {

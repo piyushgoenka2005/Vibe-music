@@ -5,6 +5,8 @@ import {
   getTaxonomyStats,
   getTaxonomyFilterOptions,
   createTaxonomyNode,
+  deleteTaxonomyNodes,
+  deleteAllTaxonomyNodes,
 } from "@/lib/server/taxonomyRepository";
 import { taxonomyApiErrorResponse } from "@/lib/server/taxonomyApiErrors";
 import { z } from "zod";
@@ -60,6 +62,27 @@ export async function POST(request: NextRequest) {
     const parsed = createTaxonomySchema.parse(body);
     const node = await createTaxonomyNode(parsed);
     return NextResponse.json({ item: node }, { status: 201 });
+  } catch (error) {
+    return taxonomyApiErrorResponse(error, request);
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    await requireAdmin("categories:delete", request);
+    const body = await request.json().catch(() => ({}));
+    if (body.all) {
+      const deleted = await deleteAllTaxonomyNodes({
+        category: body.category,
+        search: body.search,
+      });
+      return NextResponse.json({ ok: true, deleted });
+    }
+    if (Array.isArray(body.ids) && body.ids.length > 0) {
+      const deleted = await deleteTaxonomyNodes(body.ids);
+      return NextResponse.json({ ok: true, deleted });
+    }
+    return NextResponse.json({ error: "Provide ids array or all: true" }, { status: 400 });
   } catch (error) {
     return taxonomyApiErrorResponse(error, request);
   }

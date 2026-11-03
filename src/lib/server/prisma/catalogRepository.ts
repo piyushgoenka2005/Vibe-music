@@ -118,28 +118,8 @@ function assertPostgresForWrite(): void {
   }
 }
 
-/** Cached empty-DB probe so an unseeded Postgres doesn't hide the local JSON catalog. */
-let emptyCatalogProbe: { checkedAt: number; empty: boolean } | null = null;
-const EMPTY_CATALOG_PROBE_TTL_MS = 5 * 60_000;
-
 export function invalidateEmptyCatalogProbe(): void {
-  emptyCatalogProbe = null;
-}
-
-async function isPostgresCatalogEmpty(): Promise<boolean> {
-  const now = Date.now();
-  if (emptyCatalogProbe && now - emptyCatalogProbe.checkedAt < EMPTY_CATALOG_PROBE_TTL_MS) {
-    return emptyCatalogProbe.empty;
-  }
-
-  try {
-    const count = await prisma.product.count();
-    emptyCatalogProbe = { checkedAt: now, empty: count === 0 };
-    return count === 0;
-  } catch {
-    emptyCatalogProbe = { checkedAt: now, empty: true };
-    return true;
-  }
+  // Maintained for API compatibility
 }
 
 async function loadLocalProducts(includeInactive: boolean): Promise<CatalogProduct[]> {
@@ -147,7 +127,7 @@ async function loadLocalProducts(includeInactive: boolean): Promise<CatalogProdu
   return filterActive(loadProducts(), includeInactive);
 }
 
-/** Prefer Postgres; optionally fall back to local JSON (dev / explicit opt-in). */
+/** Prefer Postgres; optionally fall back to local JSON only when Postgres is unconfigured or unavailable. */
 async function withProductFallback<T>(
   dbQuery: () => Promise<T>,
   localFallback: () => Promise<T> | T,
@@ -161,12 +141,9 @@ async function withProductFallback<T>(
     return localFallback();
   }
 
-  if (await isPostgresCatalogEmpty()) {
-    // Unseeded local DBs can use JSON; production empty DB must not hide missing seed.
-    if (allowJson) return localFallback();
-    return dbQuery();
-  }
-
+  // Once Postgres is configured, the database is the single source of truth.
+  // We do NOT fall back to local JSON on an empty DB, ensuring that admin deletions
+  // (including the last product) remain permanent and never revert back.
   try {
     return await dbQuery();
   } catch (error) {
@@ -538,6 +515,7 @@ export async function writeProduct(product: CatalogProduct): Promise<CatalogProd
 export async function removeProduct(id: string): Promise<void> {
   assertPostgresForWrite();
   await prisma.product.delete({ where: { id } });
+  invalidateEmptyCatalogProbe();
 }
 
 export async function batchWriteProducts(products: CatalogProduct[]): Promise<void> {
@@ -623,6 +601,7 @@ export async function batchDeleteProducts(ids: string[]): Promise<number> {
   assertPostgresForWrite();
   if (ids.length === 0) return 0;
   const result = await prisma.product.deleteMany({ where: { id: { in: ids } } });
+  invalidateEmptyCatalogProbe();
   return result.count;
 }
 

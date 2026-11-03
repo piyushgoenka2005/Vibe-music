@@ -442,6 +442,13 @@ export const adminProductBulkSchema = z.discriminatedUnion("action", [
     ids: z.array(z.string().min(1)).min(1).max(500),
   }),
   z.object({
+    action: z.literal("delete_all"),
+    search: z.string().optional(),
+    status: z.string().optional(),
+    category: z.string().optional(),
+    stock: z.enum(["in", "low", "out"]).optional(),
+  }),
+  z.object({
     action: z.literal("archive"),
     ids: z.array(z.string().min(1)).min(1).max(500),
   }),

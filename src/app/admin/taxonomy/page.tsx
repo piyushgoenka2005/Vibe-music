@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
 import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   UploadCloud,
@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
+import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { CatalogTaxonomyItem, TaxonomyStats, TaxonomyImportResult } from "@/types/taxonomy";
@@ -77,6 +78,17 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
+  // Selection & Bulk Actions
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectAllAcrossPages, setSelectAllAcrossPages] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [bulkDeleteDialog, setBulkDeleteDialog] = useState<{
+    open: boolean;
+    type: "selected" | "all";
+    count: number;
+  }>({ open: false, type: "selected", count: 0 });
+  const masterCheckboxRef = useRef<HTMLInputElement>(null);
+
   // Upload State
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [replaceExisting, setReplaceExisting] = useState(false);
@@ -98,7 +110,7 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["admin-taxonomy", page, limit, search, selectedCategory],
     placeholderData: keepPreviousData,
-    staleTime: 60_000,
+    staleTime: 5_000,
     queryFn: async () => {
       const params = new URLSearchParams({
         page: String(page),
@@ -262,7 +274,7 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
     }
   };
 
-  // Delete Node
+  // Delete Node (Single)
   const handleDeleteNode = async (id: string, name: string) => {
     if (
       !confirm(
@@ -275,9 +287,58 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
       await adminMutateJson(`/api/admin/taxonomy/${id}`, {
         method: "DELETE",
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-taxonomy"] });
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+      await queryClient.invalidateQueries({ queryKey: ["admin-taxonomy"], refetchType: "all" });
+      if (items.length <= 1 && page > 1) {
+        setPage((p) => Math.max(1, p - 1));
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete node");
+    }
+  };
+
+  // Bulk Delete (Selected or All)
+  const handleBulkDelete = async () => {
+    setIsBulkDeleting(true);
+    try {
+      if (bulkDeleteDialog.type === "all") {
+        await adminMutateJson("/api/admin/taxonomy/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "delete_all",
+            category: selectedCategory !== "all" ? selectedCategory : undefined,
+            search: search || undefined,
+          }),
+        });
+        setPage(1);
+      } else {
+        const ids = Array.from(selectedIds);
+        await adminMutateJson("/api/admin/taxonomy/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "delete",
+            ids,
+          }),
+        });
+        if (selectedIds.size >= items.length && page > 1) {
+          setPage((p) => Math.max(1, p - 1));
+        }
+      }
+
+      setSelectedIds(new Set());
+      setSelectAllAcrossPages(false);
+      setBulkDeleteDialog({ open: false, type: "selected", count: 0 });
+      await queryClient.invalidateQueries({ queryKey: ["admin-taxonomy"], refetchType: "all" });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Bulk delete failed");
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -307,6 +368,26 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
     setIsModalOpen(true);
   };
 
+  const items = data?.items ?? [];
+  const pagination = data?.pagination ?? { page: 1, limit: 25, total: 0, totalPages: 0 };
+  const stats = data?.stats ?? {
+    totalNodes: 0,
+    distinctCategories: 0,
+    distinctSubcategories: 0,
+    distinctProductTypes: 0,
+    distinctGoogleCategories: 0,
+  };
+  const categoryOptions = data?.filterOptions?.categories ?? [];
+
+  const isAllOnPageSelected = items.length > 0 && items.every((i) => selectedIds.has(i.id));
+  const isSomeOnPageSelected = items.some((i) => selectedIds.has(i.id)) && !isAllOnPageSelected;
+
+  useEffect(() => {
+    if (masterCheckboxRef.current) {
+      masterCheckboxRef.current.indeterminate = isSomeOnPageSelected && !selectAllAcrossPages;
+    }
+  }, [isSomeOnPageSelected, selectAllAcrossPages]);
+
   if (isLoading) return <LoadingState />;
   if (isError) {
     return (
@@ -318,16 +399,24 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
     );
   }
 
-  const items = data?.items ?? [];
-  const pagination = data?.pagination ?? { page: 1, limit: 25, total: 0, totalPages: 0 };
-  const stats = data?.stats ?? {
-    totalNodes: 0,
-    distinctCategories: 0,
-    distinctSubcategories: 0,
-    distinctProductTypes: 0,
-    distinctGoogleCategories: 0,
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setSelectAllAcrossPages(false);
   };
-  const categoryOptions = data?.filterOptions?.categories ?? [];
+
+  const toggleSelectAllOnPage = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(items.map((i) => i.id)));
+    } else {
+      setSelectedIds(new Set());
+      setSelectAllAcrossPages(false);
+    }
+  };
 
   return (
     <>
@@ -432,6 +521,24 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
             >
               {isSyncing ? <Loader2 size={16} className="admin-spinner" /> : <Tag size={16} />}
               Fill Missing Product Subcategories
+            </button>
+          )}
+
+          {canDelete && stats.totalNodes > 0 && (
+            <button
+              type="button"
+              className="admin-btn admin-btn--danger"
+              onClick={() =>
+                setBulkDeleteDialog({
+                  open: true,
+                  type: "all",
+                  count: stats.totalNodes,
+                })
+              }
+              title="Delete all master taxonomy records"
+            >
+              <Trash2 size={16} />
+              Purge All ({stats.totalNodes.toLocaleString()})
             </button>
           )}
         </div>
@@ -748,12 +855,105 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
         </div>
       </div>
 
+      {/* Selection Action Toolbar */}
+      {(selectedIds.size > 0 || selectAllAcrossPages) && (
+        <div
+          className="admin-panel"
+          style={{
+            marginBottom: "1rem",
+            padding: "0.75rem 1rem",
+            background: "rgba(239, 68, 68, 0.08)",
+            borderColor: "rgba(239, 68, 68, 0.25)",
+            borderRadius: "var(--admin-radius-sm)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "0.75rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
+              {selectAllAcrossPages
+                ? `All ${pagination.total.toLocaleString()} taxonomy records selected`
+                : `${selectedIds.size} record${selectedIds.size === 1 ? "" : "s"} selected on this page`}
+            </span>
+            {isAllOnPageSelected && pagination.total > items.length && !selectAllAcrossPages && (
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem" }}
+                onClick={() => setSelectAllAcrossPages(true)}
+              >
+                Select all {pagination.total.toLocaleString()} records across all pages
+              </button>
+            )}
+            {selectAllAcrossPages && (
+              <span
+                className="admin-badge"
+                style={{
+                  background: "rgba(59, 130, 246, 0.2)",
+                  color: "#60a5fa",
+                  fontSize: "0.75rem",
+                }}
+              >
+                All Pages Selected
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            {canDelete && (
+              <button
+                type="button"
+                className="admin-btn admin-btn--danger"
+                style={{ padding: "0.4rem 0.85rem" }}
+                onClick={() =>
+                  setBulkDeleteDialog({
+                    open: true,
+                    type: selectAllAcrossPages ? "all" : "selected",
+                    count: selectAllAcrossPages ? pagination.total : selectedIds.size,
+                  })
+                }
+              >
+                <Trash2 size={15} />
+                Delete{" "}
+                {selectAllAcrossPages
+                  ? `All (${pagination.total.toLocaleString()})`
+                  : `Selected (${selectedIds.size})`}
+              </button>
+            )}
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary"
+              style={{ padding: "0.4rem 0.75rem" }}
+              onClick={() => {
+                setSelectedIds(new Set());
+                setSelectAllAcrossPages(false);
+              }}
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Data Table */}
       <div className="admin-panel" style={{ overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table className="admin-table">
             <thead>
               <tr>
+                <th style={{ width: "40px", textAlign: "center" }}>
+                  <input
+                    ref={masterCheckboxRef}
+                    type="checkbox"
+                    checked={(isAllOnPageSelected && items.length > 0) || selectAllAcrossPages}
+                    onChange={(e) => toggleSelectAllOnPage(e.target.checked)}
+                    aria-label="Select all on this page"
+                    style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                  />
+                </th>
                 <th>Category</th>
                 <th>Subcategory</th>
                 <th>Product Type</th>
@@ -768,7 +968,7 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
+                  <td colSpan={10} style={{ textAlign: "center", padding: "2.5rem 1rem" }}>
                     <EmptyState
                       message={
                         stats.totalNodes === 0
@@ -781,6 +981,15 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
               ) : (
                 items.map((item) => (
                   <tr key={item.id}>
+                    <td style={{ textAlign: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(item.id) || selectAllAcrossPages}
+                        onChange={() => toggleSelectRow(item.id)}
+                        aria-label={`Select ${item.category} ${item.subcategory} ${item.productType}`}
+                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                      />
+                    </td>
                     <td>
                       <span className="admin-badge admin-badge--neutral">{item.category}</span>
                     </td>
@@ -1193,6 +1402,33 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
           </div>
         </div>
       )}
+      {/* Bulk Delete Confirm Dialog */}
+      <AdminConfirmDialog
+        open={bulkDeleteDialog.open}
+        title={
+          bulkDeleteDialog.type === "all"
+            ? "Purge All Master Taxonomy?"
+            : `Delete ${bulkDeleteDialog.count} Selected Taxonomy Records?`
+        }
+        description={
+          bulkDeleteDialog.type === "all"
+            ? `Are you sure you want to permanently delete all ${bulkDeleteDialog.count.toLocaleString()} taxonomy records? This action cannot be undone.\n\nStorefront categories, products, and header menus will NOT be deleted.`
+            : `Are you sure you want to delete ${bulkDeleteDialog.count} selected taxonomy record(s)? This action cannot be undone.\n\nStorefront categories, products, and header menus will NOT be deleted.`
+        }
+        confirmLabel={
+          isBulkDeleting
+            ? "Deleting…"
+            : bulkDeleteDialog.type === "all"
+              ? "Purge All Records"
+              : "Delete Selected"
+        }
+        variant="danger"
+        loading={isBulkDeleting}
+        onConfirm={handleBulkDelete}
+        onCancel={() => {
+          if (!isBulkDeleting) setBulkDeleteDialog({ open: false, type: "selected", count: 0 });
+        }}
+      />
     </>
   );
 }

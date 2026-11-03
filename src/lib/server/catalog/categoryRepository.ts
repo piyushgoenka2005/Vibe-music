@@ -217,30 +217,8 @@ export async function listCategories(): Promise<AdminCategory[]> {
   try {
     const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
 
-    // If database is empty (e.g., after deletion), seed from static data
-    if (rows.length === 0) {
-      console.debug(
-        "[categoryRepository] No categories in database, attempting to seed from static data...",
-      );
-      try {
-        const seededCategories = await seedCategoriesFromStatic();
-        console.debug(
-          "[categoryRepository] Successfully seeded",
-          seededCategories.length,
-          "categories from static data",
-        );
-        return seededCategories;
-      } catch (seedErr) {
-        console.error(
-          "[categoryRepository] Failed to seed categories from static data, falling back to in-memory static categories:",
-          seedErr instanceof Error ? seedErr.message : String(seedErr),
-        );
-        // If seeding fails, fall back to static categories without DB persistence
-        return staticCategories();
-      }
-    }
-
-    // Return categories from database
+    // Return categories from database - never automatically re-seed on empty,
+    // so deletions remain permanent and do not revert back.
     console.debug("[categoryRepository] Returning", rows.length, "categories from database");
     return rows.map(mapAdminCategory);
   } catch (err) {
@@ -248,7 +226,7 @@ export async function listCategories(): Promise<AdminCategory[]> {
       "[categoryRepository] Failed to list categories from database, falling back to in-memory static categories:",
       err instanceof Error ? err.message : String(err),
     );
-    // Ultimate fallback: return in-memory static categories
+    // Ultimate fallback: return in-memory static categories only on DB failure
     return staticCategories();
   }
 }

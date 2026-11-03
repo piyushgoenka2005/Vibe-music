@@ -104,4 +104,12 @@ describe("taxonomyRepository", () => {
     expect(first.productType).toBe("Dreadnought");
     expect(first.seoSlug).toBe("guitars-acoustic-dreadnought-beginner");
   });
+
+  describe("bulk taxonomy deletion", () => {
+    it("returns 0 when deleting an empty array of taxonomy node IDs", async () => {
+      const { deleteTaxonomyNodes } = await import("@/lib/server/taxonomyRepository");
+      const count = await deleteTaxonomyNodes([]);
+      expect(count).toBe(0);
+    });
+  });
 });

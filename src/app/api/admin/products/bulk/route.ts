@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin, adminErrorResponse } from "@/lib/auth/require-admin";
 import {
   bulkDeleteAdminProducts,
+  deleteAllAdminProducts,
   bulkUpdateAdminCategory,
   bulkUpdateAdminStock,
   bulkUpdateProductStatus,
@@ -17,6 +18,16 @@ export async function POST(request: Request) {
       case "delete": {
         await requireAdmin("products:delete", request);
         const deleted = await bulkDeleteAdminProducts(parsed.ids);
+        return NextResponse.json({ deleted });
+      }
+      case "delete_all": {
+        await requireAdmin("products:delete", request);
+        const deleted = await deleteAllAdminProducts({
+          search: parsed.search,
+          status: parsed.status,
+          category: parsed.category,
+          stock: parsed.stock,
+        });
         return NextResponse.json({ deleted });
       }
       case "archive": {

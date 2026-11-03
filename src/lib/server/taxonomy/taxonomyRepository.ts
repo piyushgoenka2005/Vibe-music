@@ -295,6 +295,43 @@ export async function deleteTaxonomyNode(id: string): Promise<void> {
 }
 
 /**
+ * Bulk delete multiple taxonomy nodes by their IDs.
+ */
+export async function deleteTaxonomyNodes(ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  const result = await prisma.catalogTaxonomy.deleteMany({
+    where: { id: { in: ids } },
+  });
+  return result.count;
+}
+
+/**
+ * Bulk delete all taxonomy nodes matching optional filters, or entire table.
+ */
+export async function deleteAllTaxonomyNodes(filter?: {
+  category?: string;
+  search?: string;
+}): Promise<number> {
+  const where: Record<string, unknown> = {};
+  if (filter?.category && filter.category !== "all") {
+    where.category = { equals: filter.category, mode: "insensitive" };
+  }
+  if (filter?.search?.trim()) {
+    const term = filter.search.trim();
+    where.OR = [
+      { category: { contains: term, mode: "insensitive" } },
+      { subcategory: { contains: term, mode: "insensitive" } },
+      { productType: { contains: term, mode: "insensitive" } },
+      { variant: { contains: term, mode: "insensitive" } },
+      { seoSlug: { contains: term, mode: "insensitive" } },
+      { googleProductCategory: { contains: term, mode: "insensitive" } },
+    ];
+  }
+  const result = await prisma.catalogTaxonomy.deleteMany({ where });
+  return result.count;
+}
+
+/**
  * Aggregate high-level statistics for the taxonomy explorer dashboard.
  */
 export async function getTaxonomyStats(): Promise<TaxonomyStats> {
