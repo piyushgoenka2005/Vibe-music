@@ -43,6 +43,17 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+// If .next contains a production build (BUILD_ID present), clean it to prevent dev/build cache collision
+const buildIdFile = path.join(ROOT, ".next", "BUILD_ID");
+if (fs.existsSync(buildIdFile)) {
+  try {
+    fs.rmSync(path.join(ROOT, ".next"), { recursive: true, force: true });
+    console.log("Cleaned stale production build cache from .next before starting dev server.");
+  } catch {
+    // Non-fatal if another process has a lock
+  }
+}
+
 const verify = spawnSync(process.execPath, ["scripts/ops/verify/verify-node-modules.mjs"], {
   cwd: ROOT,
   stdio: "inherit",

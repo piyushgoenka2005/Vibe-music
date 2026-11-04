@@ -1,5 +1,3 @@
-import "server-only";
-
 // ─── In-process request metrics (resets on process restart — acceptable for Prometheus) ──
 //
 // Kept OUT of app/api/metrics/route.ts on purpose: Next.js route files must
