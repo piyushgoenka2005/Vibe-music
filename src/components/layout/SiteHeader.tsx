@@ -247,7 +247,12 @@ export default function SiteHeader({
                 className="site-header__search-submit assets-site-header__menu-search-submit"
                 aria-label="Search"
               >
-                <Search size={22} strokeWidth={2.5} aria-hidden />
+                <Search
+                  size={24}
+                  strokeWidth={2.5}
+                  className="site-header__search-submit-icon"
+                  aria-hidden
+                />
               </button>
             </form>
           ) : (
