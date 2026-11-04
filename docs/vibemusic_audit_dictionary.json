@@ -1,0 +1,1037 @@
+{
+  "meta": {
+    "site": "https://vibemusic.in",
+    "audited_on": "4 November 2026",
+    "scope": "E-commerce audit: UX/UI, latency, bugs, resilience/DDoS posture, system failures, load, unit and E2E testing, data metrics, compliance",
+    "editor_target": "VS Code GitHub Copilot agent mode (works in Cursor)",
+    "constraint": "Behaviour-preserving: strengthen and improve only; no feature or functionality change"
+  },
+  "scope_and_limits": [
+    "Static retrieval of public pages only; no browser, no JavaScript execution.",
+    "No attack, load or vulnerability traffic was sent to the live site; all such items are supplied as plans for staging.",
+    "Security, resilience, testing and data items are marked Untested where evidence needs authorized access or the repository.",
+    "robots.txt, sitemap.xml, login and response headers could not be retrieved in this session."
+  ],
+  "corrections_to_earlier_reports": [
+    "Earlier reports said the Deals section had no urgency mechanism. It has a countdown (now VM-012, a verification item). Withdrawn: L-06.",
+    "Earlier reports said support was email-only with a 1-2 day reply. The site now offers WhatsApp and a phone line; email replies are stated as Mon-Sat. L-04 is replaced by VM-011.",
+    "Earlier reports said a skip link was likely missing. It is present. Withdrawn.",
+    "Earlier reports asked whether filters exist. They do (category pages). Search autosuggest remains unverified.",
+    "Earlier reports treated business identity disclosure as unconfirmed. Address and a generic grievance contact are visible; entity name and GSTIN are not (VM-043).",
+    "Earlier slug finding is confirmed and worse than first described (model names repeat, duplicate listing with a '-2' suffix).",
+    "The site changes over time; earlier fetches may reflect an older build. This pack is based on 4 November 2026 fetches."
+  ],
+  "evidence_log": [
+    {
+      "target": "/",
+      "result": "Fetched",
+      "note": "Full homepage content and metadata"
+    },
+    {
+      "target": "/category/guitars",
+      "result": "Fetched",
+      "note": "32 products, facets, pagination"
+    },
+    {
+      "target": "/product/hertz-hza-3900-hza-3900",
+      "result": "Fetched",
+      "note": "Product page content and metadata"
+    },
+    {
+      "target": "/cart",
+      "result": "Fetched",
+      "note": "Server shell only; contents client-rendered"
+    },
+    {
+      "target": "/pages/returns, /pages/shipping, /pages/privacy",
+      "result": "Fetched",
+      "note": "Headings and links; no body text in extraction"
+    },
+    {
+      "target": "/contact",
+      "result": "Fetched",
+      "note": "Header and footer; no form content in extraction"
+    },
+    {
+      "target": "/robots.txt, /sitemap.xml",
+      "result": "Not retrieved",
+      "note": "Audit tool restriction; verify yourself"
+    },
+    {
+      "target": "/login",
+      "result": "Not fetched",
+      "note": "Disallowed to automated clients by the site"
+    },
+    {
+      "target": "Response headers",
+      "result": "Not readable",
+      "note": "Sandbox proxy returned 403 on a header request"
+    },
+    {
+      "target": "Checkout, account, track-order, terms, cookies",
+      "result": "Not fetched",
+      "note": "Not reached in this session"
+    },
+    {
+      "target": "Browser rendering, JavaScript behaviour",
+      "result": "Not available",
+      "note": "Static extraction only"
+    }
+  ],
+  "strengths_observed": [
+    "Clear information architecture with eight top categories, brands, deals, guides, programs, rentals, used and gear exchange.",
+    "Skip-to-main-content link present on every fetched page.",
+    "Canonical tags on home, cart, category and product pages; en_IN locale; viewport-fit set.",
+    "Product pages expose price, MRP, GST rate, SKU, stock state, warranty and seller; prices stated inclusive of taxes.",
+    "Open Graph product tags carry price, currency, availability, brand and condition.",
+    "Pre-sized image variants on the CDN (-w320, -w480, -w1600).",
+    "Category pages offer filters (brand, price, condition, rating, availability), sorting and pagination.",
+    "Delivery estimate and pincode update on product pages; WhatsApp, phone and email support routes.",
+    "Policy set (terms, privacy, cookies, shipping, returns) linked in the footer, with address and grievance contact."
+  ],
+  "findings": [
+    {
+      "id": "VM-001",
+      "domain": "Content and trust consistency",
+      "title": "Free-shipping promise contradicts itself across pages",
+      "severity": "High",
+      "status": "Confirmed",
+      "evidence": "Banner reads 'Free Shipping on Orders Above Rs 5,000*' on home, product, shipping and contact pages; 'Free shipping on every order' on category, cart, returns and privacy pages, the homepage trust tiles and the product page ('Free delivery on every order').",
+      "impact": "Misleading-advertising exposure, order disputes and checkout surprise.",
+      "fix": "Create one SHIPPING_POLICY constant (threshold, wording) and render every banner, trust tile and PDP badge from it. Owner states the true rule; shipping calculation logic is not touched.",
+      "acceptance": "Zero hard-coded shipping strings in the repo; 8 sampled pages show identical wording; shipping page states the same rule.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-002",
+      "domain": "Content and trust consistency",
+      "title": "Support phone and social links differ between pages",
+      "severity": "High",
+      "status": "Confirmed",
+      "evidence": "Cart page footer shows +91 97736 51006 and facebook/instagram/x/linkedin '.../vibemusic'; other pages show +91 891 048 2950 and '.../vibemusicindiaofficial' and '.../vibemusicindia'. LinkedIn icon on returns and privacy pages points to x.com. Instagram URL carries an 'stkn' tracking token.",
+      "impact": "Customers may call a wrong number; broken brand trust; minor privacy leak.",
+      "fix": "Single SITE_CONTACT config consumed by every footer; fix LinkedIn href; strip the stkn parameter. Owner confirms the authoritative phone and handles.",
+      "acceptance": "One phone number and one set of social URLs across all pages; link checker returns 0 mismatches.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-003",
+      "domain": "Content and trust consistency",
+      "title": "Two header and footer variants are in use",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Home, product, shipping and contact pages render a bar with 'Track Order -> /account/orders', 'Help & Support -> /support', '/shipping-policy', '/why-shop-with-us'; category, cart, returns and privacy pages render a different bar and a footer with a Social column. Footer routes use /pages/shipping and /contact.",
+      "impact": "Inconsistent navigation and possible orphan or 404 routes.",
+      "fix": "Unify into one layout component; confirm each target returns 200 or one 301 to the canonical route.",
+      "acceptance": "One header component; crawl shows 0 broken internal links.",
+      "change_class": "Markup only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-004",
+      "domain": "Content and trust consistency",
+      "title": "Category and search URL variants are inconsistent",
+      "severity": "Medium",
+      "status": "Confirmed (re-check in browser)",
+      "evidence": "Nav variants link /category/keyboards-pianos and /category/accessories versus /category/keyboards-synthesizers and /category/cables-cases-accessories; /category/Amplifier-Effects is mixed case; two search patterns /search?q= and /search/results?q=.",
+      "impact": "Duplicate content, possible 404s, diluted ranking.",
+      "fix": "Canonical slug map; lowercase enforcement; 301 legacy and case variants to the canonical route (redirects only).",
+      "acceptance": "Every variant resolves 200 or a single 301 hop; canonical tag present.",
+      "change_class": "Redirect only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-005",
+      "domain": "Content and trust consistency",
+      "title": "Brand claims in category tiles may exceed the catalogue",
+      "severity": "High",
+      "status": "Pending verification",
+      "evidence": "Tiles name Universal Audio, Focusrite, Neumann, Moog, Nord, Pearl, Shure, Sennheiser, AKG, Pioneer DJ, Denon, Rane, QSC, Yamaha, Chauvet, Hosa, Gator, On-Stage; the Top Brands row lists Roland, HERTZ, ZOOM, GIBRALTAR, ADEON, ZILDJIAN, HARTKE, M-AUDIO; the Guitars facet shows HERTZ (32) only.",
+      "impact": "If unstocked or unauthorized, conflicts with '100% Genuine / Authorized brands' claims.",
+      "fix": "Owner confirms each brand; bind tile brand lists to live catalogue data or remove unconfirmed names.",
+      "acceptance": "Every brand named has at least one live SKU or an authorization record on file.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-006",
+      "domain": "Content and trust consistency",
+      "title": "Same model listed with conflicting price, MRP and SKU",
+      "severity": "High",
+      "status": "Confirmed (re-check in browser)",
+      "evidence": "HZA-3900 product page: Rs 7,100, MRP Rs 8,068 (12% off); category cards for HZA-3900 (bk) and HZA-3900 EQ (TS): Rs 6,818, MRP Rs 10,490 (35% off); /hertz-hza3900eq-hza3900eq also Rs 7,100. Product page header SKU VM-HZA3900EQ versus details SKU VM-HZA3900.",
+      "impact": "Price integrity, discount substantiation and inventory-mapping risk (wrong item shipped or oversold).",
+      "fix": "Read-only data audit script grouping listings by model code and reporting conflicting MRP, price and SKU; add a validation rule blocking two active listings with the same SKU. Owner reconciles MRP.",
+      "acceptance": "Audit report shows 0 conflicting MRPs and 0 duplicate SKUs per model family.",
+      "change_class": "Data hygiene",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-007",
+      "domain": "Content and trust consistency",
+      "title": "Duplicated slugs and an exact duplicate listing",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Slugs repeat brand or model: hertz-hertz-hza-uk-24-hertz-hza-uk-24, adeon-adeon-aedan-pro1-adeon-aedan-pro1, avus-avus-hathor-16-avus-hathor-16, hertz-hza-3900-hza-3900; two 'Mint Green' STMP-X listings (one ending '-2'); several slugs exceed 200 characters.",
+      "impact": "SEO cannibalisation and unreadable URLs.",
+      "fix": "Fix the slug generator (token dedupe, 80-character cap); keep every old URL alive with a 301 to the new canonical.",
+      "acceptance": "No slug repeats a token sequence; all legacy URLs 301 correctly.",
+      "change_class": "Redirect only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-008",
+      "domain": "Content and trust consistency",
+      "title": "Catalogue taxonomy is inconsistent",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Guitars facets: 'Acoustic Guitar (7)', 'Acoustic Guitars (3)', 'Guitar (1)', 'Electro Acoustic Guitar (4)', 'Acoustic-Electric Guitars (1)'.",
+      "impact": "Fragmented filters and weaker discovery.",
+      "fix": "Normalise subcategory values through a mapping script; filter behaviour is unchanged.",
+      "acceptance": "One label per concept in every category facet.",
+      "change_class": "Data hygiene",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-009",
+      "domain": "Content and trust consistency",
+      "title": "Instagram section uses placeholder images",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Ten tiles reuse a handful of static images (guitar-1/2, drum-1/2) while linking to different reels, mostly from @hertzmusicindia.",
+      "impact": "Looks like a live feed but is not; trust and relevance loss.",
+      "fix": "Use true thumbnails or relabel as 'Follow us'; no functional change.",
+      "acceptance": "Each tile image matches its linked reel or the section is relabelled.",
+      "change_class": "Content/config only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-010",
+      "domain": "Content and trust consistency",
+      "title": "Third-party image host used on the homepage",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Banner images load from myimgs.org alongside cdn.vibemusic.in and vibemusic.in/images.",
+      "impact": "Availability, privacy and CSP surface outside your control.",
+      "fix": "Mirror assets to cdn.vibemusic.in; allow-list only owned hosts.",
+      "acceptance": "Zero requests to third-party image hosts on the five key pages.",
+      "change_class": "Performance (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-011",
+      "domain": "Content and trust consistency",
+      "title": "Dispatch and support wording contradicts itself",
+      "severity": "Low",
+      "status": "Confirmed",
+      "evidence": "'Same-day' versus 'dispatches within 1-2 business days'; 'FREE delivery Wednesday, 11 November' shown on 4 November; 'advisors reply by email' while WhatsApp and phone exist.",
+      "impact": "Expectation gaps and support load.",
+      "fix": "Align copy to the operations SLA; derive delivery estimate from the same SLA constant.",
+      "acceptance": "One SLA statement used everywhere.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-012",
+      "domain": "Content and trust consistency",
+      "title": "Countdown timers need proof they are real",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "Deals countdown shows placeholders in server HTML; product page shows 'Order within 11 hrs 12 mins'.",
+      "impact": "False urgency is a recognised dark pattern under India's consumer guidelines.",
+      "fix": "Document the data source of each timer; relabel any evergreen timer.",
+      "acceptance": "Each timer maps to a real cutoff in code or is relabelled.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-013",
+      "domain": "UX/UI and accessibility",
+      "title": "Cart badge renders as '0Cart'",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Cart page markup shows count and label fused.",
+      "impact": "Screen readers announce one garbled word (WCAG 4.1.2).",
+      "fix": "Separate spans with a visually hidden label and an aria-live count; no visual change.",
+      "acceptance": "Screen reader reads 'Cart, N items'; axe reports 0 issues on the header.",
+      "change_class": "Markup only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-014",
+      "domain": "UX/UI and accessibility",
+      "title": "Rails and marquee content duplicated in the DOM",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Homepage trending rail lists 8 products twice; brand logos, store cards, Instagram tiles and marquee text each appear twice; Staff Picks repeats the same eight products as Explore Trending.",
+      "impact": "Heavier DOM, repeated screen-reader output, weaker merchandising.",
+      "fix": "Create loop clones on the client with aria-hidden and inert; give Staff Picks its own source list.",
+      "acceptance": "Server HTML contains each product anchor once per rail; homepage DOM nodes reduced at least 25%.",
+      "change_class": "Markup only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-015",
+      "domain": "UX/UI and accessibility",
+      "title": "'?' characters appear where separators belong",
+      "severity": "Medium",
+      "status": "Confirmed (re-check in browser)",
+      "evidence": "Category tiles read 'Studio Interfaces ? Monitors ? Mics' and 'Universal Audio ? Focusrite ? Neumann'.",
+      "impact": "Looks like an encoding fault; may be an extraction artifact.",
+      "fix": "Check in a browser; use CSS or UTF-8 separators.",
+      "acceptance": "No '?' separators on any tile.",
+      "change_class": "Markup only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-016",
+      "domain": "UX/UI and accessibility",
+      "title": "Product spec template groups data under wrong headings",
+      "severity": "Low",
+      "status": "Confirmed",
+      "evidence": "Colour sits under 'Dimensions & weight'; Model, Instrument and Variant sit under 'Keyboard & performance' on a guitar page; the same fields repeat in three tables; colour shown as raw codes 'TS/NA/BK'.",
+      "impact": "Reads as unfinished; weakens trust on high-ticket items.",
+      "fix": "Category-aware spec groups, hide irrelevant headings, expand codes via a map.",
+      "acceptance": "No cross-category headings on any PDP sample.",
+      "change_class": "Markup only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-017",
+      "domain": "UX/UI and accessibility",
+      "title": "Deferred modules show 'Loading...' in server HTML",
+      "severity": "Low",
+      "status": "Confirmed",
+      "evidence": "Product page: 'Loading offers', 'Loading reviews', 'Loading Q&A'.",
+      "impact": "Layout shift and blank states.",
+      "fix": "Reserve space with min-height and add empty-state copy.",
+      "acceptance": "CLS under 0.1 on product pages.",
+      "change_class": "Markup only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-018",
+      "domain": "UX/UI and accessibility",
+      "title": "Very long product titles and truncated meta description",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Product H1 and title run roughly 170 characters; meta description is cut mid-word ('...stylish finish opti').",
+      "impact": "Poor scan-ability and weak search snippets.",
+      "fix": "Separate display title (70 characters or fewer) from SEO title; trim descriptions at a word boundary (155 or fewer).",
+      "acceptance": "H1 at most 90 characters; no mid-word truncation.",
+      "change_class": "Metadata only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-019",
+      "domain": "UX/UI and accessibility",
+      "title": "Accessibility checks beyond markup not yet run",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "Skip-to-main link is present (strength). Focus visibility, contrast, keyboard-only checkout and 200% zoom are not verified.",
+      "impact": "WCAG 2.1 AA conformance unknown.",
+      "fix": "Run axe and a manual keyboard and screen-reader pass; fix without redesign.",
+      "acceptance": "Zero critical or serious axe issues on the five key pages.",
+      "change_class": "Markup only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-020",
+      "domain": "SEO and metadata",
+      "title": "Utility pages inherit homepage metadata",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Cart, returns, privacy, shipping and contact carry og:url https://vibemusic.in and the homepage og:title; canonical absent on returns, shipping, privacy and contact (present on home, cart, product, category).",
+      "impact": "Wrong social previews and weaker canonical signals.",
+      "fix": "Per-route metadata with self-referencing canonical on every indexable page.",
+      "acceptance": "Each route has unique title, og:url and canonical.",
+      "change_class": "Metadata only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-021",
+      "domain": "SEO and metadata",
+      "title": "Indexation controls for transactional pages not visible",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "No robots meta observed for cart, login, account or track-order. robots.txt and sitemap.xml could not be retrieved by the audit tool.",
+      "impact": "Thin utility pages may be indexed.",
+      "fix": "noindex,follow on cart, checkout, account, login, track-order; review robots.txt and sitemap.",
+      "acceptance": "robots.txt and sitemap fetched, valid and submitted in Search Console.",
+      "change_class": "Metadata only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-022",
+      "domain": "SEO and metadata",
+      "title": "Structured data not observed",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "Open Graph product tags exist (price, availability, brand, condition); JSON-LD not visible in extracted markup.",
+      "impact": "No rich results (price, availability) if absent.",
+      "fix": "Emit Product, Offer, BreadcrumbList and Organization JSON-LD from existing data (no UI change).",
+      "acceptance": "Rich Results Test passes on three sample products.",
+      "change_class": "Metadata only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-023",
+      "domain": "SEO and metadata",
+      "title": "Product share image served as PNG",
+      "severity": "Low",
+      "status": "Confirmed",
+      "evidence": "Product og:image points to a .png on the CDN.",
+      "impact": "Heavy share previews.",
+      "fix": "Serve 1200x630 JPG or WebP at 200 KB or less.",
+      "acceptance": "og:image at most 200 KB.",
+      "change_class": "Performance (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-024",
+      "domain": "SEO and metadata",
+      "title": "Filter URLs may create duplicate content",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "Parameter URLs such as /search/results?category=guitars&subcategory=Acoustic.",
+      "impact": "Crawl budget waste and duplicate pages.",
+      "fix": "Canonical to the base category and noindex faceted combinations; keep pagination crawlable.",
+      "acceptance": "Facet URLs canonicalised; no duplicate titles in a crawl.",
+      "change_class": "Metadata only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-025",
+      "domain": "Performance and latency",
+      "title": "Homepage carries a very large server payload",
+      "severity": "High",
+      "status": "Pending verification",
+      "evidence": "More than 14 sections and well over 80 product anchors in server HTML, much of it duplicated.",
+      "impact": "Slower LCP on mobile networks.",
+      "fix": "Lazy-render below-fold rails, drop duplicates (see VM-014), defer non-critical images.",
+      "acceptance": "Mobile LCP at most 2.5 s (p75); HTML at least 30% smaller.",
+      "change_class": "Performance (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-026",
+      "domain": "Performance and latency",
+      "title": "Core Web Vitals baseline not captured",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "No field or lab data collected in this audit.",
+      "impact": "No way to prove improvement.",
+      "fix": "Capture PageSpeed, WebPageTest (Mumbai and Delhi) and CrUX for home, category, product, cart, checkout.",
+      "acceptance": "Baseline stored in the metrics ledger before any change.",
+      "change_class": "Test only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-027",
+      "domain": "Performance and latency",
+      "title": "Image pipeline is mixed",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Strength: pre-sized variants (-w320, -w480, -w1600) on the CDN. Gaps: homepage editorial via /_next/image w=1920, PNG brand logos, JPG store photos.",
+      "impact": "Avoidable bytes.",
+      "fix": "Correct sizes attributes, AVIF or WebP, lazy-load below fold, priority hint on the LCP image.",
+      "acceptance": "Image bytes on homepage down at least 30%.",
+      "change_class": "Performance (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-028",
+      "domain": "Performance and latency",
+      "title": "Third-party script origins not enumerated",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "Payment, analytics, embeds and chat origins not captured.",
+      "impact": "Unknown main-thread cost and CSP scope.",
+      "fix": "Build a request map and remove or defer non-critical scripts.",
+      "acceptance": "Each third-party origin has an owner and a cost.",
+      "change_class": "Performance (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-029",
+      "domain": "Security",
+      "title": "Checkout total must be recalculated on the server",
+      "severity": "Critical",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Homepage publicly states 'Razorpay-encrypted checkout with server-verified totals'. Not tested.",
+      "impact": "If untrue: price tampering and a false public claim.",
+      "fix": "Server recomputes every line from the database and ignores client prices; add a tampering test.",
+      "acceptance": "Tampered-price request rejected or corrected; test in CI.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-030",
+      "domain": "Security",
+      "title": "Object-level authorization on orders, wishlist, addresses and track-order",
+      "severity": "Critical",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Guest 'Track your order' route exists. Not tested.",
+      "impact": "One customer could read another's order data.",
+      "fix": "Check ownership on every user-scoped read; bind guest tracking to order ID plus verified email or phone.",
+      "acceptance": "Cross-account access returns 403 or 404 in staging tests.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-031",
+      "domain": "Security",
+      "title": "Security response headers unverified",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "The audit sandbox could not read response headers (proxy returned 403).",
+      "impact": "Missing CSP, HSTS and frame protection raise the blast radius of any bug.",
+      "fix": "Read headers with curl -I from your machine; add missing headers in next.config.js with a report-only CSP first.",
+      "acceptance": "securityheaders.com A grade; no CSP violations on core flows.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-032",
+      "domain": "Security",
+      "title": "Authentication hardening",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Login is disallowed to automated clients by the site's robots rules, so it was not probed.",
+      "impact": "Credential stuffing and account enumeration risk.",
+      "fix": "Rate-limit login, register and reset; uniform error messages; secure cookie flags.",
+      "acceptance": "Eleventh failed login in a minute returns 429; identical error for unknown and known emails.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-033",
+      "domain": "Security",
+      "title": "Payment webhook signature and idempotency",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Razorpay integration not inspected.",
+      "impact": "Spoofed 'paid' callbacks or double orders.",
+      "fix": "Verify gateway signature on every webhook; idempotency key on order creation.",
+      "acceptance": "Forged webhook rejected; replay creates no second order.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-034",
+      "domain": "Security",
+      "title": "Dependency and secret hygiene",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Repository not available to this audit.",
+      "impact": "Known CVEs or leaked keys.",
+      "fix": "Run npm audit and a secret scan including git history; rotate anything found.",
+      "acceptance": "No critical or high findings; secrets only in the host secret manager.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-035",
+      "domain": "Security",
+      "title": "Consent banner and tracking scripts",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "No cookie-consent banner text observed on any fetched page; a cookie policy page exists. Newsletter checkbox default state unknown.",
+      "impact": "Tracking before consent; DPDP exposure.",
+      "fix": "Verify in a browser network panel; gate non-essential scripts until consent; checkbox must not be pre-ticked.",
+      "acceptance": "No analytics request before consent.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-036",
+      "domain": "Resilience and operations",
+      "title": "Edge protection and origin exposure",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "CDN or WAF presence not visible (headers unreadable here).",
+      "impact": "Direct origin exposure to volumetric traffic.",
+      "fix": "Confirm edge layer, lock origin to edge IP ranges, enable bot and rate rules.",
+      "acceptance": "Origin refuses non-edge traffic.",
+      "change_class": "Ops/infra (outside repo)",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-037",
+      "domain": "Resilience and operations",
+      "title": "Rate limits on search, cart, checkout, contact and newsletter",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Newsletter form on every page; 'Buy Now' on every product card.",
+      "impact": "Cheap abuse vectors.",
+      "fix": "Per-IP and per-session limits with 429 and Retry-After.",
+      "acceptance": "Scripted burst beyond the limit is throttled in staging.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-038",
+      "domain": "Resilience and operations",
+      "title": "Inventory decrement under concurrency",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Stock states 'In stock' and 'Limited' exist; behaviour under parallel orders unknown.",
+      "impact": "Overselling the last unit.",
+      "fix": "Atomic conditional update (decrement where stock > 0) plus unique order idempotency.",
+      "acceptance": "1,000 parallel orders on a stock-of-5 SKU create exactly 5 orders.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-039",
+      "domain": "Resilience and operations",
+      "title": "Graceful degradation of non-critical modules",
+      "severity": "Medium",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Offers, reviews, Q&A, Instagram and third-party images load separately.",
+      "impact": "One failing dependency could break a page.",
+      "fix": "Error boundaries and timeouts; checkout never depends on a non-critical module.",
+      "acceptance": "Fault-injection test leaves purchase flow working.",
+      "change_class": "Hardening (behaviour-preserving)",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-040",
+      "domain": "Resilience and operations",
+      "title": "Monitoring, alerting, backups and rollback undocumented",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "No evidence available.",
+      "impact": "Slow detection and recovery.",
+      "fix": "Uptime, error tracking, payment-failure alerts, a scheduled synthetic checkout, documented RPO and RTO, tested rollback.",
+      "acceptance": "Alert fires in a drill within 5 minutes.",
+      "change_class": "Ops/infra (outside repo)",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-041",
+      "domain": "Testing and release safety",
+      "title": "No visible automated test safety net",
+      "severity": "High",
+      "status": "Untested (needs authorized access)",
+      "evidence": "Repository not available.",
+      "impact": "Any change can silently break checkout.",
+      "fix": "Add characterization (golden) tests first, then unit, integration and E2E in CI as a merge gate.",
+      "acceptance": "CI blocks merges on failing checkout tests.",
+      "change_class": "Test only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-042",
+      "domain": "Legal and compliance",
+      "title": "Policy page bodies absent in extracted pages",
+      "severity": "High",
+      "status": "Confirmed (re-check in browser)",
+      "evidence": "Returns, shipping and privacy pages returned headings and links but no body text (returns meta description mentions a 7-day window).",
+      "impact": "Consumer-rule disclosures and a data-protection notice must be visible.",
+      "fix": "Confirm in a browser; if the body is client-rendered make it server-rendered.",
+      "acceptance": "Full policy text present in server HTML.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-043",
+      "domain": "Legal and compliance",
+      "title": "Legal entity and tax identifiers not visible; grievance officer unnamed",
+      "severity": "Medium",
+      "status": "Confirmed",
+      "evidence": "Footer shows trade name, Kolkata address and 'Customer Grievance Officer (support@vibemusic.in)'; no legal entity name, GSTIN or named officer.",
+      "impact": "Gap against e-commerce disclosure expectations.",
+      "fix": "Owner supplies entity name, GSTIN and officer name; render from SITE_CONTACT config.",
+      "acceptance": "Details visible in footer and policy pages.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-044",
+      "domain": "Legal and compliance",
+      "title": "DPDP Act readiness",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "DPDP Rules were notified in November 2025 with a phased rollout of about 18 months.",
+      "impact": "Notice, consent, retention and breach duties apply on a timetable.",
+      "fix": "Counsel maps duties to data flows; engineering implements the notice and consent wording.",
+      "acceptance": "Written compliance map signed off by counsel.",
+      "change_class": "Ops/infra (outside repo)",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-045",
+      "domain": "Legal and compliance",
+      "title": "Dark-pattern self-audit",
+      "severity": "Medium",
+      "status": "Pending verification",
+      "evidence": "'Price Protection - Worry-free shopping' has no visible terms; timers (VM-012); newsletter consent default unknown.",
+      "impact": "Vague claims and nudges are enforcement targets.",
+      "fix": "Add terms to each vague claim or remove it; confirm no pre-ticked consent.",
+      "acceptance": "Checklist signed off by owner.",
+      "change_class": "Content/config only",
+      "owner_decision": true,
+      "editor_scope": "in_scope"
+    },
+    {
+      "id": "VM-046",
+      "domain": "Data and metrics",
+      "title": "Analytics and funnel instrumentation unverified",
+      "severity": "Medium",
+      "status": "Untested (needs authorized access)",
+      "evidence": "No evidence of e-commerce event tracking.",
+      "impact": "No baseline, no proof of improvement.",
+      "fix": "Verify GA4 events (view_item, add_to_cart, begin_checkout, purchase) and server-side backup; log zero-result searches.",
+      "acceptance": "Funnel dashboard shows every step with less than 5% event loss.",
+      "change_class": "Test only",
+      "owner_decision": false,
+      "editor_scope": "in_scope"
+    }
+  ],
+  "feature_backlog_out_of_scope": [
+    {
+      "id": "FB-01",
+      "item": "Search autosuggest with image and price preview",
+      "why": "Not verifiable from static markup; adding it is a new feature, so it is outside the no-feature-change rule."
+    },
+    {
+      "id": "FB-02",
+      "item": "Variant model (one product, many finishes) instead of separate listings",
+      "why": "Changes catalogue behaviour; plan as a separate project."
+    },
+    {
+      "id": "FB-03",
+      "item": "Live chat widget with visible response time",
+      "why": "WhatsApp and phone already exist; new capability."
+    },
+    {
+      "id": "FB-04",
+      "item": "Real review collection and photo reviews",
+      "why": "New capability; product pages currently show 'Be the first to review'."
+    }
+  ],
+  "test_catalog": {
+    "unit": [
+      "Price and money: integer-paise arithmetic, rounding, GST inclusive/exclusive, MRP versus selling price, discount percentage (boundaries 0%, 100%, negative rejected).",
+      "Shipping rule: threshold equals Rs 5,000 boundary (4,999 / 5,000 / 5,001) once the owner fixes the rule.",
+      "Slug generator: no repeated brand or model tokens, length cap, unicode, collision suffix, idempotence.",
+      "Cart reducer: add, update, remove, quantity bounds, stock cap, merge guest cart on login.",
+      "Coupon engine: valid, expired, minimum value, stacking, tampered discount value ignored.",
+      "Delivery estimate: cutoff time, weekends and holidays, pincode serviceability.",
+      "Inventory decrement: conditional update returns affected rows; zero rows means rejection.",
+      "Validators: phone, PIN code, email, address length; error messages.",
+      "Metadata builders: unique title, canonical, og:url per route; description trimmed at word boundary.",
+      "SITE_CONTACT and SHIPPING_POLICY constants: every consumer reads from them (grep test)."
+    ],
+    "integration": [
+      "Create-order endpoint recomputes totals from the database and ignores client prices.",
+      "Payment webhook: valid signature accepted once; forged or replayed rejected.",
+      "Auth: rate limit, uniform errors, session cookie flags, logout invalidation.",
+      "Order, wishlist, address and track-order endpoints enforce ownership.",
+      "Search and filter API: pagination without duplicates; zero-result response.",
+      "Email and SMS triggers on order, shipment and password reset.",
+      "Redirect map: legacy slugs and case variants return one 301 to the canonical URL."
+    ],
+    "e2e": [
+      "Guest checkout end to end in the payment sandbox, mobile and desktop.",
+      "Registered user checkout with saved address; reorder from history.",
+      "Search, filter, sort, add to cart; out-of-stock behaviour.",
+      "Coupon apply and remove; shipping threshold crossing.",
+      "Track order with valid and invalid IDs; cross-account attempt blocked.",
+      "Return or exchange initiation within and outside the 7-day window.",
+      "Keyboard-only checkout and screen-reader smoke test.",
+      "Cross-browser run: Chromium, WebKit, Firefox, Pixel and iPhone profiles."
+    ],
+    "load_staging_only": [
+      "Baseline: ramp to 500 virtual users, hold 5 minutes; p95 under 1 s, errors under 1%.",
+      "Search and category: 200 concurrent users with varied queries; no pool exhaustion.",
+      "Cart add and update: 300 concurrent; totals stay correct.",
+      "Flash sale: 1,000 concurrent orders on a stock-of-5 SKU; exactly 5 orders.",
+      "Soak: 150 users for 60 minutes; flat memory and latency.",
+      "Spike: 10 to 2,000 users in 10 seconds; no 5xx storm."
+    ],
+    "resilience_defensive": [
+      "Confirm edge layer and that the origin rejects non-edge traffic.",
+      "Confirm per-IP rate limits return 429 on search, cart, checkout, contact, newsletter and login.",
+      "Fault injection in staging: block Instagram, third-party images, offers and reviews APIs; checkout must still work.",
+      "Payment gateway timeout and decline paths; no duplicate orders.",
+      "Budget alerts and maximum autoscaling caps to prevent cost-based denial.",
+      "Backup restore drill and rollback drill with recorded RTO."
+    ],
+    "accessibility": [
+      "axe scan and manual keyboard pass on the five key pages; focus visible; contrast 4.5:1; 200% zoom; reduced motion for marquees."
+    ],
+    "seo": [
+      "Crawl for duplicate titles, canonicals, redirects, orphan routes; Rich Results Test on three products; robots and sitemap validity."
+    ],
+    "data": [
+      "GA4 event audit, consent gating, zero-result search log, funnel drop-off by step, weekly dashboard."
+    ]
+  },
+  "kpi_targets_and_ledger": [
+    {
+      "metric": "LCP (mobile, p75)",
+      "baseline": "Capture",
+      "target": "2.5 s or less",
+      "tool": "PageSpeed, CrUX, WebPageTest"
+    },
+    {
+      "metric": "INP (p75)",
+      "baseline": "Capture",
+      "target": "200 ms or less",
+      "tool": "CrUX, RUM"
+    },
+    {
+      "metric": "CLS (p75)",
+      "baseline": "Capture",
+      "target": "0.1 or less",
+      "tool": "CrUX, Lighthouse"
+    },
+    {
+      "metric": "TTFB (India nodes)",
+      "baseline": "Capture",
+      "target": "800 ms or less",
+      "tool": "WebPageTest Mumbai and Delhi"
+    },
+    {
+      "metric": "Lighthouse performance (mobile)",
+      "baseline": "Capture",
+      "target": "90 or more",
+      "tool": "Lighthouse CI"
+    },
+    {
+      "metric": "Homepage HTML size",
+      "baseline": "Capture",
+      "target": "30% smaller",
+      "tool": "Build output"
+    },
+    {
+      "metric": "Homepage DOM nodes",
+      "baseline": "Capture",
+      "target": "25% fewer",
+      "tool": "Lighthouse"
+    },
+    {
+      "metric": "axe critical or serious issues",
+      "baseline": "Capture",
+      "target": "0",
+      "tool": "axe CI"
+    },
+    {
+      "metric": "Broken internal links",
+      "baseline": "Capture",
+      "target": "0",
+      "tool": "Crawler"
+    },
+    {
+      "metric": "Duplicate titles and canonicals",
+      "baseline": "Capture",
+      "target": "0",
+      "tool": "Crawler"
+    },
+    {
+      "metric": "securityheaders.com grade",
+      "baseline": "Capture",
+      "target": "A",
+      "tool": "securityheaders.com"
+    },
+    {
+      "metric": "npm audit critical or high",
+      "baseline": "Capture",
+      "target": "0",
+      "tool": "npm audit"
+    },
+    {
+      "metric": "Checkout E2E pass rate in CI",
+      "baseline": "Capture",
+      "target": "100% on main",
+      "tool": "CI"
+    },
+    {
+      "metric": "Payment failure rate",
+      "baseline": "Capture",
+      "target": "Alert above agreed threshold",
+      "tool": "Gateway dashboard"
+    },
+    {
+      "metric": "Cart-to-purchase conversion",
+      "baseline": "Capture",
+      "target": "Report change; no target set",
+      "tool": "GA4"
+    }
+  ],
+  "release_gates": [
+    {
+      "gate": "G1",
+      "name": "Trust boundaries proven",
+      "findings": "VM-029, 030, 033, 038",
+      "evidence": "Tests pass in staging and CI"
+    },
+    {
+      "gate": "G2",
+      "name": "Edge and abuse controls live",
+      "findings": "VM-031, 032, 036, 037",
+      "evidence": "Headers A grade; 429 behaviour shown"
+    },
+    {
+      "gate": "G3",
+      "name": "Content and pricing consistent",
+      "findings": "VM-001, 002, 005, 006, 042, 043",
+      "evidence": "Owner sign-off; crawl diff clean"
+    },
+    {
+      "gate": "G4",
+      "name": "Core Web Vitals green",
+      "findings": "VM-025, 026, 027, 028",
+      "evidence": "Five pages meet targets"
+    },
+    {
+      "gate": "G5",
+      "name": "Test safety net gating merges",
+      "findings": "VM-041",
+      "evidence": "CI blocks failing checkout tests"
+    },
+    {
+      "gate": "G6",
+      "name": "SEO and indexation clean",
+      "findings": "VM-003, 004, 007, 020-024",
+      "evidence": "Crawl and Rich Results pass"
+    },
+    {
+      "gate": "G7",
+      "name": "Accessibility AA on key pages",
+      "findings": "VM-013, 014, 019",
+      "evidence": "axe 0; manual pass logged"
+    },
+    {
+      "gate": "G8",
+      "name": "Observability and recovery proven",
+      "findings": "VM-039, 040, 046",
+      "evidence": "Drill results recorded"
+    },
+    {
+      "gate": "G9",
+      "name": "Counsel and owner compliance sign-off",
+      "findings": "VM-035, 043, 044, 045",
+      "evidence": "Signed memo"
+    }
+  ],
+  "scorecard": [
+    {
+      "domain": "Content and trust consistency",
+      "score": "5.0 / 10",
+      "basis": "Observed",
+      "note": "Contradictory shipping claim, mixed contact details, duplicate or conflicting listings"
+    },
+    {
+      "domain": "UX/UI (observed markup)",
+      "score": "7.0 / 10",
+      "basis": "Observed",
+      "note": "Strong IA, filters, skip link; duplication and spec-template gaps"
+    },
+    {
+      "domain": "Accessibility",
+      "score": "6.0 / 10",
+      "basis": "Partial",
+      "note": "Skip link present; badge markup and deeper checks outstanding"
+    },
+    {
+      "domain": "SEO and metadata",
+      "score": "6.0 / 10",
+      "basis": "Observed",
+      "note": "Canonicals on core pages; utility pages inherit wrong metadata; schema unverified"
+    },
+    {
+      "domain": "Legal and compliance",
+      "score": "5.0 / 10",
+      "basis": "Observed",
+      "note": "Address and grievance contact present; policy bodies, entity, GSTIN not visible"
+    },
+    {
+      "domain": "Performance",
+      "score": "Not measured",
+      "basis": "No data",
+      "note": "Baseline not captured"
+    },
+    {
+      "domain": "Security",
+      "score": "Not tested",
+      "basis": "No access",
+      "note": "Requires authorized staging tests"
+    },
+    {
+      "domain": "Resilience and DDoS",
+      "score": "Not tested",
+      "basis": "No access",
+      "note": "Requires edge and staging evidence"
+    },
+    {
+      "domain": "Testing and CI",
+      "score": "Not tested",
+      "basis": "No access",
+      "note": "Repository not available"
+    },
+    {
+      "domain": "Data and analytics",
+      "score": "Not tested",
+      "basis": "No access",
+      "note": "Instrumentation unverified"
+    }
+  ],
+  "verdict": {
+    "status": "CONDITIONAL - not yet certifiable as 10/10 production ready",
+    "evidence_based_average": "5.8 / 10 across the five domains that could be observed; the other five domains receive no credit until tested",
+    "summary": "The storefront is presentable and structurally sound, but confirmed content and pricing inconsistencies plus untested trust boundaries (checkout totals, object authorization, edge protection, test coverage) prevent a 10/10 verdict today. A 10/10 can be awarded only when gates G1 to G9 pass with recorded evidence."
+  },
+  "copilot": {
+    "instructions_file": ".github/copilot-instructions.md",
+    "master_prompt_file": "copilot_master_command.md"
+  }
+}

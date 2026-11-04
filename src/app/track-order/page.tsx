@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: `Track Order | ${BRAND.name}`,
   description: "Track your Vibe Music order from dispatch to delivery.",
   alternates: { canonical: "/track-order" },
+  robots: { index: false, follow: true },
 };
 
 export default function TrackOrderPage() {

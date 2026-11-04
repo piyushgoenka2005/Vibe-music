@@ -6,6 +6,10 @@ import { getTaxonomySubcategoriesForHeader } from "@/lib/server/taxonomy/taxonom
 import { isPostgresConfigured } from "@/lib/db/prisma";
 import type { Category } from "@/types/category";
 import {
+  SHIPPING_POLICY,
+  STOREFRONT_FREE_SHIPPING_THRESHOLD,
+} from "@/lib/storefront/shippingPolicy";
+import {
   getHeaderSettings,
   getNavigationMenuByHandle,
   type HeaderSettingRecord,
@@ -31,8 +35,8 @@ const DEFAULT_SETTINGS: HeaderSettingRecord = {
   cartVisibility: true,
   cartDestination: "/cart",
   utilityBarActive: true,
-  shippingAnnouncement: "Free Shipping on Orders Above ₹5,000*",
-  shippingThreshold: 5000,
+  shippingAnnouncement: SHIPPING_POLICY.announcement,
+  shippingThreshold: STOREFRONT_FREE_SHIPPING_THRESHOLD,
   updatedAt: new Date().toISOString(),
 };
 
@@ -41,8 +45,8 @@ const DEFAULT_UTILITY_ITEMS: NavigationMenuItemRecord[] = [
     id: "def_util_1",
     menuId: "utility_bar",
     parentId: null,
-    label: "Free Shipping on Orders Above ₹5,000*",
-    url: "/shipping-policy",
+    label: SHIPPING_POLICY.announcement,
+    url: "/pages/shipping",
     categoryId: null,
     icon: "Truck",
     sortOrder: 0,

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
+import type { MegaMenuLink } from "@/data/headerMegaMenu";
 
 interface HeaderMegaMenuProps {
   menu: MegaMenuItem | null;
@@ -12,6 +13,31 @@ interface HeaderMegaMenuProps {
 export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   if (!menu) return null;
+
+  const renderLinks = (links: MegaMenuLink[], parentKey = "") =>
+    links.map((link) => {
+      const linkKey = `${parentKey}${link.href}:${link.label}`;
+      const hasChildren = Boolean(link.children?.length);
+      return (
+        <li
+          key={linkKey}
+          className="header-mega__link-item"
+          onMouseEnter={() => setHoveredLink(linkKey)}
+          onMouseLeave={() => setHoveredLink(null)}
+        >
+          <Link href={link.href} className="header-mega__link">
+            {link.label}
+            {hasChildren ? <span className="header-mega__link-indicator">›</span> : null}
+          </Link>
+          {hasChildren && hoveredLink === linkKey ? (
+            <div className="header-mega__link-submenu" role="menu">
+              <p className="header-mega__link-submenu-title">{link.label}</p>
+              {renderLinks(link.children ?? [], `${linkKey}:`)}
+            </div>
+          ) : null}
+        </li>
+      );
+    });
 
   return (
     <div
@@ -26,38 +52,7 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
             {menu.columns.map((column) => (
               <div key={column.heading} className="header-mega__column">
                 <p className="header-mega__heading">{column.heading}</p>
-                <ul className="header-mega__links">
-                  {column.links.map((link) => {
-                    const linkKey = `${link.href}:${link.label}`;
-                    return (
-                      <li
-                        key={linkKey}
-                        className="header-mega__link-item"
-                        onMouseEnter={() => setHoveredLink(linkKey)}
-                        onMouseLeave={() => setHoveredLink(null)}
-                      >
-                        <Link href={link.href} className="header-mega__link">
-                          {link.label}
-                        </Link>
-                        {link.children && link.children.length > 0 && hoveredLink === linkKey ? (
-                          <div className="header-mega__link-submenu" role="menu">
-                            <p className="header-mega__link-submenu-title">{link.label}</p>
-                            {link.children.map((child) => (
-                              <Link
-                                key={`${child.href}:${child.label}`}
-                                href={child.href}
-                                className="header-mega__link-submenu-link"
-                                role="menuitem"
-                              >
-                                {child.label}
-                              </Link>
-                            ))}
-                          </div>
-                        ) : null}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <ul className="header-mega__links">{renderLinks(column.links)}</ul>
               </div>
             ))}
           </div>

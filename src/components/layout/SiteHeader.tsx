@@ -248,8 +248,8 @@ export default function SiteHeader({
                 aria-label="Search"
               >
                 <Search
-                  size={24}
-                  strokeWidth={2.5}
+                  size={18}
+                  strokeWidth={2.2}
                   className="site-header__search-submit-icon"
                   aria-hidden
                 />

@@ -5,6 +5,7 @@ import StorefrontBackButton from "@/components/layout/StorefrontBackButton";
 import { listContentPages, resolveContentPage } from "@/lib/server/contentPageRepository";
 import { withServerPageError } from "@/lib/serverPageError";
 import { CONTENT_PAGE_SLUGS } from "@/data/contentPages";
+import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
 import "@/styles/cms-page.css";
 
@@ -37,9 +38,25 @@ export async function generateMetadata({ params }: ContentPageRouteProps): Promi
     const { slug } = await params;
     const page = await resolveContentPage(slug);
     if (!page) return {};
-    return { title: page.title, description: page.sections[0]?.paragraphs[0] };
+    const title = `${page.title} | ${BRAND.name}`;
+    const description = page.sections[0]?.paragraphs[0] || `${page.title} for ${BRAND.name}.`;
+    const canonical = `/pages/${slug}`;
+    const canonicalUrl = `${BRAND.siteUrl}${canonical}`;
+    return {
+      title,
+      description,
+      alternates: { canonical },
+      openGraph: {
+        title,
+        description,
+        url: canonicalUrl,
+        siteName: BRAND.name,
+        locale: "en_IN",
+        type: "website",
+      },
+    };
   } catch {
-    return { title: "Vibe Music" };
+    return { title: `Vibe Music` };
   }
 }
 

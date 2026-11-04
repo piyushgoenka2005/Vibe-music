@@ -708,7 +708,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
                 onChange={(e) =>
                   setSettingsForm({ ...settingsForm, shippingAnnouncement: e.target.value })
                 }
-                placeholder="Free Shipping on Orders Above ₹5,000*"
+                placeholder="Free shipping on every order"
               />
             </div>
 

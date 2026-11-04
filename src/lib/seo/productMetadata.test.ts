@@ -51,4 +51,17 @@ describe("buildProductMetadata", () => {
     expect(metadata.other?.["product:brand"]).toBe("GIBRALTAR");
     expect(metadata.openGraph?.images?.[0]?.url).toContain("snare.webp");
   });
+
+  it("truncates long raw description at word boundary without cutting mid-word", () => {
+    const longDesc =
+      "This is a premium acoustic guitar engineered with solid sitka spruce top and mahogany back and sides providing unmatched resonance and deep projection for stage performance.";
+    const metadata = buildProductMetadata({
+      ...product,
+      description: longDesc,
+      metaDescription: undefined,
+    });
+    expect(metadata.description?.length).toBeLessThanOrEqual(156);
+    expect(metadata.description).not.toContain("performa…");
+    expect(metadata.description?.endsWith("…")).toBe(true);
+  });
 });

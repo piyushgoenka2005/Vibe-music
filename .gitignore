@@ -89,5 +89,8 @@ cdn-upload-manifest.json
 .deploy-previous.sha
 .deploy-history.log
 
+# local telemetry / metrics ledger
+/metrics/
+
 # internal audit exports (not for the repo)
 docs/Vibemusic_*.docx

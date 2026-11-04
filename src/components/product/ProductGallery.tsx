@@ -175,7 +175,7 @@ export default function ProductGallery({
   const has360 = spin360Images.length >= 2;
   const activeSrc = activeImage?.src ?? "";
   const imageFallback = useMemo(
-    () => productImageLocalFallback(productSlug, productCategory),
+    () => productImageLocalFallback(productSlug, productCategory) || "/placeholder.svg",
     [productSlug, productCategory],
   );
   const displayCandidates = useMemo(

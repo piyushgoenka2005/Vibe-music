@@ -48,6 +48,7 @@ const nextConfig: NextConfig = {
         ? ([
             { protocol: "http", hostname: "localhost", pathname: "/cdn-local/**" },
             { protocol: "http", hostname: "127.0.0.1", pathname: "/cdn-local/**" },
+            { protocol: "https", hostname: "cdn.example", pathname: "/**" },
           ] as const)
         : []),
     ],

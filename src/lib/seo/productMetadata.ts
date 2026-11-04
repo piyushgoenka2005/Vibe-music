@@ -11,12 +11,20 @@ function stripHtml(value: string): string {
     .trim();
 }
 
+function truncateAtWordBoundary(text: string, maxLen = 155): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= maxLen) return trimmed;
+  const cut = trimmed.slice(0, maxLen);
+  const lastSpace = cut.lastIndexOf(" ");
+  return lastSpace > 40 ? `${cut.slice(0, lastSpace).trim()}…` : `${cut.trim()}…`;
+}
+
 export function buildProductMetadata(product: ProductDetail): Metadata {
   const rawDescription = product.description ? stripHtml(product.description) : "";
   const metaDescription =
     product.metaDescription?.trim() ||
     (rawDescription.length > 20
-      ? rawDescription.slice(0, 160)
+      ? truncateAtWordBoundary(rawDescription, 155)
       : `${product.name} by ${product.brand}. Buy online with manufacturer warranty and free shipping from ${BRAND.name}.`);
   const pageTitle = product.metaTitle?.trim() || `${product.name} | ${BRAND.name}`;
 

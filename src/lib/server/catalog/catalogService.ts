@@ -2017,7 +2017,7 @@ export async function bulkImportProducts(
     }
   }
 
-  await invalidateCatalogCache();
+  void invalidateCatalogCache();
 
   return {
     imported: importedProducts.length - updatedCount,

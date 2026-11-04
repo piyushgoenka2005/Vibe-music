@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/db/prisma";
 import { invalidateAllStorefrontCaches } from "@/lib/server/storefront/storefrontCacheInvalidation";
+import {
+  SHIPPING_POLICY,
+  STOREFRONT_FREE_SHIPPING_THRESHOLD,
+} from "@/lib/storefront/shippingPolicy";
 
 export interface NavigationMenuItemRecord {
   id: string;
@@ -69,8 +73,8 @@ export async function getHeaderSettings(): Promise<HeaderSettingRecord> {
       cartVisibility: true,
       cartDestination: "/cart",
       utilityBarActive: true,
-      shippingAnnouncement: "Free Shipping on Orders Above ₹5,000*",
-      shippingThreshold: 5000,
+      shippingAnnouncement: SHIPPING_POLICY.announcement,
+      shippingThreshold: STOREFRONT_FREE_SHIPPING_THRESHOLD,
       updatedAt: now,
     },
   });
@@ -95,8 +99,8 @@ export async function updateHeaderSettings(
       cartVisibility: patch.cartVisibility ?? true,
       cartDestination: patch.cartDestination ?? "/cart",
       utilityBarActive: patch.utilityBarActive ?? true,
-      shippingAnnouncement: patch.shippingAnnouncement ?? "Free Shipping on Orders Above ₹5,000*",
-      shippingThreshold: patch.shippingThreshold ?? 5000,
+      shippingAnnouncement: patch.shippingAnnouncement ?? SHIPPING_POLICY.announcement,
+      shippingThreshold: patch.shippingThreshold ?? STOREFRONT_FREE_SHIPPING_THRESHOLD,
       updatedAt: now,
     },
     update: {
@@ -136,8 +140,8 @@ export async function ensureDefaultNavigationMenus(): Promise<void> {
 
       const utilityItems = [
         {
-          label: "Free Shipping on Orders Above ₹5,000*",
-          url: "/shipping-policy",
+          label: SHIPPING_POLICY.announcement,
+          url: "/pages/shipping",
           icon: "Truck",
           sortOrder: 0,
         },

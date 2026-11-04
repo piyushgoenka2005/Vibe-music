@@ -15,6 +15,7 @@ export default function robots() {
         "/register",
         "/forgot-password",
         "/reset-password",
+        "/track-order",
       ],
     },
     sitemap: `${BRAND.siteUrl}/sitemap.xml`,

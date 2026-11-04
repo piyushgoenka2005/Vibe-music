@@ -8,7 +8,11 @@ import type { MegaMenuItem } from "@/data/headerMegaMenu";
 interface CategoryGroup {
   name: string;
   slug: string;
-  subcategories: { name: string; slug: string }[];
+  subcategories: {
+    name: string;
+    slug: string;
+    children?: { name: string; slug: string; children?: { name: string; slug: string }[] }[];
+  }[];
 }
 
 const DEFAULT_CATEGORY_GROUPS: CategoryGroup[] = [
@@ -102,7 +106,18 @@ export default function AllCategoriesMegaMenu({
           subcategories: menu.columns.flatMap((column) =>
             column.links
               .filter((link) => !link.label.toLowerCase().startsWith("shop all"))
-              .map((link) => ({ name: link.label, slug: link.href })),
+              .map((link) => ({
+                name: link.label,
+                slug: link.href,
+                children: link.children?.map((child) => ({
+                  name: child.label,
+                  slug: child.href,
+                  children: child.children?.map((feature) => ({
+                    name: feature.label,
+                    slug: feature.href,
+                  })),
+                })),
+              })),
           ),
         }))
       : DEFAULT_CATEGORY_GROUPS;

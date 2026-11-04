@@ -90,7 +90,11 @@ export async function revalidateCatalogSnapshot(): Promise<void> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     // Admin/catalog writes invoked outside an App Router request (CLI, workers).
-    if (message.includes("static generation store missing")) {
+    if (
+      message.includes("static generation store missing") ||
+      message.includes("during render") ||
+      message.includes("unsupported")
+    ) {
       return;
     }
     throw error;

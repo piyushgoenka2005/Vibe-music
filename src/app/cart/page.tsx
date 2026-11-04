@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   description: "Review items in your cart before checkout.",
   alternates: { canonical: "/cart" },
   robots: { index: false, follow: true },
+  openGraph: {
+    title: `Cart | ${BRAND.name}`,
+    description: "Review items in your cart before checkout.",
+    url: `${BRAND.siteUrl}/cart`,
+    siteName: BRAND.name,
+    locale: "en_IN",
+    type: "website",
+  },
 };
 
 export default function CartRoute() {
