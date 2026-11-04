@@ -268,7 +268,7 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
     >
       <div className="admin-sidebar__brand">
         {!collapsed ? (
-          <Link href={ROUTES.admin} prefetch={false} className="admin-sidebar__brand-text">
+          <Link href={ROUTES.admin} className="admin-sidebar__brand-text">
             Vibe <span>Music</span>
           </Link>
         ) : null}
@@ -311,8 +311,6 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
                   <Link
                     key={`${section.title}-${item.label}-${item.href}`}
                     href={item.href}
-                    prefetch={false}
-                    onMouseEnter={() => router.prefetch(item.href)}
                     className={`admin-sidebar__link${isActive ? " admin-sidebar__link--active" : ""}`}
                     title={collapsed ? item.label : undefined}
                     onClick={closeSidebarOnMobile}

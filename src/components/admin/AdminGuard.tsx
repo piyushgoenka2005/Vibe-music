@@ -65,13 +65,12 @@ export function useAdminSession() {
     retry: false,
     staleTime: 60_000,
     gcTime: 60 * 60_000,
-    refetchOnMount: true,
+    refetchOnMount: false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     // Server layout or sessionStorage already resolved the session — paint immediately with zero delay,
     // but still validate with /api/admin/me in the background so expired cookies are detected cleanly.
     initialData: cached ?? undefined,
-    initialDataUpdatedAt: cached ? 0 : undefined,
   });
 }
 
