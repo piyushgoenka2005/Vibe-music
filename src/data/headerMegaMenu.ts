@@ -311,6 +311,17 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
   },
 ];
 
-export const MEGA_MENU_BY_SLUG = Object.fromEntries(
-  HEADER_MEGA_MENUS.map((menu) => [menu.slug, menu]),
-) as Record<string, MegaMenuItem>;
+const menuEntries: [string, MegaMenuItem][] = [];
+for (const menu of HEADER_MEGA_MENUS) {
+  menuEntries.push([menu.slug, menu]);
+  menuEntries.push([`cat_${menu.slug}`, menu]);
+  menuEntries.push([`cat-${menu.slug}`, menu]);
+}
+const accessoriesMenu = HEADER_MEGA_MENUS.find((m) => m.slug === "cables-cases-accessories");
+if (accessoriesMenu) {
+  menuEntries.push(["accessories", accessoriesMenu]);
+  menuEntries.push(["cat_accessories", accessoriesMenu]);
+  menuEntries.push(["cat-13", accessoriesMenu]);
+}
+
+export const MEGA_MENU_BY_SLUG = Object.fromEntries(menuEntries) as Record<string, MegaMenuItem>;

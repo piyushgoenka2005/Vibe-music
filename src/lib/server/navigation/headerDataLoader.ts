@@ -388,7 +388,10 @@ export const loadHeaderData = cache(async (): Promise<ResolvedHeaderData> => {
         const urlCategorySlug = extractCategorySlugFromUrl(n.url);
         return (
           (n.categoryId &&
-            (n.categoryId === base.slug || n.categoryId === base.name.toLowerCase())) ||
+            (n.categoryId === base.slug ||
+              n.categoryId === `cat_${base.slug}` ||
+              n.categoryId === `cat-${base.slug}` ||
+              n.categoryId === base.name.toLowerCase())) ||
           (urlCategorySlug &&
             (urlCategorySlug === base.slug || base.slug.includes(urlCategorySlug))) ||
           n.url.includes(base.slug) ||

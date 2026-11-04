@@ -117,7 +117,8 @@ export function buildCategoryMegaMenus(
         (category.slug === baseline.slug ||
           category.id === baseline.slug ||
           category.name.toLowerCase() === baseline.name.toLowerCase() ||
-          category.id === `cat-${baseline.slug}`),
+          category.id === `cat-${baseline.slug}` ||
+          category.id === `cat_${baseline.slug}`),
     );
 
     if (dbMain) {
@@ -246,10 +247,10 @@ export function buildCategoryMegaMenus(
     // Any DB subcategories that didn't match existing static links get added to the last column
     const unmatchedSubs = sortedDbSubs.filter((sub) => !matchedSubIds.has(sub.id));
     if (unmatchedSubs.length > 0) {
-      const targetCol = columns[columns.length - 1];
-      if (targetCol) {
-        for (const sub of unmatchedSubs) {
-          targetCol.links.unshift({
+      unmatchedSubs.forEach((sub, subIdx) => {
+        const targetCol = columns[subIdx % columns.length];
+        if (targetCol) {
+          targetCol.links.push({
             label: sub.name,
             href: categoryPath(sub.slug),
             children: sub.children?.map((child) => ({
@@ -258,7 +259,7 @@ export function buildCategoryMegaMenus(
             })),
           });
         }
-      }
+      });
     }
 
     const featured =
