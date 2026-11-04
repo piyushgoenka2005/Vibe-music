@@ -1873,6 +1873,21 @@ body.site-nav-open .site-header--hidden {
     color: var(--brand-primary);
     background: var(--brand-primary-muted);
   }
+
+  .site-header__mobile-nav-footer-link--logout {
+    border: 1px solid #fecaca;
+    background: #fff5f5;
+    color: #dc2626;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .site-header__mobile-nav-footer-link--logout:hover,
+  .site-header__mobile-nav-footer-link--logout:focus-visible {
+    background: #fee2e2;
+    border-color: #f87171;
+    color: #b91c1c;
+  }
 }
 
 @media (max-width: 767px) {

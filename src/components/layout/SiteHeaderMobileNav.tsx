@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { HEADER_MEGA_MENUS, type MegaMenuItem } from "@/data/headerMegaMenu";
 import { ROUTES } from "@/lib/routes";
@@ -140,6 +140,7 @@ export default function SiteHeaderMobileNav({
   categoryMegaMenus = null,
 }: SiteHeaderMobileNavProps) {
   const pathname = usePathname() ?? "";
+  const router = useRouter();
   const [searchParamsState, setSearchParamsState] = useState<{
     category: string | null;
     q: string | null;
@@ -162,10 +163,11 @@ export default function SiteHeaderMobileNav({
         : HEADER_MEGA_MENUS,
     [categoryMegaMenus],
   );
-  const { isAuthenticated, isInitialized } = useAuthStore(
+  const { isAuthenticated, isInitialized, logout } = useAuthStore(
     useShallow((state) => ({
       isAuthenticated: state.isAuthenticated,
       isInitialized: state.isInitialized,
+      logout: state.logout,
     })),
   );
   const [expandedSlug, setExpandedSlug] = useState<string | null>(null);
@@ -183,6 +185,12 @@ export default function SiteHeaderMobileNav({
   const toggleExpanded = useCallback((slug: string) => {
     setExpandedSlug((current) => (current === slug ? null : slug));
   }, []);
+
+  const handleLogout = useCallback(async () => {
+    handleNavigate();
+    await logout();
+    router.push("/");
+  }, [handleNavigate, logout, router]);
 
   const accountHref = isInitialized && isAuthenticated ? ROUTES.account : ROUTES.login;
   const resolvedBrandsMegaMenu = useMemo(
@@ -250,8 +258,17 @@ export default function SiteHeaderMobileNav({
           className="site-header__mobile-nav-footer-link site-header__mobile-nav-footer-link--primary"
           onClick={handleNavigate}
         >
-          My account
+          {isInitialized && isAuthenticated ? "My account" : "Log in"}
         </Link>
+        {isInitialized && isAuthenticated ? (
+          <button
+            type="button"
+            className="site-header__mobile-nav-footer-link site-header__mobile-nav-footer-link--logout"
+            onClick={() => void handleLogout()}
+          >
+            Log out
+          </button>
+        ) : null}
       </div>
     </div>
   );

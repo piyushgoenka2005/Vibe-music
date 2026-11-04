@@ -1,6 +1,8 @@
 "use client";
 
-import { User } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { LogOut, User } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 function getInitials(name: string): string {
@@ -12,9 +14,23 @@ function getInitials(name: string): string {
 }
 
 export default function AccountWelcomeHeader() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const firstName = user?.name?.split(" ")[0] ?? "there";
   const photoURL = user?.photoURL ?? null;
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.push("/");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   return (
     <header className="acct__hero">
@@ -25,6 +41,16 @@ export default function AccountWelcomeHeader() {
           <p className="acct__hero-sub">
             Manage your orders, wishlist, profile, and preferences — all in one place.
           </p>
+          <button
+            type="button"
+            className="acct__hero-logout-btn"
+            onClick={() => void handleLogout()}
+            disabled={loggingOut}
+            aria-label="Log out of account"
+          >
+            <LogOut size={14} aria-hidden />
+            <span>{loggingOut ? "Signing out…" : "Log out"}</span>
+          </button>
         </div>
 
         <div

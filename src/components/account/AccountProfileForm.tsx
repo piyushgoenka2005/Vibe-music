@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useAccountProfileStore } from "@/store/accountProfileStore";
 
@@ -10,11 +12,7 @@ interface ProfileFormFieldsProps {
   initialName: string;
   initialPhone: string;
   initialDob: string;
-  onSave: (values: {
-    name: string;
-    phone: string;
-    dateOfBirth: string;
-  }) => Promise<void>;
+  onSave: (values: { name: string; phone: string; dateOfBirth: string }) => Promise<void>;
 }
 
 function ProfileFormFields({
@@ -59,10 +57,7 @@ function ProfileFormFields({
   return (
     <>
       {message ? (
-        <div
-          className={`acct__toast acct__toast--${message.type}`}
-          role="status"
-        >
+        <div className={`acct__toast acct__toast--${message.type}`} role="status">
           {message.text}
         </div>
       ) : null}
@@ -128,11 +123,7 @@ function ProfileFormFields({
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <button
-            type="submit"
-            className="acct__btn acct__btn--primary"
-            disabled={saving}
-          >
+          <button type="submit" className="acct__btn acct__btn--primary" disabled={saving}>
             {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
@@ -142,7 +133,9 @@ function ProfileFormFields({
 }
 
 export default function AccountProfileForm() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
   const setSessionUser = useAuthStore((s) => s.setSessionUser);
   const phone = useAccountProfileStore((s) => s.phone);
   const dateOfBirth = useAccountProfileStore((s) => s.dateOfBirth);
@@ -151,6 +144,18 @@ export default function AccountProfileForm() {
   const [serverPhone, setServerPhone] = useState(phone);
   const [serverDob, setServerDob] = useState(dateOfBirth);
   const [loaded, setLoaded] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      router.push("/");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -191,10 +196,22 @@ export default function AccountProfileForm() {
 
   return (
     <div>
-      <h1 className="acct__section-title">Profile</h1>
-      <p className="acct__section-sub">
-        Update your personal information and contact details.
-      </p>
+      <div className="acct__header-row">
+        <div>
+          <h1 className="acct__section-title">Profile</h1>
+          <p className="acct__section-sub">Update your personal information and contact details.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          disabled={loggingOut}
+          className="acct__btn acct__btn--logout-quick"
+          aria-label="Log out of account"
+        >
+          <LogOut size={16} aria-hidden />
+          <span>{loggingOut ? "Signing out…" : "Log Out"}</span>
+        </button>
+      </div>
 
       <div className="acct__card">
         <div className="acct__card-body">
@@ -237,6 +254,33 @@ export default function AccountProfileForm() {
           ) : (
             <p className="acct__section-sub">Loading profile…</p>
           )}
+        </div>
+      </div>
+
+      <div className="acct__card acct__card--session" style={{ marginTop: "1.5rem" }}>
+        <div className="acct__card-body">
+          <div className="acct__session-box">
+            <div>
+              <h2
+                className="acct__card-title"
+                style={{ fontSize: "1.1rem", fontWeight: 600, margin: "0 0 4px" }}
+              >
+                Session & Sign Out
+              </h2>
+              <p className="acct__section-sub" style={{ margin: 0 }}>
+                Signed in as <strong>{user.email}</strong>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              disabled={loggingOut}
+              className="acct__btn acct__btn--logout"
+            >
+              <LogOut size={16} aria-hidden />
+              <span>{loggingOut ? "Signing out…" : "Log Out of Vibe Music"}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

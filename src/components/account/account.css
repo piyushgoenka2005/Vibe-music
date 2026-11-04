@@ -154,6 +154,27 @@
   margin: 0;
 }
 
+.acct__hero-logout-btn {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.acct__hero-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 /* ── Layout Grid ── */
 .acct__layout {
   display: grid;
@@ -336,6 +357,19 @@
   height: 22px;
 }
 
+.acct__mobile-link--logout {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #d71920;
+}
+
+.acct__mobile-link--logout:hover,
+.acct__mobile-link--logout:focus-visible {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
 @media (max-width: 767px) {
   .acct__btn,
   .acct__input,
@@ -365,6 +399,27 @@
   font-size: 14px;
   color: var(--acct-muted);
   margin: 0 0 24px;
+}
+
+.acct__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.acct__header-row .acct__section-sub {
+  margin-bottom: 0;
+}
+
+.acct__session-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 /* ── Stat Cards Grid ── */
@@ -725,6 +780,40 @@
 
 .acct__btn--danger:hover {
   background: #fef2f2;
+}
+
+.acct__btn--logout {
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #dc2626;
+  border-radius: var(--acct-radius-sm);
+}
+
+.acct__btn--logout:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+  color: #fff;
+}
+
+.acct__btn--logout-quick {
+  background: #fff;
+  color: #d71920;
+  border: 1px solid #fecaca;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.acct__btn--logout-quick:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
 }
 
 .acct__btn--sm {
