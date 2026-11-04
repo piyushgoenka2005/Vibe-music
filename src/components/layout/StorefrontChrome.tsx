@@ -12,7 +12,6 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useIsMobileViewport } from "@/hooks/useIsMobileViewport";
 import DeferredSplashCursor from "@/components/layout/DeferredSplashCursor";
 import { isMobileWhatsAppPath } from "@/data/helpWidget";
-import { ROUTES } from "@/lib/routes";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 import type {
@@ -73,11 +72,6 @@ export default function StorefrontChrome({
   const isLandingPage = pathname === "/";
   const isProductPage = /^\/product\/[^/]+$/.test(pathname);
   const isAccountPage = pathname.startsWith("/account");
-  const isListingPage =
-    pathname === ROUTES.categories ||
-    /^\/category\/[^/]+$/.test(pathname) ||
-    pathname.startsWith("/search") ||
-    pathname === "/deals";
   const isCheckoutOrCart = pathname.startsWith("/checkout") || pathname.startsWith("/cart");
   const isAuthPage =
     pathname === "/login" ||

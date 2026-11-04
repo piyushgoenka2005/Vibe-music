@@ -1067,7 +1067,11 @@ export async function getCategoryBentoPublicData(
         ? resolved.map((item) => {
             const fallback = staticBySlug.get(item.slug);
             const rawImage = item.imageSrc?.split("?")[0];
-            const isLegacyCutout = !rawImage || rawImage.includes("/images/m/home/cats/");
+            const isLegacyCutout =
+              !rawImage ||
+              rawImage.includes("/images/m/home/cats/") ||
+              rawImage.includes("Electric Orange Guitar") ||
+              rawImage.includes("Electric Blue Guitar");
             const imageSrc = isLegacyCutout
               ? resolveBentoImage(item.slug)
               : rawImage || fallback?.image || resolveBentoImage(item.slug);
