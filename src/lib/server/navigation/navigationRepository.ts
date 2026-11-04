@@ -147,13 +147,13 @@ export async function ensureDefaultNavigationMenus(): Promise<void> {
         },
         {
           label: "100% Genuine Products",
-          url: "/why-shop-with-us",
+          url: "/",
           icon: "ShieldCheck",
           sortOrder: 1,
         },
-        { label: "Expert Support", url: "/support", icon: "Headphones", sortOrder: 2 },
+        { label: "Expert Support", url: "/contact", icon: "Headphones", sortOrder: 2 },
         { label: "Track Order", url: "/account/orders", icon: "Package", sortOrder: 3 },
-        { label: "Help & Support", url: "/support", icon: "HelpCircle", sortOrder: 4 },
+        { label: "Help & Support", url: "/contact", icon: "HelpCircle", sortOrder: 4 },
       ];
 
       for (const item of utilityItems) {

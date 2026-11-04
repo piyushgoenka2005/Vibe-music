@@ -20,6 +20,7 @@ Date: 4 November 2026
 - Checkout repricing, ownership authorization, payment webhook signature/idempotency, and inventory locking are covered by passing tests (VM-029, VM-030, VM-033, VM-038).
 - Canonical header ordering, nested taxonomy menus, editable CMS content, deletion flows, and responsive layout changes are covered by the repository test suite.
 - Live public smoke checks reached `https://vibemusic.in` and `https://vibemusic.in/robots.txt`; the public site responds and the robots exclusions are present.
+- Repository remediation for the latest live smoke findings is ready: shipping fallbacks now use `SHIPPING_POLICY`, and legacy `/shipping-policy`, `/support`, and `/why-shop-with-us` links have canonical 301 redirects. These changes require deployment before the live checks can pass.
 
 ## Finding status
 

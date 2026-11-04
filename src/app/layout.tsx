@@ -7,6 +7,7 @@ import brandsCatalog from "@/data/catalog/brands.json";
 import { buildBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
 import { loadBrandsWithCounts } from "@/lib/server/brandsPageLoader";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 import { loadHeaderData } from "@/lib/server/navigation/headerDataLoader";
 import GoogleAnalyticsScripts from "@/components/analytics/GoogleAnalyticsScripts";
 import MetaPixelScripts from "@/components/analytics/MetaPixelScripts";
@@ -75,9 +76,9 @@ export default async function RootLayout({
     shippingPolicy = {
       freeShippingThreshold: 0,
       standardShippingCharge: 0,
-      pdpDetail: "Free delivery on all prepaid orders across India",
+      pdpDetail: SHIPPING_POLICY.pdpDetail,
       pdpBadge: "Free Delivery",
-      cartCallout: "Free delivery on all orders",
+      cartCallout: SHIPPING_POLICY.cartBanner,
     };
   }
 

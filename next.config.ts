@@ -150,6 +150,21 @@ const nextConfig: NextConfig = {
         destination: "/category",
         permanent: true,
       },
+      {
+        source: "/shipping-policy",
+        destination: "/pages/shipping",
+        permanent: true,
+      },
+      {
+        source: "/support",
+        destination: "/contact",
+        permanent: true,
+      },
+      {
+        source: "/why-shop-with-us",
+        destination: "/",
+        permanent: true,
+      },
     ];
   },
 };

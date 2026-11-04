@@ -7,6 +7,7 @@ import { resolveCanonicalProductSlug } from "@/services/catalogService";
 import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
 import { buildProductMetadata } from "@/lib/seo/productMetadata";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
+import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
 import { withServerPageError } from "@/lib/serverPageError";
 
@@ -70,7 +71,7 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
     const defaultVariant = variants.find((v) => v.availability !== "out-of-stock") ?? variants[0];
 
     const jsonLd = buildProductJsonLd(initialData.product, defaultVariant);
-    let shippingDetail = "Free delivery on all prepaid orders across India";
+    let shippingDetail = SHIPPING_POLICY.pdpDetail;
     try {
       const shippingPolicy = await resolveStoreShippingPolicy();
       shippingDetail = shippingPolicy.pdpDetail;
