@@ -153,17 +153,17 @@ const nextConfig: NextConfig = {
       {
         source: "/shipping-policy",
         destination: "/pages/shipping",
-        permanent: true,
+        statusCode: 301,
       },
       {
         source: "/support",
         destination: "/contact",
-        permanent: true,
+        statusCode: 301,
       },
       {
         source: "/why-shop-with-us",
         destination: "/",
-        permanent: true,
+        statusCode: 301,
       },
     ];
   },

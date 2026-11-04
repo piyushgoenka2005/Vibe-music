@@ -19,6 +19,7 @@ Date: 4 November 2026
 - E2E database preparation passed after making the Premium Hero migration idempotent.
 - After restarting the repository-managed PostgreSQL service and using a fresh development server, the focused mobile/admin suite passed 10/10 and the authenticated admin feature suite passed 12/12. The clean production build subsequently passed after stopping the stale dev server that had left `.next/dev` route-validator artifacts.
 - Catalog bulk import now returns without waiting on request-context cache invalidation, and unavailable product gallery images fall back to `/placeholder.svg`.
+- Synthetic checkout monitoring now selects an actually purchasable catalog item instead of assuming the first catalog result is in stock; the production monitor passes without placing a real charge.
 - Checkout repricing, ownership authorization, payment webhook signature/idempotency, and inventory locking are covered by passing tests (VM-029, VM-030, VM-033, VM-038).
 - Canonical header ordering, nested taxonomy menus, editable CMS content, deletion flows, and responsive layout changes are covered by the repository test suite.
 - Live public smoke checks reached `https://vibemusic.in` and `https://vibemusic.in/robots.txt`; the public site responds and the robots exclusions are present.
