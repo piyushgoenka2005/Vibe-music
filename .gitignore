@@ -91,6 +91,7 @@ cdn-upload-manifest.json
 
 # local telemetry / metrics ledger
 /metrics/
+.audit-prod.json
 
 # internal audit exports (not for the repo)
 docs/Vibemusic_*.docx
