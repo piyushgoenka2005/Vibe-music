@@ -69,7 +69,22 @@ export default async function RootLayout({
     legal = resolvedLegal;
     shippingPolicy = resolvedShipping;
     brands = resolvedBrands;
-    headerData = resolvedHeaderData;
+    headerData = {
+      ...resolvedHeaderData,
+      settings: {
+        ...resolvedHeaderData.settings,
+        shippingAnnouncement: resolvedShipping.announcement,
+      },
+      utilityItems: resolvedHeaderData.utilityItems.map((item) =>
+        item.icon === "Truck"
+          ? {
+              ...item,
+              label: resolvedShipping.announcement,
+              url: "/pages/shipping",
+            }
+          : item,
+      ),
+    };
   } catch (error) {
     console.error("[layout] error resolving layout data, using safe defaults", error);
     legal = { legalName: "Vibe Music", address: "India", gstin: "" };

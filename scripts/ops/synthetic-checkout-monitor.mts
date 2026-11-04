@@ -126,10 +126,12 @@ const checks: Check[] = [];
 }
 
 {
-  const catalog = await get("/api/products?limit=8");
+  const catalog = await get("/api/products?limit=100");
   const products =
-    (catalog.body as { products?: Array<{ id: string; inStock?: boolean }> }).products ?? [];
-  const product = products.find((item) => item.inStock !== false) ?? products[0];
+    (catalog.body as { products?: Array<{ id: string; availability?: string }> }).products ?? [];
+  const product = products.find(
+    (item) => item.availability === "in-stock" || item.availability === "limited",
+  );
 
   if (!product?.id) {
     record(checks, "razorpay-create-order", false, "no catalog product for probe");
