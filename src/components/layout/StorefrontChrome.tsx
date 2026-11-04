@@ -89,11 +89,8 @@ export default function StorefrontChrome({
   // Viewport/media queries can differ between SSR and the first client paint.
   const hasMounted = useHasMounted();
 
-  const hideMobileFloatingUi =
-    hasMounted &&
-    isMobileViewport &&
-    (isProductPage || isLandingPage || isListingPage || isCheckoutOrCart || isAuthPage);
-  const showHelpWidget = !hideMobileFloatingUi;
+  const hideMobileFloatingUi = hasMounted && isMobileViewport && (isCheckoutOrCart || isAuthPage);
+  const showHelpWidget = !hideChrome && !(hasMounted && isMobileViewport && isAuthPage);
   const showBackToTop = !hideMobileFloatingUi;
   const showMobileWhatsApp = hasMounted && isMobileViewport && isMobileWhatsAppPath(pathname);
   const splashEnabled =

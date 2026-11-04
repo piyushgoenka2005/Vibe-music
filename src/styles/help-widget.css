@@ -503,7 +503,9 @@
 
   .help-widget {
     right: max(0.75rem, env(safe-area-inset-right, 0px));
-    bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    bottom: calc(
+      max(0.75rem, env(safe-area-inset-bottom, 0px)) + var(--floating-ui-clearance, 0px)
+    );
   }
 
   .help-widget__close {
@@ -639,11 +641,15 @@
   }
 
   .help-widget__trigger:not(.help-widget__trigger--open) {
-    width: 2.875rem;
-    min-width: 2.875rem;
-    min-height: 2.875rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: var(--touch-target-min, 44px);
+    min-height: var(--touch-target-min, 44px);
     padding: 0;
     border-radius: 50%;
+    box-shadow:
+      0 4px 14px rgba(18, 83, 237, 0.38),
+      0 1px 3px rgba(15, 23, 42, 0.12);
   }
 
   .help-widget__icon-mark {
