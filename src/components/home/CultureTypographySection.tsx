@@ -30,8 +30,8 @@ const WORD_CYCLE = [
   "BRAND.",
 ] as const;
 
-/** Exactly two quote cycles on mobile + desktop (no extra loop padding). */
-const QUOTE_REPEATS = 2;
+/** Three quote cycles on mobile + desktop to guarantee seamless scroll coverage. */
+const QUOTE_REPEATS = 3;
 /**
  * Max pinned scrub distance in sticky-viewport units.
  * Section ≈ pin + this runway → about two page-scrolls to pass through,
@@ -39,13 +39,10 @@ const QUOTE_REPEATS = 2;
  */
 const MAX_SCROLL_RUNWAY_VIEWPORTS = 1;
 /** Shorter pinned scrub on phones — a small scroll nudge, not a long trap. */
-const MAX_SCROLL_RUNWAY_VIEWPORTS_MOBILE = 0.42;
+const MAX_SCROLL_RUNWAY_VIEWPORTS_MOBILE = 0.45;
 
-/** Mobile sticky sits below the header — section height must be viewport + runway, not pin + runway. */
-function resolveCultureSectionHeight(pinPx: number, shiftPx: number, mobile: boolean): number {
-  if (mobile) {
-    return Math.round(window.innerHeight + shiftPx);
-  }
+/** Section height equals sticky pin height (100svh) + scrub runway. */
+function resolveCultureSectionHeight(pinPx: number, shiftPx: number, _mobile: boolean): number {
   return Math.round(pinPx + shiftPx);
 }
 
@@ -137,7 +134,7 @@ export default function CultureTypographySection({
 
   /** Measure track overflow in px for both mobile + desktop (one transform unit). */
   useLayoutEffect(() => {
-    if (!motionReady || isMobile) {
+    if (!motionReady) {
       setScrollShiftPx(0);
       setStickyPinPx(0);
       return undefined;
@@ -193,7 +190,7 @@ export default function CultureTypographySection({
 
   // Always numeric px — never mix % and px (framer-motion glitch source).
   const backgroundY = useTransform(scrollYProgress, (progress) => {
-    if (!motionReady || isMobile || scrollShiftPx <= 0) return 0;
+    if (!motionReady || scrollShiftPx <= 0) return 0;
     return -scrollShiftPx * progress;
   });
 
@@ -263,7 +260,7 @@ export default function CultureTypographySection({
   const scrollTrackStyle = motionReady ? { y: backgroundY } : undefined;
 
   const sectionStyle = {
-    ...(motionReady && !isMobile && scrollShiftPx > 0 && stickyPinPx > 0
+    ...(motionReady && scrollShiftPx > 0 && stickyPinPx > 0
       ? {
           "--culture-scroll-height": `${resolveCultureSectionHeight(
             stickyPinPx,
@@ -349,20 +346,22 @@ export default function CultureTypographySection({
           </div>
         </motion.div>
 
-        {!reduceMotion && !isMobile ? (
+        {!reduceMotion ? (
           <>
-            <motion.div
-              className="culture-typography__scroll-hint"
-              style={{ opacity: hintOpacity }}
-              aria-hidden
-            >
-              <span className="culture-typography__scroll-hint-label">Scroll</span>
-              <ChevronDown
-                className="culture-typography__scroll-hint-icon"
-                size={20}
-                strokeWidth={2.25}
-              />
-            </motion.div>
+            {!isMobile ? (
+              <motion.div
+                className="culture-typography__scroll-hint"
+                style={{ opacity: hintOpacity }}
+                aria-hidden
+              >
+                <span className="culture-typography__scroll-hint-label">Scroll</span>
+                <ChevronDown
+                  className="culture-typography__scroll-hint-icon"
+                  size={20}
+                  strokeWidth={2.25}
+                />
+              </motion.div>
+            ) : null}
 
             <div
               className="culture-typography__progress"
