@@ -1,5 +1,4 @@
-import { POPULAR_CATEGORY_ITEMS } from "@/data/popularCategories";
-import { categoryPath } from "@/lib/routes";
+import { getCategoryHeroImage } from "@/lib/categoryImages";
 
 export type CategoryBentoSize = "large" | "small";
 export type CategoryBentoVariant = "hero-light" | "image-card";
@@ -24,20 +23,6 @@ export interface CategoryBentoItem {
   href?: string;
 }
 
-const CAT = "/images/m/home/cats";
-
-/** Map bento slugs to popular-category hrefs for image lookup. */
-const SLUG_TO_HREF: Record<string, string> = {
-  guitars: categoryPath("guitars"),
-  "studio-recording": categoryPath("studio-recording"),
-  "drums-percussion": categoryPath("drums-percussion"),
-  "keyboards-synthesizers": categoryPath("keyboards-synthesizers"),
-  "live-sound-lighting": categoryPath("live-sound-lighting"),
-  "microphones-wireless": categoryPath("microphones-wireless"),
-  "dj-equipment": categoryPath("dj-equipment"),
-  "cables-cases-accessories": categoryPath("cables-cases-accessories"),
-};
-
 const BENTO_IMAGE_FILES: Record<string, string> = {
   guitars: "https://myimgs.org/storage/images/75152/guitars_banner_800x600.webp",
   "studio-recording":
@@ -54,26 +39,18 @@ const BENTO_IMAGE_FILES: Record<string, string> = {
     "https://myimgs.org/storage/images/74368/AcousticGuitarsProductBanner.webp",
 };
 
-/** Build optimized image URL for bento tile sizes. */
+/** Build optimized image URL for bento tile sizes (edge-to-edge banners). */
 export function resolveBentoImage(slug: string): string {
   const base =
     BENTO_IMAGE_FILES[slug] ??
-    POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])?.imageSrc.split(
-      "?",
-    )[0] ??
-    `${CAT}/LPR59VOWCSNH.png`;
+    getCategoryHeroImage(slug) ??
+    "/images/browse-categories/guitars.jpg";
 
   return base;
 }
 
 function resolveBentoSrcSet(slug: string, size: "hero" | "card" = "card"): string | undefined {
-  const base =
-    BENTO_IMAGE_FILES[slug] ??
-    POPULAR_CATEGORY_ITEMS.find((item) => item.href === SLUG_TO_HREF[slug])?.imageSrc.split(
-      "?",
-    )[0] ??
-    `${CAT}/LPR59VOWCSNH.png`;
-
+  const base = resolveBentoImage(slug);
   const widths = size === "hero" ? [800, 1200, 1600] : [480, 768, 1200];
   return widths.map((width) => `${base} ${width}w`).join(", ");
 }

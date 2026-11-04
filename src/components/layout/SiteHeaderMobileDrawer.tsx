@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, type RefObject } from "react";
+import { Suspense, useEffect, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
@@ -24,6 +24,15 @@ export default function SiteHeaderMobileDrawer({
 }: SiteHeaderMobileDrawerProps) {
   const isClient = useIsClient();
   const navRef = useDialogA11y(open, onClose);
+
+  useEffect(() => {
+    if (!open) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [open]);
 
   if (!isClient || !open) return null;
 

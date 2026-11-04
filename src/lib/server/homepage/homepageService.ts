@@ -35,7 +35,7 @@ import type { CatalogProduct } from "@/types/catalog";
 import { clampHomepageMaxItems } from "@/lib/homepage/homepageLimits";
 import { unpackCategoryOfferText } from "@/lib/homepage/categoryOfferText";
 import { BROWSE_CATEGORY_CARDS, BROWSE_CATEGORY_CARDS_CTA } from "@/data/browseCategoryCards";
-import { CATEGORY_BENTO_ITEMS } from "@/data/categoryBento";
+import { CATEGORY_BENTO_ITEMS, resolveBentoImage } from "@/data/categoryBento";
 import { buildCategoryBentoCatalogMeta } from "@/lib/server/categoryBentoCatalog";
 import type {
   HomepageBrandItem,
@@ -1066,9 +1066,14 @@ export async function getCategoryBentoPublicData(
       resolved.length > 0
         ? resolved.map((item) => {
             const fallback = staticBySlug.get(item.slug);
+            const rawImage = item.imageSrc?.split("?")[0];
+            const isLegacyCutout = !rawImage || rawImage.includes("/images/m/home/cats/");
+            const imageSrc = isLegacyCutout
+              ? resolveBentoImage(item.slug)
+              : rawImage || fallback?.image || resolveBentoImage(item.slug);
             return {
               ...item,
-              imageSrc: item.imageSrc || fallback?.image || item.imageSrc,
+              imageSrc,
               desc: item.desc || fallback?.desc,
               brands: item.brands || fallback?.brands,
               badge: item.badge || fallback?.badge,

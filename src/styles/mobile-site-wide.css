@@ -1,6 +1,26 @@
 /* ─── Mobile site-wide layer (≤767px) — loaded last for cross-route coverage ─── */
 
 @media (max-width: 767px) {
+  /* Global viewport & body safeguards */
+  html,
+  body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden !important;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    font-size: 16px !important;
+  }
+
+  /* Global touch target floor for primary interactive controls */
+  :where(button, .premium-btn, a[role="button"], input[type="submit"], input[type="button"]) {
+    min-height: 44px;
+  }
+
   /* Route shells */
   .premium-home,
   .storefront-page,
@@ -16,6 +36,7 @@
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
+    overflow-x: hidden;
     overflow-x: clip;
   }
 

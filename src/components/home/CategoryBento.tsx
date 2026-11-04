@@ -15,13 +15,19 @@ export default async function CategoryBento() {
 
   const items: CategoryBentoItem[] = data.items.map((item) => {
     const fallback = staticBySlug.get(item.slug);
+    const rawImage = item.imageSrc?.split("?")[0];
+    const isLegacyCutout = !rawImage || rawImage.includes("/images/m/home/cats/");
+    const image = isLegacyCutout
+      ? resolveBentoImage(item.slug)
+      : rawImage || fallback?.image || resolveBentoImage(item.slug);
+
     return {
       slug: item.slug,
       title: item.title,
       desc: item.desc || fallback?.desc || "",
       size: fallback?.size ?? "small",
       variant: fallback?.variant ?? "image-card",
-      image: item.imageSrc?.split("?")[0] || fallback?.image || resolveBentoImage(item.slug),
+      image,
       imageSrcSet: fallback?.imageSrcSet,
       imageSizes: fallback?.imageSizes,
       imageAlt: fallback?.imageAlt || item.title,

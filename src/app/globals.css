@@ -104,6 +104,9 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -119,6 +122,9 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   overflow-x: clip;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -181,15 +187,7 @@ body {
 }
 
 /* Baseline keyboard focus — :where keeps specificity low so component styles win */
-:where(
-  a,
-  button,
-  [role="button"],
-  input,
-  select,
-  textarea,
-  summary
-):focus-visible {
+:where(a, button, [role="button"], input, select, textarea, summary):focus-visible {
   outline: 2px solid var(--ring, #1253ed);
   outline-offset: 2px;
 }
