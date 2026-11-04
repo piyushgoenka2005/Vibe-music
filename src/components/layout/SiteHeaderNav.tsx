@@ -4,9 +4,16 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "rea
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown, LayoutGrid } from "lucide-react";
-import { HEADER_MEGA_MENUS, MEGA_MENU_BY_SLUG, type MegaMenuItem } from "@/data/headerMegaMenu";
+import {
+  HEADER_MEGA_MENUS,
+  MEGA_MENU_BY_SLUG,
+  type MegaMenuItem,
+  type MegaMenuColumn,
+} from "@/data/headerMegaMenu";
 import { BRANDS_MEGA_MENU_SLUG, resolveBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
-import { ROUTES } from "@/lib/routes";
+import { extractCategorySlugFromUrl, extractSlugFromUrl, ROUTES } from "@/lib/routes";
+import { slugify } from "@/lib/slug";
+import { getCategoryHeroImage, getMegaMenuFeaturedImage } from "@/lib/categoryImages";
 import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import HeaderMegaMenu from "@/components/layout/HeaderMegaMenu";
 import AllCategoriesMegaMenu from "@/components/layout/AllCategoriesMegaMenu";
@@ -97,7 +104,7 @@ export default function SiteHeaderNav({
   }, [categoryMegaMenus]);
 
   const megaMenuBySlug = useMemo(() => {
-    const menus = { ...MEGA_MENU_BY_SLUG };
+    const menus: Record<string, MegaMenuItem> = { ...MEGA_MENU_BY_SLUG };
     for (const menu of effectiveCategoryMenus) {
       menus[menu.slug] = menu;
     }
@@ -105,40 +112,109 @@ export default function SiteHeaderNav({
       menus[BRANDS_MEGA_MENU_SLUG] = resolvedBrandsMegaMenu;
     }
 
-    // Merge any item-level megaMenuData overrides configured in admin
+    // Ensure every configured item with dropdown/mega_menu has a valid MegaMenuItem in menus
     if (configuredNavItems && configuredNavItems.length > 0) {
       for (const item of configuredNavItems) {
+        const urlCatSlug = extractCategorySlugFromUrl(item.url);
+        const itemSlug =
+          item.categoryId ||
+          urlCatSlug ||
+          extractSlugFromUrl(item.url) ||
+          slugify(item.label) ||
+          item.id;
+
+        // Check if already in menus under itemSlug or another key
+        let existing = menus[itemSlug];
+        if (!existing && item.categoryId && menus[item.categoryId]) {
+          existing = menus[item.categoryId];
+          menus[itemSlug] = existing;
+        }
+        if (!existing && urlCatSlug && menus[urlCatSlug]) {
+          existing = menus[urlCatSlug];
+          menus[itemSlug] = existing;
+        }
+        if (!existing) {
+          const foundKey = Object.keys(menus).find(
+            (k) =>
+              menus[k]?.name?.toLowerCase() === item.label.toLowerCase() ||
+              (urlCatSlug && (k.includes(urlCatSlug) || urlCatSlug.includes(k))) ||
+              item.url.includes(k),
+          );
+          if (foundKey && menus[foundKey]) {
+            existing = menus[foundKey];
+            menus[itemSlug] = existing;
+          }
+        }
+
+        // If still no menu exists and this item is a dropdown or mega_menu, synthesize one!
+        if (!existing && (item.itemType === "dropdown" || item.itemType === "mega_menu")) {
+          const childItems = configuredNavItems.filter((c) => c.parentId === item.id && c.isActive);
+          const synthesizedColumns: MegaMenuColumn[] =
+            childItems.length > 0
+              ? [
+                  {
+                    heading: item.label,
+                    links: childItems.map((c) => ({ label: c.label, href: c.url })),
+                  },
+                ]
+              : [
+                  {
+                    heading: item.label,
+                    links: [
+                      { label: `All ${item.label}`, href: item.url },
+                      { label: `Shop all ${item.label}`, href: item.url },
+                      {
+                        label: "New Arrivals",
+                        href: `${item.url}${item.url.includes("?") ? "&" : "?"}sort=newest`,
+                      },
+                    ],
+                  },
+                ];
+
+          menus[itemSlug] = {
+            slug: itemSlug,
+            name: item.label,
+            href: item.url,
+            columns: synthesizedColumns,
+            featured: [
+              {
+                title: item.label,
+                href: item.url,
+                image: getCategoryHeroImage(itemSlug) || "/brand/header-logo.webp",
+              },
+              {
+                title: `Explore ${item.label}`,
+                href: `${item.url}${item.url.includes("?") ? "&" : "?"}sort=newest`,
+                image: getMegaMenuFeaturedImage(itemSlug, "secondary") || "/images/New Guitar.png",
+              },
+            ],
+          };
+          existing = menus[itemSlug];
+        }
+
+        // Merge any item-level megaMenuData overrides configured in admin
         if (item.megaMenuData && typeof item.megaMenuData === "object") {
           const customData = item.megaMenuData as {
             featured?: { title: string; href: string; image: string }[];
           };
-          const slug =
-            item.categoryId ||
-            item.url.replace(/^\/category\//, "").split("?")[0] ||
-            item.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-
-          const matchedSlug =
-            (item.categoryId && menus[item.categoryId] ? item.categoryId : null) ||
-            Object.keys(menus).find(
-              (s) =>
-                item.url.includes(s) ||
-                menus[s]?.name?.toLowerCase() === item.label.toLowerCase() ||
-                item.categoryId === s,
-            ) ||
-            slug;
+          const targetSlug = existing
+            ? itemSlug
+            : item.categoryId && menus[item.categoryId]
+              ? item.categoryId
+              : itemSlug;
 
           if (
-            matchedSlug &&
-            menus[matchedSlug] &&
+            targetSlug &&
+            menus[targetSlug] &&
             customData.featured &&
             customData.featured.length > 0
           ) {
-            menus[matchedSlug] = {
-              ...menus[matchedSlug],
+            menus[targetSlug] = {
+              ...menus[targetSlug],
               featured: customData.featured.map((card, idx) => ({
-                title: card.title || menus[matchedSlug].featured[idx]?.title || "",
-                href: card.href || menus[matchedSlug].featured[idx]?.href || item.url,
-                image: card.image || menus[matchedSlug].featured[idx]?.image || "",
+                title: card.title || menus[targetSlug]?.featured[idx]?.title || "",
+                href: card.href || menus[targetSlug]?.featured[idx]?.href || item.url,
+                image: card.image || menus[targetSlug]?.featured[idx]?.image || "",
               })),
             };
           }
@@ -172,20 +248,48 @@ export default function SiteHeaderNav({
         )
         .map((item) => {
           let slug: string | undefined = undefined;
-          if (item.url.includes("/brands")) {
+          if (item.url.includes("/brands") || item.label.toLowerCase() === "brands") {
             slug = resolvedBrandsMegaMenu ? BRANDS_MEGA_MENU_SLUG : undefined;
           } else {
+            const urlCatSlug = extractCategorySlugFromUrl(item.url);
             const match = effectiveCategoryMenus.find(
               (m) =>
+                (item.categoryId &&
+                  (m.slug === item.categoryId ||
+                    m.slug.toLowerCase() === item.categoryId.toLowerCase())) ||
+                (urlCatSlug &&
+                  (m.slug === urlCatSlug ||
+                    m.slug.includes(urlCatSlug) ||
+                    urlCatSlug.includes(m.slug))) ||
+                m.slug === item.url.replace(/^\//, "").split("?")[0] ||
                 item.url.includes(m.slug) ||
-                item.label.toLowerCase() === m.name.toLowerCase() ||
-                item.categoryId === m.slug,
+                m.href === item.url ||
+                item.label.trim().toLowerCase() === m.name.trim().toLowerCase() ||
+                (item.label.toLowerCase().includes(m.name.toLowerCase()) && m.name.length > 3),
             );
-            if (match) slug = match.slug;
+            if (match) {
+              slug = match.slug;
+            } else if (item.itemType === "dropdown" || item.itemType === "mega_menu") {
+              slug =
+                item.categoryId ||
+                urlCatSlug ||
+                extractSlugFromUrl(item.url) ||
+                slugify(item.label) ||
+                item.id;
+            }
           }
 
           const hasDropdown =
             item.itemType === "dropdown" || item.itemType === "mega_menu" || Boolean(slug);
+
+          if (hasDropdown && !slug) {
+            slug =
+              item.categoryId ||
+              extractCategorySlugFromUrl(item.url) ||
+              extractSlugFromUrl(item.url) ||
+              slugify(item.label) ||
+              item.id;
+          }
 
           return {
             key: item.id,
@@ -363,7 +467,7 @@ export default function SiteHeaderNav({
                 role="listitem"
                 onMouseEnter={() => {
                   setHoveredKey(item.key);
-                  if (item.slug) {
+                  if (item.slug && megaMenuBySlug[item.slug]) {
                     openMenu(item.slug);
                   } else {
                     setActiveSlug(null);

@@ -1,5 +1,6 @@
 import { HEADER_MEGA_MENUS, type MegaMenuItem, type MegaMenuColumn } from "@/data/headerMegaMenu";
 import { categoryPath, ROUTES } from "@/lib/routes";
+import { getCategoryHeroImage, getMegaMenuFeaturedImage } from "@/lib/categoryImages";
 import type { Category } from "@/types/category";
 
 type HeaderSubcategory = Pick<Category, "id" | "name" | "slug"> & {
@@ -18,7 +19,7 @@ export function buildCategoryMegaMenus(
 ): MegaMenuItem[] {
   if (!categories || categories.length === 0) {
     if (!taxonomySubcategories || taxonomySubcategories.size === 0) return HEADER_MEGA_MENUS;
-    return HEADER_MEGA_MENUS.map((baseline) => {
+    const baselineMenus = HEADER_MEGA_MENUS.map((baseline) => {
       const subcategories = taxonomySubcategories.get(baseline.slug);
       if (!subcategories) return baseline;
       const columns: MegaMenuColumn[] = baseline.columns.map((column) => ({
@@ -41,6 +42,55 @@ export function buildCategoryMegaMenus(
       });
       return { ...baseline, columns };
     });
+
+    const baselineSlugs = new Set(HEADER_MEGA_MENUS.map((m) => m.slug));
+    const extraTaxonomyMenus: MegaMenuItem[] = [];
+    for (const [taxSlug, subs] of taxonomySubcategories.entries()) {
+      if (baselineSlugs.has(taxSlug) || !subs || subs.length === 0) continue;
+      const taxName = taxSlug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      const numCols = subs.length >= 8 ? 3 : subs.length >= 4 ? 2 : 1;
+      const columns: MegaMenuColumn[] = Array.from({ length: numCols }, (_, i) => ({
+        heading: i === 0 ? taxName : "More",
+        links: [],
+      }));
+      subs.forEach((sub, i) => {
+        columns[i % numCols]?.links.push({
+          label: sub.name,
+          href: categoryPath(sub.slug),
+          children: sub.children?.map((child) => ({
+            label: child.name,
+            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(taxSlug)}`,
+          })),
+        });
+      });
+      columns[columns.length - 1]?.links.push({
+        label: `Shop all ${taxName}`,
+        href: categoryPath(taxSlug),
+      });
+      extraTaxonomyMenus.push({
+        slug: taxSlug,
+        name: taxName,
+        href: categoryPath(taxSlug),
+        columns,
+        featured: [
+          {
+            title: taxName,
+            href: categoryPath(taxSlug),
+            image:
+              getMegaMenuFeaturedImage(taxSlug, "featured") ||
+              getCategoryHeroImage(taxSlug) ||
+              "/brand/header-logo.webp",
+          },
+          {
+            title: `Shop ${taxName}`,
+            href: `${categoryPath(taxSlug)}?sort=newest`,
+            image: getMegaMenuFeaturedImage(taxSlug, "secondary") || "/images/New Guitar.png",
+          },
+        ],
+      });
+    }
+
+    return [...baselineMenus, ...extraTaxonomyMenus];
   }
 
   const subCategoriesByParent = new Map<string, HeaderSubcategory[]>();
@@ -58,14 +108,21 @@ export function buildCategoryMegaMenus(
     }
   }
 
-  return HEADER_MEGA_MENUS.map((baseline) => {
+  const matchedCategoryIds = new Set<string>();
+
+  const baselineMenus = HEADER_MEGA_MENUS.map((baseline) => {
     const dbMain = categories.find(
       (category) =>
         !category.parentId &&
         (category.slug === baseline.slug ||
           category.id === baseline.slug ||
-          category.name.toLowerCase() === baseline.name.toLowerCase()),
+          category.name.toLowerCase() === baseline.name.toLowerCase() ||
+          category.id === `cat-${baseline.slug}`),
     );
+
+    if (dbMain) {
+      matchedCategoryIds.add(dbMain.id);
+    }
 
     if (!dbMain && !taxonomySubcategories?.has(baseline.slug)) return baseline;
 
@@ -223,4 +280,92 @@ export function buildCategoryMegaMenus(
       featured,
     };
   });
+
+  const baselineSlugs = new Set(HEADER_MEGA_MENUS.map((m) => m.slug));
+  const baselineNames = new Set(HEADER_MEGA_MENUS.map((m) => m.name.toLowerCase()));
+
+  // Dynamic root categories from database that are not covered by baseline departments
+  const dynamicCategoryMenus: MegaMenuItem[] = [];
+
+  const unmatchedRootCategories = categories.filter(
+    (category) =>
+      !category.parentId &&
+      !matchedCategoryIds.has(category.id) &&
+      !baselineSlugs.has(category.slug) &&
+      !baselineNames.has(category.name.toLowerCase()),
+  );
+
+  for (const cat of unmatchedRootCategories) {
+    const dbSubs = taxonomySubcategories?.get(cat.slug) ?? subCategoriesByParent.get(cat.id) ?? [];
+    const sortedDbSubs = [...dbSubs].sort(
+      (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
+    );
+
+    let columns: MegaMenuColumn[];
+    if (sortedDbSubs.length > 0) {
+      const numCols = sortedDbSubs.length >= 8 ? 3 : sortedDbSubs.length >= 4 ? 2 : 1;
+      columns = Array.from({ length: numCols }, (_, index) => ({
+        heading: index === 0 ? cat.name : "More",
+        links: [],
+      }));
+
+      sortedDbSubs.forEach((sub, index) => {
+        columns[index % numCols]?.links.push({
+          label: sub.name,
+          href: categoryPath(sub.slug),
+          children: sub.children?.map((child) => ({
+            label: child.name,
+            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(cat.slug)}`,
+          })),
+        });
+      });
+
+      columns[columns.length - 1]?.links.push({
+        label: `Shop all ${cat.name}`,
+        href: categoryPath(cat.slug),
+      });
+    } else {
+      columns = [
+        {
+          heading: cat.name,
+          links: [
+            { label: `All ${cat.name}`, href: categoryPath(cat.slug) },
+            { label: "New Arrivals", href: `${categoryPath(cat.slug)}?sort=newest` },
+            { label: "Best Sellers", href: `${categoryPath(cat.slug)}?sort=bestselling` },
+            { label: `Shop all ${cat.name}`, href: categoryPath(cat.slug) },
+          ],
+        },
+      ];
+    }
+
+    const card1 =
+      cat.imageUrl ||
+      cat.featuredImageUrls?.[0] ||
+      getMegaMenuFeaturedImage(cat.slug, "featured") ||
+      getCategoryHeroImage(cat.slug) ||
+      "/brand/header-logo.webp";
+    const card2 =
+      cat.featuredImageUrls?.[1] || getMegaMenuFeaturedImage(cat.slug, "secondary") || card1;
+
+    dynamicCategoryMenus.push({
+      slug: cat.slug,
+      name: cat.name,
+      href: categoryPath(cat.slug),
+      columns,
+      featured: [
+        {
+          title: cat.name,
+          href: categoryPath(cat.slug),
+          image: card1,
+        },
+        {
+          title: `Shop ${cat.name}`,
+          href: `${categoryPath(cat.slug)}?sort=newest`,
+          image: card2,
+        },
+      ],
+    });
+  }
+
+  return [...baselineMenus, ...dynamicCategoryMenus];
 }

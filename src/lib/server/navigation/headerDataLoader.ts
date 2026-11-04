@@ -1,10 +1,18 @@
 import { cache } from "react";
-import { HEADER_MEGA_MENUS, type MegaMenuItem } from "@/data/headerMegaMenu";
+import {
+  HEADER_MEGA_MENUS,
+  type MegaMenuItem,
+  type MegaMenuColumn,
+  type MegaMenuFeatured,
+} from "@/data/headerMegaMenu";
 import { buildCategoryMegaMenus } from "@/lib/navigation/buildCategoryMegaMenus";
 import { listCategories } from "@/lib/server/catalog/categoryRepository";
 import { getTaxonomySubcategoriesForHeader } from "@/lib/server/taxonomy/taxonomyRepository";
 import { isPostgresConfigured } from "@/lib/db/prisma";
 import type { Category } from "@/types/category";
+import { extractCategorySlugFromUrl, extractSlugFromUrl } from "@/lib/routes";
+import { slugify } from "@/lib/slug";
+import { getCategoryHeroImage, getMegaMenuFeaturedImage } from "@/lib/categoryImages";
 import {
   SHIPPING_POLICY,
   STOREFRONT_FREE_SHIPPING_THRESHOLD,
@@ -372,15 +380,25 @@ export const loadHeaderData = cache(async (): Promise<ResolvedHeaderData> => {
     // 2. Build mega-menu map based on configured navigation items + category definitions
     // This allows Header & Menu Management to customize promo cards while ensuring
     // changing or deleting categories never deletes or modifies header navigation items.
+    const matchedNavIds = new Set<string>();
+
     const megaMenus: MegaMenuItem[] = baseMegaMenus.map((base) => {
       // If there's a matching nav item configured with custom name or href, respect it
-      const matchingNavItem = navItems.find(
-        (n) =>
+      const matchingNavItem = navItems.find((n) => {
+        const urlCategorySlug = extractCategorySlugFromUrl(n.url);
+        return (
+          (n.categoryId &&
+            (n.categoryId === base.slug || n.categoryId === base.name.toLowerCase())) ||
+          (urlCategorySlug &&
+            (urlCategorySlug === base.slug || base.slug.includes(urlCategorySlug))) ||
           n.url.includes(base.slug) ||
-          n.label.toLowerCase() === base.name.toLowerCase() ||
-          n.categoryId === base.slug,
-      );
+          base.slug.includes(n.url.replace(/^\/category\//, "").split("?")[0]) ||
+          n.label.trim().toLowerCase() === base.name.trim().toLowerCase()
+        );
+      });
+
       if (matchingNavItem) {
+        matchedNavIds.add(matchingNavItem.id);
         let customFeatured = base.featured;
         if (matchingNavItem.megaMenuData && typeof matchingNavItem.megaMenuData === "object") {
           const customData = matchingNavItem.megaMenuData as {
@@ -403,6 +421,99 @@ export const loadHeaderData = cache(async (): Promise<ResolvedHeaderData> => {
       }
       return base;
     });
+
+    // 3. For any configured header section with dropdown/mega_menu that was not covered by baseMegaMenus,
+    // synthesize a complete MegaMenuItem so hovering it always displays its dropdown and promo cards!
+    for (const navItem of navItems) {
+      if (
+        (navItem.itemType === "dropdown" || navItem.itemType === "mega_menu") &&
+        !matchedNavIds.has(navItem.id) &&
+        navItem.url !== "/brands" &&
+        navItem.label.toLowerCase() !== "all categories"
+      ) {
+        const urlCatSlug = extractCategorySlugFromUrl(navItem.url);
+        const itemSlug =
+          navItem.categoryId ||
+          urlCatSlug ||
+          extractSlugFromUrl(navItem.url) ||
+          slugify(navItem.label) ||
+          navItem.id;
+
+        // Skip if already in megaMenus
+        if (
+          megaMenus.some(
+            (m) => m.slug === itemSlug || m.name.toLowerCase() === navItem.label.toLowerCase(),
+          )
+        ) {
+          continue;
+        }
+
+        const childItems = navItems.filter((c) => c.parentId === navItem.id && c.isActive);
+        const customColumns: MegaMenuColumn[] =
+          childItems.length > 0
+            ? [
+                {
+                  heading: navItem.label,
+                  links: childItems.map((c) => ({
+                    label: c.label,
+                    href: c.url,
+                  })),
+                },
+              ]
+            : [
+                {
+                  heading: navItem.label,
+                  links: [
+                    { label: `All ${navItem.label}`, href: navItem.url },
+                    { label: `Shop all ${navItem.label}`, href: navItem.url },
+                    {
+                      label: "New Arrivals",
+                      href: `${navItem.url}${navItem.url.includes("?") ? "&" : "?"}sort=newest`,
+                    },
+                  ],
+                },
+              ];
+
+        let customFeatured: MegaMenuFeatured[] = [];
+        if (navItem.megaMenuData && typeof navItem.megaMenuData === "object") {
+          const customData = navItem.megaMenuData as {
+            featured?: { title: string; href: string; image: string }[];
+          };
+          if (Array.isArray(customData.featured) && customData.featured.length > 0) {
+            customFeatured = customData.featured
+              .filter((c) => c.title || c.image)
+              .map((card) => ({
+                title: card.title || navItem.label,
+                href: card.href || navItem.url,
+                image: card.image || getCategoryHeroImage(itemSlug) || "/brand/header-logo.webp",
+              }));
+          }
+        }
+
+        if (customFeatured.length === 0) {
+          customFeatured = [
+            {
+              title: navItem.label,
+              href: navItem.url,
+              image: getCategoryHeroImage(itemSlug) || "/brand/header-logo.webp",
+            },
+            {
+              title: `Shop ${navItem.label}`,
+              href: `${navItem.url}${navItem.url.includes("?") ? "&" : "?"}sort=newest`,
+              image: getMegaMenuFeaturedImage(itemSlug, "secondary") || "/images/New Guitar.png",
+            },
+          ];
+        }
+
+        megaMenus.push({
+          slug: itemSlug,
+          name: navItem.label,
+          href: navItem.url,
+          columns: customColumns,
+          featured: customFeatured,
+        });
+      }
+    }
 
     return {
       settings,

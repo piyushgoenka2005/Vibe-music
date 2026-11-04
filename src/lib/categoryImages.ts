@@ -15,6 +15,10 @@ const SLUG_TO_HREF: Record<string, string> = {
   "dj-equipment": categoryPath("dj-equipment"),
   amplifiers: categoryPath("guitars"),
   "cables-cases-accessories": categoryPath("cables-cases-accessories"),
+  cables: categoryPath("cables"),
+  accessories: categoryPath("accessories"),
+  cases: categoryPath("cables-cases-accessories"),
+  "keyboards-pianos": categoryPath("keyboards-pianos"),
   "microphones-wireless": categoryPath("microphones-wireless"),
   "band-orchestra": categoryPath("band-orchestra"),
   "home-audio-electronics": categoryPath("home-audio-electronics"),
@@ -26,6 +30,22 @@ const SLUG_TO_HREF: Record<string, string> = {
 const SLUG_ALIASES: Record<string, string> = {
   "software-plugins": "software-plug-ins",
   "live-sound": "live-sound-lighting",
+  cables: "cables-cases-accessories",
+  accessories: "cables-cases-accessories",
+  cases: "cables-cases-accessories",
+  "keyboards-pianos": "keyboards-synthesizers",
+  keyboards: "keyboards-synthesizers",
+  synthesizers: "keyboards-synthesizers",
+  synths: "keyboards-synthesizers",
+  pianos: "keyboards-synthesizers",
+  microphones: "microphones-wireless",
+  wireless: "microphones-wireless",
+  lighting: "live-sound-lighting",
+  dj: "dj-equipment",
+  drums: "drums-percussion",
+  percussion: "drums-percussion",
+  studio: "studio-recording",
+  recording: "studio-recording",
 };
 
 function canonicalizeCategorySlug(slug: string): string {
@@ -65,6 +85,10 @@ const MEGA_MENU_VARIANT_OVERRIDES: Record<string, string> = {
     "/images/m/products/image/6a29cdc6e653NWv2mMN2IAdpJxfo9MiePtgYNx2u.jpg",
   "cables-cases-accessories:cases":
     "/images/m/products/image/2f51071997sqxE3R3gW9W0nTbFJsJVxfRgVdqWBU.jpg",
+  "cables:featured": "/images/m/products/image/6a29cdc6e653NWv2mMN2IAdpJxfo9MiePtgYNx2u.jpg",
+  "cables:secondary": "/images/m/products/image/2f51071997sqxE3R3gW9W0nTbFJsJVxfRgVdqWBU.jpg",
+  "accessories:featured": "/images/m/products/image/2f51071997sqxE3R3gW9W0nTbFJsJVxfRgVdqWBU.jpg",
+  "accessories:secondary": "/images/m/products/image/6a29cdc6e653NWv2mMN2IAdpJxfo9MiePtgYNx2u.jpg",
 };
 
 function cleanLocalPath(path: string): string {
@@ -106,6 +130,9 @@ const HERO_IMAGE_BY_SLUG: Record<string, string> = {
   "home-audio-electronics": "/images/m/home/cats/TourOneM2Bk.png",
   "commercial-audio-installation": "/images/m/home/cats/Control28.png",
   "cables-cases-accessories": "/images/m/home/cats/M4WP006.png",
+  cables: "/images/m/home/cats/M4WP006.png",
+  accessories: "/images/m/home/cats/M4WP006.png",
+  "keyboards-pianos": "/images/m/home/cats/Matriarch.png",
   "video-cameras": "/images/m/home/cats/EOSR82450Kit.png",
 };
 
@@ -143,6 +170,9 @@ const GRID_FALLBACK_BY_SLUG: Record<string, string> = {
   "home-audio-electronics": "/images/m/home/cats/TourOneM2Bk.png",
   "commercial-audio-installation": "/images/m/home/cats/Control28.png",
   "cables-cases-accessories": "/images/m/home/cats/M4WP006.png",
+  cables: "/images/m/home/cats/M4WP006.png",
+  accessories: "/images/m/home/cats/M4WP006.png",
+  "keyboards-pianos": "/images/m/home/cats/Matriarch.png",
   "video-cameras": "/images/m/home/cats/EOSR82450Kit.png",
 };
 

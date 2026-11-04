@@ -126,4 +126,29 @@ describe("buildCategoryMegaMenus", () => {
     const studioMenu = menus.find((menu) => menu.slug === "studio-recording");
     expect(studioMenu?.featured.map((card) => card.image)).toEqual(featuredImageUrls);
   });
+
+  it("dynamically generates mega menu for new categories not in baseline departments", () => {
+    const menus = buildCategoryMegaMenus([
+      { id: "cat-cables", name: "Cables", slug: "cables", sortOrder: 20 },
+      {
+        id: "sub-inst-cables",
+        name: "Instrument Cables",
+        slug: "instrument-cables",
+        parentId: "cat-cables",
+        sortOrder: 1,
+      },
+    ]);
+
+    const cablesMenu = menus.find((m) => m.slug === "cables");
+    expect(cablesMenu).toBeDefined();
+    expect(cablesMenu?.name).toBe("Cables");
+    expect(cablesMenu?.href).toBe("/category/cables");
+    expect(cablesMenu?.columns.flatMap((c) => c.links).map((l) => l.label)).toContain(
+      "Instrument Cables",
+    );
+    expect(cablesMenu?.columns.flatMap((c) => c.links).map((l) => l.label)).toContain(
+      "Shop all Cables",
+    );
+    expect(cablesMenu?.featured.length).toBeGreaterThanOrEqual(1);
+  });
 });

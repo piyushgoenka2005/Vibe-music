@@ -123,6 +123,22 @@ export function categoryPath(slug: string): string {
   return `/category/${slug}`;
 }
 
+export function extractCategorySlugFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const match = url.match(/\/category\/([a-zA-Z0-9_-]+)/i);
+  if (match?.[1]) return match[1].toLowerCase();
+  return null;
+}
+
+export function extractSlugFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const catSlug = extractCategorySlugFromUrl(url);
+  if (catSlug) return catSlug;
+  const match = url.match(/^\/([a-zA-Z0-9_-]+)/);
+  if (match?.[1]) return match[1].toLowerCase();
+  return null;
+}
+
 export function productPath(slug: string): string {
   return `/product/${slug}`;
 }
