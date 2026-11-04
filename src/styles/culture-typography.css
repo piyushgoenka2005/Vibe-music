@@ -391,31 +391,34 @@
 
 /* Mobile — CSS-first layout (no JS class required) */
 @media (max-width: 767px) {
+  .culture-typography,
   .culture-typography--scrollable,
   .culture-typography--mobile-scroll {
-    /* Full viewport + ~42% of pinned area — matches JS (innerHeight + runway). */
-    --culture-scroll-height: calc(100svh + (100svh - var(--site-header-offset, 90px)) * 0.42);
+    height: auto;
+    min-height: auto;
+    --culture-scroll-height: auto;
     touch-action: pan-y;
     overscroll-behavior-y: auto;
   }
 
   .culture-typography__sticky {
-    position: sticky;
-    top: var(--site-header-offset, 90px);
-    height: calc(100svh - var(--site-header-offset, 90px));
-    min-height: calc(100svh - var(--site-header-offset, 90px));
+    position: relative;
+    top: 0;
+    height: auto;
+    min-height: clamp(460px, 72svh, 600px);
+    overflow: hidden;
   }
 
   .culture-typography__content {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: flex-end;
-    height: 100%;
-    min-height: 0;
+    height: auto;
+    min-height: clamp(460px, 72svh, 600px);
     z-index: 4;
     opacity: 1 !important;
     transform: none !important;
-    padding: clamp(1.25rem, 4vw, 1.75rem) clamp(1.1rem, 4.5vw, 1.5rem) clamp(3.75rem, 11vh, 4.75rem);
+    padding: clamp(2rem, 5vh, 3.25rem) clamp(1.25rem, 5vw, 1.75rem);
   }
 
   .culture-typography__content-inner {
@@ -475,20 +478,9 @@
     z-index: 1;
   }
 
-  .culture-typography__progress {
-    left: clamp(1rem, 4vw, 1.5rem);
-    right: clamp(1rem, 4vw, 1.5rem);
-    bottom: clamp(0.85rem, 2.5vh, 1.25rem);
-  }
-
+  .culture-typography__progress,
   .culture-typography__scroll-hint {
-    bottom: clamp(2.75rem, 8vh, 3.5rem);
-    opacity: 0.9;
-    z-index: 6;
-  }
-
-  .culture-typography--mobile-scroll .culture-typography__scroll-hint {
-    display: flex;
+    display: none !important;
   }
 
   .culture-typography__bg,
@@ -572,9 +564,5 @@
 
   .culture-typography__subtitle {
     font-size: 0.9375rem;
-  }
-
-  .culture-typography__scroll-hint {
-    bottom: clamp(2.5rem, 7vh, 3.25rem);
   }
 }

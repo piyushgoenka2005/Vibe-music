@@ -137,7 +137,7 @@ export default function CultureTypographySection({
 
   /** Measure track overflow in px for both mobile + desktop (one transform unit). */
   useLayoutEffect(() => {
-    if (!motionReady) {
+    if (!motionReady || isMobile) {
       setScrollShiftPx(0);
       setStickyPinPx(0);
       return undefined;
@@ -193,7 +193,7 @@ export default function CultureTypographySection({
 
   // Always numeric px — never mix % and px (framer-motion glitch source).
   const backgroundY = useTransform(scrollYProgress, (progress) => {
-    if (!motionReady || scrollShiftPx <= 0) return 0;
+    if (!motionReady || isMobile || scrollShiftPx <= 0) return 0;
     return -scrollShiftPx * progress;
   });
 
@@ -263,7 +263,7 @@ export default function CultureTypographySection({
   const scrollTrackStyle = motionReady ? { y: backgroundY } : undefined;
 
   const sectionStyle = {
-    ...(motionReady && scrollShiftPx > 0 && stickyPinPx > 0
+    ...(motionReady && !isMobile && scrollShiftPx > 0 && stickyPinPx > 0
       ? {
           "--culture-scroll-height": `${resolveCultureSectionHeight(
             stickyPinPx,
@@ -349,7 +349,7 @@ export default function CultureTypographySection({
           </div>
         </motion.div>
 
-        {!reduceMotion ? (
+        {!reduceMotion && !isMobile ? (
           <>
             <motion.div
               className="culture-typography__scroll-hint"
