@@ -28,7 +28,10 @@ async function postHandler(request: Request) {
           parseJsonBody(request, createOrderSchema),
         ]);
         if ("error" in parsed) {
-          logPayment("Zod validation failed");
+          logPayment("Order validation rejected request", {
+            reason: parsed.errorMessage ?? "Invalid payload",
+            issues: parsed.issues?.map((i) => `${i.path.join(".") || "root"}: ${i.message}`),
+          });
           return parsed.error;
         }
         const body = parsed.data;

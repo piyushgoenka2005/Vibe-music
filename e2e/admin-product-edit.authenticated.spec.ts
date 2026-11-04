@@ -35,7 +35,7 @@ test.describe("Admin product edit roundtrip", () => {
         stockQuantity: 8,
         status: "active",
         description: "Initial description line",
-        images: ["https://cdn.example/e2e-a.jpg", "https://cdn.example/e2e-b.jpg"],
+        images: ["/images/products/electric-guitar.webp", "/images/products/acoustic-guitar.webp"],
         spin360Images: [],
         variants: [
           {
@@ -60,8 +60,11 @@ test.describe("Admin product edit roundtrip", () => {
         price: 16500,
         stockQuantity: 3,
         description: "Updated description after edit",
-        images: ["https://cdn.example/e2e-a.jpg"],
-        spin360Images: ["https://cdn.example/spin-1.jpg", "https://cdn.example/spin-2.jpg"],
+        images: ["/images/products/electric-guitar.webp"],
+        spin360Images: [
+          "/images/products/electric-guitar.webp",
+          "/images/products/acoustic-guitar.webp",
+        ],
         inTheBox: ["Processor", "Power adapter"],
         detailSpecs: [{ label: "Weight", value: "2.1 kg" }],
       },
@@ -85,7 +88,7 @@ test.describe("Admin product edit roundtrip", () => {
     expect(loaded.product?.price).toBe(16500);
     expect(loaded.product?.stockQuantity).toBe(3);
     expect(loaded.product?.description).toContain("Updated description");
-    expect(loaded.product?.images).toEqual(["https://cdn.example/e2e-a.jpg"]);
+    expect(loaded.product?.images).toEqual(["/images/products/electric-guitar.webp"]);
     expect(loaded.product?.spin360Images).toHaveLength(2);
     expect(loaded.product?.inTheBox).toEqual(["Processor", "Power adapter"]);
     expect(loaded.product?.detailSpecs?.[0]?.label).toBe("Weight");

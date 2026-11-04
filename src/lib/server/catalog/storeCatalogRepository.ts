@@ -58,7 +58,14 @@ export async function invalidateCatalogCache(): Promise<void> {
       ]);
     } catch (error) {
       // Never fail a catalog write/delete because cache busting threw.
-      console.error("[catalog] invalidateCatalogCache failed", error);
+      const message = error instanceof Error ? error.message : String(error);
+      if (
+        !message.includes("cached function") &&
+        !message.includes("during render") &&
+        !message.includes("revalidateTag")
+      ) {
+        console.error("[catalog] invalidateCatalogCache failed", error);
+      }
     }
   })().finally(() => {
     inFlightCatalogInvalidate = null;

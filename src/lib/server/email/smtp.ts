@@ -62,6 +62,9 @@ export function getSmtpTransport(): SmtpTransport | null {
     port: config.port,
     secure: config.secure,
     auth,
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
     tls:
       process.env.SMTP_TLS_REJECT_UNAUTHORIZED === "false"
         ? { rejectUnauthorized: false }

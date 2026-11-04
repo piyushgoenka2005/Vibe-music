@@ -92,6 +92,7 @@ export async function listAllBundles(): Promise<ProductBundle[]> {
 export async function upsertProductBundle(
   productId: string,
   input: UpsertProductBundleInput,
+  options?: { skipCacheInvalidation?: boolean },
 ): Promise<ProductBundle> {
   if (!isPostgresConfigured()) {
     throw new Error("DATABASE_URL is required to save product bundles");
@@ -135,7 +136,9 @@ export async function upsertProductBundle(
   });
 
   invalidateBundleCache();
-  void invalidateCatalogCache();
+  if (!options?.skipCacheInvalidation) {
+    void invalidateCatalogCache();
+  }
   return bundle;
 }
 
@@ -171,13 +174,17 @@ async function seedBundleFromProductDetail(productId: string): Promise<ProductBu
   const fromDetail = bundleFromProductDetail(product);
   if (!fromDetail) return null;
 
-  return upsertProductBundle(productId, {
-    relatedProductIds: fromDetail.relatedProductIds,
-    productName: product.name,
-    productSlug: product.slug,
-    discountPercent: DEFAULT_BUNDLE_DISCOUNT_PERCENT,
-    isActive: true,
-  });
+  return upsertProductBundle(
+    productId,
+    {
+      relatedProductIds: fromDetail.relatedProductIds,
+      productName: product.name,
+      productSlug: product.slug,
+      discountPercent: DEFAULT_BUNDLE_DISCOUNT_PERCENT,
+      isActive: true,
+    },
+    { skipCacheInvalidation: true },
+  );
 }
 
 export async function resolveBundleForProduct(

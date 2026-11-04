@@ -93,6 +93,7 @@ export async function getRelatedListByProductId(
 export async function upsertProductRelatedList(
   productId: string,
   input: UpsertProductRelatedListInput,
+  options?: { skipCacheInvalidation?: boolean },
 ): Promise<ProductRelatedList> {
   if (!isPostgresConfigured()) {
     throw new Error("DATABASE_URL is required to save related products");
@@ -133,7 +134,9 @@ export async function upsertProductRelatedList(
   });
 
   invalidateRelatedProductsCache();
-  void invalidateCatalogCache();
+  if (!options?.skipCacheInvalidation) {
+    void invalidateCatalogCache();
+  }
   return relation;
 }
 
@@ -170,12 +173,16 @@ async function seedRelationFromProductDetail(
   const fromDetail = relationFromProductDetail(product);
   if (!fromDetail) return null;
 
-  return upsertProductRelatedList(productId, {
-    relatedProductIds: fromDetail.relatedProductIds,
-    productName: product.name,
-    productSlug: product.slug,
-    isActive: true,
-  });
+  return upsertProductRelatedList(
+    productId,
+    {
+      relatedProductIds: fromDetail.relatedProductIds,
+      productName: product.name,
+      productSlug: product.slug,
+      isActive: true,
+    },
+    { skipCacheInvalidation: true },
+  );
 }
 
 function appendUniqueProducts(

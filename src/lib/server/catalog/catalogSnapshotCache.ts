@@ -89,10 +89,14 @@ export async function revalidateCatalogSnapshot(): Promise<void> {
     revalidateTag("footer-trending", { expire: 0 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    // Admin/catalog writes invoked outside an App Router request (CLI, workers).
+    // Next.js App Router prohibits revalidateTag / revalidatePath during render
+    // or inside cached functions (throws "can't be called inside a cached function").
+    // Also ignore when invoked outside an App Router request (CLI, workers).
     if (
       message.includes("static generation store missing") ||
       message.includes("during render") ||
+      message.includes("cached function") ||
+      message.includes("revalidateTag") ||
       message.includes("unsupported")
     ) {
       return;

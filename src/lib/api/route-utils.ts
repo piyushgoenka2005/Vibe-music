@@ -117,22 +117,23 @@ export function logApiRequest(
 export async function parseJsonBody<T>(
   request: Request,
   schema: z.ZodType<T>,
-): Promise<{ data: T } | { error: NextResponse }> {
+): Promise<{ data: T } | { error: NextResponse; issues?: z.ZodIssue[]; errorMessage?: string }> {
   try {
     const body = await request.json();
-    const data = schema.parse(body);
-    return { data };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+    const result = schema.safeParse(body);
+    if (!result.success) {
+      const errorMessage = result.error.issues.map((issue) => issue.message).join("; ");
       return {
-        error: applyRequestIdHeader(
-          jsonError(error.issues.map((issue) => issue.message).join("; "), 400),
-          request,
-        ),
+        error: applyRequestIdHeader(jsonError(errorMessage, 400), request),
+        issues: result.error.issues,
+        errorMessage,
       };
     }
+    return { data: result.data };
+  } catch {
     return {
       error: applyRequestIdHeader(jsonError("Invalid JSON body", 400), request),
+      errorMessage: "Invalid JSON body",
     };
   }
 }
