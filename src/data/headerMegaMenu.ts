@@ -4,6 +4,7 @@ import { getMegaMenuFeaturedImage } from "@/lib/categoryImages";
 export interface MegaMenuLink {
   label: string;
   href: string;
+  children?: MegaMenuLink[];
 }
 
 export interface MegaMenuColumn {

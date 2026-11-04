@@ -514,6 +514,8 @@ model HomepageSection {
   accentLabel String? @map("accent_label")
   ctaText     String? @map("cta_text")
   ctaLink     String? @map("cta_link")
+  secondaryCtaText String? @map("secondary_cta_text")
+  secondaryCtaLink String? @map("secondary_cta_link")
   isActive    Boolean @default(true) @map("is_active")
   sortOrder   Int     @default(0) @map("sort_order")
   sourceMode  String  @default("auto") @map("source_mode")

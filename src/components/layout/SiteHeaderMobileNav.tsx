@@ -30,7 +30,7 @@ function MobileSearchParamsWatcher({
 const MOBILE_EXTRA_LINKS = [
   {
     key: "deals",
-    label: "Today Deals",
+    label: "Deals",
     href: ROUTES.deals,
   },
   {

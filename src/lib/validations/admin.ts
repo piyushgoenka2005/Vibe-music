@@ -258,6 +258,7 @@ export const adminBannerReorderSchema = z.object({
 });
 
 const homepageSectionKeySchema = z.enum([
+  "premium_hero",
   "new_arrivals",
   "best_sellers",
   "trending",
@@ -283,6 +284,8 @@ export const adminHomepageSectionSchema = z.object({
   accentLabel: z.string().max(100).optional(),
   ctaText: z.string().max(100).optional(),
   ctaLink: z.union([z.literal(""), safeStorefrontHref]).optional(),
+  secondaryCtaText: z.string().max(100).optional(),
+  secondaryCtaLink: z.union([z.literal(""), safeStorefrontHref]).optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().min(0).optional(),
   sourceMode: z.enum(["manual", "auto"]).optional(),

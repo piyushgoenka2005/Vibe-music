@@ -997,6 +997,8 @@ function mapHomepageSection(row: {
   accentLabel: string | null;
   ctaText: string | null;
   ctaLink: string | null;
+  secondaryCtaText: string | null;
+  secondaryCtaLink: string | null;
   isActive: boolean;
   sortOrder: number;
   sourceMode: string;
@@ -1013,6 +1015,8 @@ function mapHomepageSection(row: {
     accentLabel: row.accentLabel ?? undefined,
     ctaText: row.ctaText ?? undefined,
     ctaLink: row.ctaLink ?? undefined,
+    secondaryCtaText: row.secondaryCtaText ?? undefined,
+    secondaryCtaLink: row.secondaryCtaLink ?? undefined,
     isActive: row.isActive,
     sortOrder: row.sortOrder,
     sourceMode: row.sourceMode === "manual" ? "manual" : "auto",
@@ -1069,6 +1073,26 @@ export async function seedHomepageCuratedItemsIfEmpty(): Promise<void> {
   async function empty(sectionKey: HomepageSectionKey): Promise<boolean> {
     const count = await prisma.homepageSectionItem.count({ where: { sectionKey } });
     return count === 0;
+  }
+
+  if (await empty("premium_hero")) {
+    const { MARKETING_HERO_SLIDES } = await import("@/data/marketingHeroSlides");
+    await prisma.homepageSectionItem.createMany({
+      data: MARKETING_HERO_SLIDES.slice(0, 4).map((slide, index) => ({
+        id: `premium-hero-${index + 1}`,
+        sectionKey: "premium_hero",
+        sortOrder: index,
+        isActive: true,
+        customImage: slide.src,
+        customTitle: slide.title ?? slide.alt,
+        customHref: slide.href,
+        badgeLabel: slide.badge ?? null,
+        offerText: slide.description ?? null,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      })),
+      skipDuplicates: true,
+    });
   }
 
   if (await empty("featured_stories")) {
@@ -1255,6 +1279,8 @@ export async function ensureDefaultHomepageSections(): Promise<void> {
           accentLabel: section.accentLabel ?? null,
           ctaText: section.ctaText ?? null,
           ctaLink: section.ctaLink ?? null,
+          secondaryCtaText: section.secondaryCtaText ?? null,
+          secondaryCtaLink: section.secondaryCtaLink ?? null,
           isActive: section.isActive,
           sortOrder: section.sortOrder,
           sourceMode: section.sourceMode,
@@ -1310,6 +1336,8 @@ export async function ensureMissingHomepageSections(): Promise<void> {
               accentLabel: section.accentLabel ?? null,
               ctaText: section.ctaText ?? null,
               ctaLink: section.ctaLink ?? null,
+              secondaryCtaText: section.secondaryCtaText ?? null,
+              secondaryCtaLink: section.secondaryCtaLink ?? null,
               isActive: section.isActive,
               sortOrder: section.sortOrder,
               sourceMode: section.sourceMode,
@@ -1396,6 +1424,12 @@ export async function updateHomepageSectionRecord(
       ...(patch.accentLabel !== undefined ? { accentLabel: patch.accentLabel.trim() || null } : {}),
       ...(patch.ctaText !== undefined ? { ctaText: patch.ctaText.trim() || null } : {}),
       ...(patch.ctaLink !== undefined ? { ctaLink: patch.ctaLink.trim() || null } : {}),
+      ...(patch.secondaryCtaText !== undefined
+        ? { secondaryCtaText: patch.secondaryCtaText.trim() || null }
+        : {}),
+      ...(patch.secondaryCtaLink !== undefined
+        ? { secondaryCtaLink: patch.secondaryCtaLink.trim() || null }
+        : {}),
       ...(patch.isActive !== undefined ? { isActive: patch.isActive } : {}),
       ...(patch.sortOrder !== undefined ? { sortOrder: patch.sortOrder } : {}),
       ...(patch.sourceMode !== undefined ? { sourceMode: patch.sourceMode } : {}),

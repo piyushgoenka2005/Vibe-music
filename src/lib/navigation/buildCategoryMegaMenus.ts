@@ -1,124 +1,143 @@
 import { HEADER_MEGA_MENUS, type MegaMenuItem, type MegaMenuColumn } from "@/data/headerMegaMenu";
-import { categoryPath } from "@/lib/routes";
+import { categoryPath, ROUTES } from "@/lib/routes";
 import type { Category } from "@/types/category";
 
+type HeaderSubcategory = Pick<Category, "id" | "name" | "slug"> & {
+  sortOrder?: number;
+  children?: HeaderSubcategory[];
+};
+
 /**
- * Builds dynamic header mega-menus enriched with live database categories and subcategories.
- * When database categories exist, their subcategories are dynamically wired into the navigation columns,
- * guaranteeing that any additions, renames, or deletions made in /admin/categories appear immediately in the header.
+ * Builds the fixed department menus with live submenu links.
+ * Database/taxonomy changes can update submenu links, but never the approved
+ * department labels, routes, order, or presence in the main header.
  */
-export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
+export function buildCategoryMegaMenus(
+  categories: Category[],
+  taxonomySubcategories?: ReadonlyMap<string, HeaderSubcategory[]>,
+): MegaMenuItem[] {
   if (!categories || categories.length === 0) {
-    return [];
+    if (!taxonomySubcategories || taxonomySubcategories.size === 0) return HEADER_MEGA_MENUS;
+    return HEADER_MEGA_MENUS.map((baseline) => {
+      const subcategories = taxonomySubcategories.get(baseline.slug);
+      if (!subcategories) return baseline;
+      const columns: MegaMenuColumn[] = baseline.columns.map((column) => ({
+        heading: column.heading,
+        links: [],
+      }));
+      subcategories.forEach((subcategory, index) => {
+        columns[index % columns.length]?.links.push({
+          label: subcategory.name,
+          href: categoryPath(subcategory.slug),
+          children: subcategory.children?.map((child) => ({
+            label: child.name,
+            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+          })),
+        });
+      });
+      columns[columns.length - 1]?.links.push({
+        label: `Shop all ${baseline.name}`,
+        href: baseline.href,
+      });
+      return { ...baseline, columns };
+    });
   }
 
-  const mainCategories = categories.filter((c) => !c.parentId);
-  if (mainCategories.length === 0) {
-    return [];
-  }
-
-  const subCategoriesByParent = new Map<string, Category[]>();
+  const subCategoriesByParent = new Map<string, HeaderSubcategory[]>();
 
   for (const cat of categories) {
     if (cat.parentId) {
       const existing = subCategoriesByParent.get(cat.parentId) ?? [];
-      existing.push(cat);
+      existing.push({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        sortOrder: cat.sortOrder,
+      });
       subCategoriesByParent.set(cat.parentId, existing);
     }
   }
 
-  const result: MegaMenuItem[] = [];
-
-  // Iterate over DB main categories so that deleted categories are completely excluded from the header.
-  // Order follows DB sortOrder, then baseline position if available.
-  const sortedMainCategories = [...mainCategories].sort((a, b) => {
-    const aOrder = a.sortOrder ?? 0;
-    const bOrder = b.sortOrder ?? 0;
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    const aBaseIdx = HEADER_MEGA_MENUS.findIndex((m) => m.slug === a.slug);
-    const bBaseIdx = HEADER_MEGA_MENUS.findIndex((m) => m.slug === b.slug);
-    if (aBaseIdx !== -1 && bBaseIdx !== -1) return aBaseIdx - bBaseIdx;
-    if (aBaseIdx !== -1) return -1;
-    if (bBaseIdx !== -1) return 1;
-    return a.name.localeCompare(b.name);
-  });
-
-  for (const dbMain of sortedMainCategories) {
-    const baseline = HEADER_MEGA_MENUS.find(
-      (m) =>
-        m.slug === dbMain.slug ||
-        m.slug === dbMain.id ||
-        m.name.toLowerCase() === dbMain.name.toLowerCase(),
+  return HEADER_MEGA_MENUS.map((baseline) => {
+    const dbMain = categories.find(
+      (category) =>
+        !category.parentId &&
+        (category.slug === baseline.slug ||
+          category.id === baseline.slug ||
+          category.name.toLowerCase() === baseline.name.toLowerCase()),
     );
 
-    const dbSubs = subCategoriesByParent.get(dbMain.id) ?? [];
+    if (!dbMain && !taxonomySubcategories?.has(baseline.slug)) return baseline;
+
+    const hasTaxonomySubcategories = taxonomySubcategories?.has(baseline.slug) ?? false;
+    const dbSubs =
+      taxonomySubcategories?.get(baseline.slug) ??
+      (dbMain ? taxonomySubcategories?.get(dbMain.slug) : undefined) ??
+      (dbMain ? subCategoriesByParent.get(dbMain.id) : undefined) ??
+      [];
     const sortedDbSubs = [...dbSubs].sort(
       (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name),
     );
 
-    if (!baseline) {
-      // Custom category in DB not in baseline: chunk subcategories into columns
-      const chunkSize = 5;
-      const customColumns: MegaMenuColumn[] = [];
-      if (sortedDbSubs.length > 0) {
-        for (let i = 0; i < sortedDbSubs.length; i += chunkSize) {
-          const chunk = sortedDbSubs.slice(i, i + chunkSize);
-          customColumns.push({
-            heading: i === 0 ? "Categories" : "More",
-            links: chunk.map((s) => ({
-              label: s.name,
-              href: categoryPath(s.slug),
-            })),
-          });
-        }
-      } else {
-        customColumns.push({
-          heading: dbMain.name,
-          links: [{ label: `Shop all ${dbMain.name}`, href: categoryPath(dbMain.slug) }],
-        });
-      }
-
-      result.push({
-        slug: dbMain.slug,
-        name: dbMain.name,
-        href: categoryPath(dbMain.slug),
-        columns: customColumns,
-        featured: [
-          {
-            title: dbMain.name,
-            href: categoryPath(dbMain.slug),
-            image: dbMain.imageUrl || "/images/m/home/cats/thumbs/Arrow-small.webp",
-          },
-        ],
-      });
-      continue;
-    }
-
-    // Baseline exists for this DB category
     if (sortedDbSubs.length === 0) {
-      result.push({
+      return {
         ...baseline,
-        name: dbMain.name || baseline.name,
-        href: categoryPath(dbMain.slug),
+        name: baseline.name,
+        href: baseline.href,
         featured:
-          dbMain.imageUrl || dbMain.featuredImageUrls?.length
+          dbMain?.imageUrl || dbMain?.featuredImageUrls?.length
             ? baseline.featured.map((card, index) => ({
                 ...card,
                 image:
-                  dbMain.featuredImageUrls?.[index] ||
-                  (index === 0 ? dbMain.imageUrl : undefined) ||
+                  dbMain?.featuredImageUrls?.[index] ||
+                  (index === 0 ? dbMain?.imageUrl : undefined) ||
                   card.image,
               }))
             : baseline.featured,
-      });
-      continue;
+      };
     }
 
-    // Deep clone baseline columns so we can enrich them
+    // When taxonomy data is available, it is authoritative: deleted taxonomy
+    // rows must not survive as static submenu links.
     const columns: MegaMenuColumn[] = baseline.columns.map((col) => ({
       heading: col.heading,
-      links: [...col.links],
+      links: hasTaxonomySubcategories ? [] : [...col.links],
     }));
+
+    if (hasTaxonomySubcategories) {
+      sortedDbSubs.forEach((sub, index) => {
+        const targetColumn = columns[index % columns.length];
+        targetColumn?.links.push({
+          label: sub.name,
+          href: categoryPath(sub.slug),
+          children: sub.children?.map((child) => ({
+            label: child.name,
+            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+          })),
+        });
+      });
+
+      const lastColumn = columns[columns.length - 1];
+      if (lastColumn) {
+        lastColumn.links.push({
+          label: `Shop all ${baseline.name}`,
+          href: baseline.href,
+        });
+      }
+
+      const featured =
+        dbMain?.imageUrl || dbMain?.featuredImageUrls?.length
+          ? baseline.featured.map((card, index) => ({
+              ...card,
+              image:
+                dbMain?.featuredImageUrls?.[index] ||
+                (index === 0 ? dbMain?.imageUrl : undefined) ||
+                card.image,
+            }))
+          : baseline.featured;
+
+      return { ...baseline, columns, featured };
+    }
 
     // Track which DB subcategories matched existing links in the columns
     const matchedSubIds = new Set<string>();
@@ -136,6 +155,10 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
           return {
             label: match.name,
             href: categoryPath(match.slug),
+            children: match.children?.map((child) => ({
+              label: child.name,
+              href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+            })),
           };
         }
         return link;
@@ -155,6 +178,10 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
         targetCol.links.unshift({
           label: sub.name,
           href: categoryPath(sub.slug),
+          children: sub.children?.map((child) => ({
+            label: child.name,
+            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+          })),
         });
       }
     }
@@ -168,30 +195,32 @@ export function buildCategoryMegaMenus(categories: Category[]): MegaMenuItem[] {
           targetCol.links.unshift({
             label: sub.name,
             href: categoryPath(sub.slug),
+            children: sub.children?.map((child) => ({
+              label: child.name,
+              href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+            })),
           });
         }
       }
     }
 
     const featured =
-      dbMain.imageUrl || dbMain.featuredImageUrls?.length
+      dbMain?.imageUrl || dbMain?.featuredImageUrls?.length
         ? baseline.featured.map((card, index) => ({
             ...card,
             image:
-              dbMain.featuredImageUrls?.[index] ||
-              (index === 0 ? dbMain.imageUrl : undefined) ||
+              dbMain?.featuredImageUrls?.[index] ||
+              (index === 0 ? dbMain?.imageUrl : undefined) ||
               card.image,
           }))
         : baseline.featured;
 
-    result.push({
+    return {
       ...baseline,
-      name: dbMain.name || baseline.name,
-      href: categoryPath(dbMain.slug),
+      name: baseline.name,
+      href: baseline.href,
       columns,
       featured,
-    });
-  }
-
-  return result;
+    };
+  });
 }

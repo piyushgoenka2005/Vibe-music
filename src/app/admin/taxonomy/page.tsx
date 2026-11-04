@@ -306,23 +306,20 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
     setIsBulkDeleting(true);
     try {
       if (bulkDeleteDialog.type === "all") {
-        await adminMutateJson("/api/admin/taxonomy/bulk", {
-          method: "POST",
+        await adminMutateJson("/api/admin/taxonomy", {
+          method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "delete_all",
-            category: selectedCategory !== "all" ? selectedCategory : undefined,
-            search: search || undefined,
+            all: true,
           }),
         });
         setPage(1);
       } else {
         const ids = Array.from(selectedIds);
-        await adminMutateJson("/api/admin/taxonomy/bulk", {
-          method: "POST",
+        await adminMutateJson("/api/admin/taxonomy", {
+          method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "delete",
             ids,
           }),
         });

@@ -1,6 +1,7 @@
 import type { BigNamesDealItem } from "@/lib/homepage/bigNamesDeals";
 
 export const HOMEPAGE_SECTION_KEYS = [
+  "premium_hero",
   "new_arrivals",
   "best_sellers",
   "trending",
@@ -48,6 +49,8 @@ export interface HomepageSection {
   accentLabel?: string;
   ctaText?: string;
   ctaLink?: string;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
   isActive: boolean;
   sortOrder: number;
   sourceMode: HomepageSourceMode;
@@ -183,6 +186,8 @@ export type CreateHomepageSectionInput = Pick<
   | "accentLabel"
   | "ctaText"
   | "ctaLink"
+  | "secondaryCtaText"
+  | "secondaryCtaLink"
   | "isActive"
   | "sortOrder"
   | "sourceMode"
@@ -215,6 +220,7 @@ export type UpdateHomepageSectionItemInput = Partial<
 >;
 
 export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
+  premium_hero: "Premium Hero",
   new_arrivals: "New Arrivals",
   best_sellers: "Best Sellers",
   trending: "Trending",
@@ -235,6 +241,21 @@ export const HOMEPAGE_SECTION_LABELS: Record<HomepageSectionKey, string> = {
 };
 
 export const DEFAULT_HOMEPAGE_SECTIONS: CreateHomepageSectionInput[] = [
+  {
+    sectionKey: "premium_hero",
+    title: "Sound better\nPlay louder\nShip faster.",
+    subtitle:
+      "Musical instruments, pro audio, and studio essentials — curated for creators who want gear that keeps up.",
+    ctaText: "Shop all gear",
+    ctaLink: "/search",
+    secondaryCtaText: "View deals",
+    secondaryCtaLink: "/search/results?q=deals",
+    isActive: true,
+    sortOrder: -1,
+    sourceMode: "manual",
+    maxItems: 4,
+    layout: "product_grid",
+  },
   {
     sectionKey: "new_arrivals",
     title: "Top New Products",

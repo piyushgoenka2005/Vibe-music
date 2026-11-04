@@ -47,19 +47,32 @@ function spec(input: Omit<ImageSpec, "endpoint" | "maxUploadMb"> & Partial<Image
 
 export const IMAGE_SPECS = {
   /**
-   * `category.imageUrl` is the first featured card in the header mega-menu. The card is a
-   * near-square tile (2-up grid, 220px min-height), so square art with a centred subject is
-   * the only safe choice. The card label overlays the bottom of the image.
+   * `category.imageUrl` is rendered by the `/category` department cards. The card image
+   * frame stays 4:3 at every responsive breakpoint, so uploads with this ratio remain fully
+   * visible without stretching or unexpected cropping.
    */
+  categoryThumbnail: spec({
+    id: "category-thumbnail",
+    label: "Categories page thumbnail",
+    aspectRatio: "4 / 3",
+    ratioLabel: "4:3 (landscape card)",
+    recommendedWidth: 1200,
+    recommendedHeight: 900,
+    fit: "contain",
+    hint: "Displayed in the thumbnail box on the Categories page. Keep the main subject centred and use a 4:3 composition for predictable card framing.",
+    previewMaxWidth: 320,
+  }),
+
+  /** @deprecated Use categoryThumbnail for the public Categories page card. */
   categoryStorefront: spec({
     id: "category-storefront",
     label: "Category storefront image",
-    aspectRatio: "1 / 1",
-    ratioLabel: "1:1 (square)",
-    recommendedWidth: 1000,
-    recommendedHeight: 1000,
-    fit: "cover",
-    hint: "Used as featured card 1 in the header mega-menu. Keep the product centred and the bottom ~25% clear — the category label sits over it.",
+    aspectRatio: "4 / 3",
+    ratioLabel: "4:3 (landscape card)",
+    recommendedWidth: 1200,
+    recommendedHeight: 900,
+    fit: "contain",
+    hint: "Displayed in the thumbnail box on the Categories page. Keep the main subject centred and use a 4:3 composition for predictable card framing.",
     previewMaxWidth: 320,
   }),
 

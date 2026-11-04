@@ -84,13 +84,17 @@ export default function SiteHeaderNav({
     [brandsMegaMenu],
   );
 
-  const effectiveCategoryMenus = useMemo(
-    () =>
-      categoryMegaMenus !== null && categoryMegaMenus !== undefined && categoryMegaMenus.length > 0
-        ? categoryMegaMenus
-        : HEADER_MEGA_MENUS,
-    [categoryMegaMenus],
-  );
+  const effectiveCategoryMenus = useMemo(() => {
+    if (!categoryMegaMenus || categoryMegaMenus.length === 0) return HEADER_MEGA_MENUS;
+
+    const generatedBySlug = new Map(categoryMegaMenus.map((menu) => [menu.slug, menu]));
+    const orderedMenus = HEADER_MEGA_MENUS.map(
+      (baseline) => generatedBySlug.get(baseline.slug) ?? baseline,
+    );
+    const baselineSlugs = new Set(HEADER_MEGA_MENUS.map((menu) => menu.slug));
+
+    return [...orderedMenus, ...categoryMegaMenus.filter((menu) => !baselineSlugs.has(menu.slug))];
+  }, [categoryMegaMenus]);
 
   const megaMenuBySlug = useMemo(() => {
     const menus = { ...MEGA_MENU_BY_SLUG };
@@ -149,10 +153,22 @@ export default function SiteHeaderNav({
   const navItems: NavGooItem[] = useMemo(() => {
     if (configuredNavItems && configuredNavItems.length > 0) {
       // Filter out "All Categories" if configured as an item, since it gets its own special trigger
-      return configuredNavItems
+      const visibleItems = configuredNavItems.filter(
+        (item) =>
+          item.label.toLowerCase() !== "all categories" && item.isActive && item.visibleDesktop,
+      );
+      const hasDealsLabel = visibleItems.some(
+        (item) => item.url === ROUTES.deals && item.label.trim().toLowerCase() === "deals",
+      );
+
+      return visibleItems
         .filter(
           (item) =>
-            item.label.toLowerCase() !== "all categories" && item.isActive && item.visibleDesktop,
+            !(
+              hasDealsLabel &&
+              item.url === ROUTES.deals &&
+              item.label.trim().toLowerCase() === "today deals"
+            ),
         )
         .map((item) => {
           let slug: string | undefined = undefined;
@@ -203,11 +219,6 @@ export default function SiteHeaderNav({
         label: "Deals",
         href: ROUTES.deals,
         badge: "Hot",
-      },
-      {
-        key: "today-deals",
-        label: "Today Deals",
-        href: ROUTES.deals,
       },
       {
         key: "gp9",
@@ -326,6 +337,7 @@ export default function SiteHeaderNav({
               onClick={() => setAllCategoriesOpen((prev) => !prev)}
               aria-expanded={allCategoriesOpen}
               aria-haspopup="true"
+              aria-controls="all-categories-mega-menu"
               aria-label="Browse all categories"
             >
               <LayoutGrid size={16} className="site-header__all-cats-icon" aria-hidden />
@@ -382,6 +394,7 @@ export default function SiteHeaderNav({
         <div onMouseEnter={clearCloseTimer} onMouseLeave={scheduleClose}>
           <AllCategoriesMegaMenu
             open={allCategoriesOpen}
+            menus={effectiveCategoryMenus}
             onClose={() => setAllCategoriesOpen(false)}
             onNavigate={handleNavigate}
           />

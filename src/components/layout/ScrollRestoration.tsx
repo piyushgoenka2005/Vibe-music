@@ -620,6 +620,14 @@ export default function ScrollRestoration() {
       applyScrollY(0);
       lastYRef.current = 0;
       clearStorefrontBackIntent();
+      // Next can apply its own scroll adjustment after this layout effect.
+      // Re-apply once the new route has painted so the page header and
+      // breadcrumbs are consistently visible after client-side navigation.
+      requestAnimationFrame(() => {
+        applyScrollY(0);
+        window.dispatchEvent(new Event("app:scroll"));
+        requestAnimationFrame(() => applyScrollY(0));
+      });
     }
 
     return undefined;

@@ -1028,7 +1028,7 @@
   }
 
   .categories-index__thumb-wrap {
-    aspect-ratio: 5 / 4;
+    aspect-ratio: 4 / 3;
     margin-bottom: 0.5rem;
     border-radius: 10px;
   }

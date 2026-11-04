@@ -422,6 +422,7 @@ async function resolveBrands(
 
 function sectionDomId(sectionKey: HomepageSectionKey): string {
   const map: Record<HomepageSectionKey, string> = {
+    premium_hero: "premium-hero",
     new_arrivals: "top-new-products",
     best_sellers: "best-sellers",
     trending: "trending-products",
@@ -668,6 +669,7 @@ async function resolveSection(
   };
 
   if (
+    effectiveSection.sectionKey === "premium_hero" ||
     effectiveSection.sectionKey === "big_names_deals" ||
     effectiveSection.sectionKey === "featured_stories" ||
     effectiveSection.sectionKey === "browse_by_categories" ||

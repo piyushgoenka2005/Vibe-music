@@ -405,6 +405,76 @@ export async function getTaxonomyFilterOptions() {
 }
 
 /**
+ * Returns taxonomy subcategories for the fixed storefront header departments.
+ * The taxonomy table is authoritative for submenu links; it never creates or
+ * removes the department-level header entries.
+ */
+export async function getTaxonomySubcategoriesForHeader(): Promise<
+  Map<
+    string,
+    Array<{
+      id: string;
+      name: string;
+      slug: string;
+      sortOrder: number;
+      children: Array<{ id: string; name: string; slug: string; sortOrder: number }>;
+    }>
+  >
+> {
+  const result = new Map<
+    string,
+    Array<{
+      id: string;
+      name: string;
+      slug: string;
+      sortOrder: number;
+      children: Array<{ id: string; name: string; slug: string; sortOrder: number }>;
+    }>
+  >();
+  if (!isPostgresConfigured()) return result;
+
+  const rows = await prisma.catalogTaxonomy.findMany({
+    select: { id: true, category: true, subcategory: true, productType: true, variant: true },
+    orderBy: [{ category: "asc" }, { subcategory: "asc" }, { productType: "asc" }],
+  });
+
+  for (const row of rows) {
+    const categoryKey = slugify(row.category);
+    const subcategory = row.subcategory.trim();
+    if (!categoryKey || !subcategory) continue;
+    const entries = result.get(categoryKey) ?? [];
+    let entry = entries.find((item) => item.name.toLowerCase() === subcategory.toLowerCase());
+    if (!entry) {
+      entry = {
+        id: row.id,
+        name: subcategory,
+        slug: slugify(`${row.category}-${subcategory}`),
+        sortOrder: entries.length,
+        children: [],
+      };
+      entries.push(entry);
+    }
+    const productType = row.productType.trim();
+    if (productType) {
+      const childLabel = row.variant?.trim()
+        ? `${productType} - ${row.variant.trim()}`
+        : productType;
+      if (!entry.children.some((child) => child.name.toLowerCase() === childLabel.toLowerCase())) {
+        entry.children.push({
+          id: `${row.id}:${childLabel}`,
+          name: childLabel,
+          slug: slugify(`${row.category}-${subcategory}-${childLabel}`),
+          sortOrder: entry.children.length,
+        });
+      }
+    }
+    result.set(categoryKey, entries);
+  }
+
+  return result;
+}
+
+/**
  * Sync distinct categories and subcategories from the taxonomy table to the main Category table.
  */
 export async function syncCategoriesFromTaxonomy(): Promise<{

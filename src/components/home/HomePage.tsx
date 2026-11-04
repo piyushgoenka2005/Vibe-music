@@ -8,7 +8,7 @@ import HomepageSectionsSkeleton from "@/components/homepage/HomepageSectionsSkel
 import HomepageNewArrivalsAsync from "@/components/home/HomepageNewArrivalsAsync";
 import BlogTeaserSkeleton from "@/components/home/BlogTeaserSkeleton";
 import HomepageBlogTeaser from "@/components/home/HomepageBlogTeaser";
-import PremiumHero from "@/components/home/PremiumHero";
+import PremiumHeroLive from "@/components/home/PremiumHeroLive";
 
 const BrowseCategoryCardsSection = dynamic(
   () => import("@/components/home/BrowseCategoryCardsSection"),
@@ -72,7 +72,7 @@ export default function HomePage() {
         <HomepageBannerHeroSection />
       </Section>
 
-      <PremiumHero />
+      <PremiumHeroLive />
       <HomepageStats />
 
       <Section name="New arrivals" fallback={<HomepageSectionsSkeleton />}>

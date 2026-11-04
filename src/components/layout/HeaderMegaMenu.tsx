@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
 
 interface HeaderMegaMenuProps {
@@ -9,6 +10,7 @@ interface HeaderMegaMenuProps {
 }
 
 export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   if (!menu) return null;
 
   return (
@@ -25,13 +27,36 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
               <div key={column.heading} className="header-mega__column">
                 <p className="header-mega__heading">{column.heading}</p>
                 <ul className="header-mega__links">
-                  {column.links.map((link) => (
-                    <li key={`${link.href}:${link.label}`}>
-                      <Link href={link.href} className="header-mega__link">
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
+                  {column.links.map((link) => {
+                    const linkKey = `${link.href}:${link.label}`;
+                    return (
+                      <li
+                        key={linkKey}
+                        className="header-mega__link-item"
+                        onMouseEnter={() => setHoveredLink(linkKey)}
+                        onMouseLeave={() => setHoveredLink(null)}
+                      >
+                        <Link href={link.href} className="header-mega__link">
+                          {link.label}
+                        </Link>
+                        {link.children && link.children.length > 0 && hoveredLink === linkKey ? (
+                          <div className="header-mega__link-submenu" role="menu">
+                            <p className="header-mega__link-submenu-title">{link.label}</p>
+                            {link.children.map((child) => (
+                              <Link
+                                key={`${child.href}:${child.label}`}
+                                href={child.href}
+                                className="header-mega__link-submenu-link"
+                                role="menuitem"
+                              >
+                                {child.label}
+                              </Link>
+                            ))}
+                          </div>
+                        ) : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
@@ -39,7 +64,11 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
 
           <div className="header-mega__featured">
             {menu.featured.map((card) => (
-              <Link key={`${card.href}:${card.title}`} href={card.href} className="header-mega__card">
+              <Link
+                key={`${card.href}:${card.title}`}
+                href={card.href}
+                className="header-mega__card"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element -- mega-menu featured card art */}
                 <img
                   src={card.image}

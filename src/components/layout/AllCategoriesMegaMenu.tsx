@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Sparkles } from "lucide-react";
 import { categoryPath, ROUTES } from "@/lib/routes";
+import type { MegaMenuItem } from "@/data/headerMegaMenu";
 
 interface CategoryGroup {
   name: string;
@@ -81,19 +82,42 @@ const DEFAULT_CATEGORY_GROUPS: CategoryGroup[] = [
 
 interface AllCategoriesMegaMenuProps {
   open: boolean;
+  menus?: MegaMenuItem[] | null;
   onClose?: () => void;
   onNavigate?: () => void;
 }
 
-export default function AllCategoriesMegaMenu({ open, onNavigate }: AllCategoriesMegaMenuProps) {
+export default function AllCategoriesMegaMenu({
+  open,
+  menus,
+  onNavigate,
+}: AllCategoriesMegaMenuProps) {
   if (!open) return null;
 
+  const groups =
+    menus && menus.length > 0
+      ? menus.map((menu) => ({
+          name: menu.name,
+          slug: menu.slug,
+          subcategories: menu.columns.flatMap((column) =>
+            column.links
+              .filter((link) => !link.label.toLowerCase().startsWith("shop all"))
+              .map((link) => ({ name: link.label, slug: link.href })),
+          ),
+        }))
+      : DEFAULT_CATEGORY_GROUPS;
+
   return (
-    <div className="all-cats-mega" role="region" aria-label="All Categories Navigation">
+    <div
+      id="all-categories-mega-menu"
+      className="all-cats-mega"
+      role="region"
+      aria-label="All Categories Navigation"
+    >
       <div className="all-cats-mega__panel">
         <div className="all-cats-mega__inner">
           <div className="all-cats-mega__grid">
-            {DEFAULT_CATEGORY_GROUPS.map((group) => (
+            {groups.map((group) => (
               <div key={group.slug} className="all-cats-mega__col">
                 <Link
                   href={categoryPath(group.slug)}
@@ -107,7 +131,7 @@ export default function AllCategoriesMegaMenu({ open, onNavigate }: AllCategorie
                   {group.subcategories.map((sub) => (
                     <li key={sub.slug}>
                       <Link
-                        href={categoryPath(sub.slug)}
+                        href={sub.slug.startsWith("/") ? sub.slug : categoryPath(sub.slug)}
                         className="all-cats-mega__link"
                         onClick={onNavigate}
                       >
@@ -117,7 +141,7 @@ export default function AllCategoriesMegaMenu({ open, onNavigate }: AllCategorie
                   ))}
                   <li>
                     <Link
-                      href={categoryPath(group.slug)}
+                      href={group.slug.startsWith("/") ? group.slug : categoryPath(group.slug)}
                       className="all-cats-mega__link all-cats-mega__link--all"
                       onClick={onNavigate}
                     >

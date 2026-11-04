@@ -44,89 +44,48 @@ export default function AnnouncementBar({
   const activeItems = items && items.length > 0 ? items.filter((i) => i.isActive) : null;
 
   if (activeItems && activeItems.length > 0) {
+    const utilitySequence = Array.from({ length: 6 }, (_, sequenceIndex) =>
+      activeItems.map((item) => {
+        const IconComponent = item.icon ? ICON_MAP[item.icon] : null;
+        const content = (
+          <span className="announcement-bar__utility-item">
+            {IconComponent ? <IconComponent size={13} className="announcement-bar__icon" /> : null}
+            <span>{item.label}</span>
+          </span>
+        );
+
+        return item.url && item.url !== "#" ? (
+          <Link
+            key={`${item.id}-${sequenceIndex}`}
+            href={item.url}
+            className="announcement-bar__utility-link"
+            target={item.openInNewTab ? "_blank" : undefined}
+            rel={item.openInNewTab ? "noopener noreferrer" : undefined}
+          >
+            {content}
+          </Link>
+        ) : (
+          <span key={`${item.id}-${sequenceIndex}`}>{content}</span>
+        );
+      }),
+    ).flat();
+
     return (
       <div
         className="announcement-bar announcement-bar--utility"
         role="region"
-        aria-label="Store announcement and utility navigation"
+        aria-label="Scrolling store announcements and utility navigation"
       >
-        <div className="announcement-bar__utility-container">
-          <div className="announcement-bar__utility-left">
-            {activeItems.slice(0, 3).map((item) => {
-              const IconComponent = item.icon ? ICON_MAP[item.icon] : null;
-              const content = (
-                <span className="announcement-bar__utility-item">
-                  {IconComponent ? (
-                    <IconComponent size={13} className="announcement-bar__icon" />
-                  ) : null}
-                  <span>{item.label}</span>
-                </span>
-              );
-
-              if (item.url && item.url !== "#") {
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.url}
-                    className="announcement-bar__utility-link"
-                    target={item.openInNewTab ? "_blank" : undefined}
-                    rel={item.openInNewTab ? "noopener noreferrer" : undefined}
-                  >
-                    {content}
-                  </Link>
-                );
-              }
-              return <span key={item.id}>{content}</span>;
-            })}
-          </div>
-
-          <div className="announcement-bar__utility-right">
-            {activeItems.slice(3).map((item) => {
-              const IconComponent = item.icon ? ICON_MAP[item.icon] : null;
-              const content = (
-                <span className="announcement-bar__utility-item">
-                  {IconComponent ? (
-                    <IconComponent size={13} className="announcement-bar__icon" />
-                  ) : null}
-                  <span>{item.label}</span>
-                </span>
-              );
-
-              if (item.url && item.url !== "#") {
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.url}
-                    className="announcement-bar__utility-link"
-                    target={item.openInNewTab ? "_blank" : undefined}
-                    rel={item.openInNewTab ? "noopener noreferrer" : undefined}
-                  >
-                    {content}
-                  </Link>
-                );
-              }
-              return <span key={item.id}>{content}</span>;
-            })}
-          </div>
-        </div>
-
-        {/* Mobile compact strip */}
-        <div className="announcement-bar__mobile-strip">
-          <Marquee
-            className="announcement-bar__marquee"
-            trackClassName="announcement-bar__marquee-track"
-            sequenceClassName="announcement-bar__marquee-sequence"
-            duration="var(--announcement-marquee-duration, 35s)"
-            pauseOnHover={false}
-            role="presentation"
-          >
-            {activeItems.map((item) => (
-              <span key={item.id} className="announcement-bar__item">
-                {item.label}
-              </span>
-            ))}
-          </Marquee>
-        </div>
+        <Marquee
+          className="announcement-bar__marquee"
+          trackClassName="announcement-bar__marquee-track"
+          sequenceClassName="announcement-bar__marquee-sequence"
+          duration="var(--announcement-marquee-duration, 35s)"
+          pauseOnHover={false}
+          role="presentation"
+        >
+          {utilitySequence}
+        </Marquee>
       </div>
     );
   }

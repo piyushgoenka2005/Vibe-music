@@ -69,7 +69,14 @@ export default function SiteHeader({
   }, [pathname]);
 
   useEffect(() => {
-    if (!isCompactHeader && mobileOpen) setMobileOpen(false);
+    if (
+      !isCompactHeader &&
+      mobileOpen &&
+      typeof window !== "undefined" &&
+      !window.matchMedia("(max-width: 1023px)").matches
+    ) {
+      setMobileOpen(false);
+    }
   }, [isCompactHeader, mobileOpen]);
 
   useEffect(() => {
@@ -101,10 +108,9 @@ export default function SiteHeader({
   }, [mobileOpen]);
 
   const toggleMobileNav = useCallback(() => {
-    if (!isCompactHeader) return;
     searchStore.closeOverlay();
     setMobileOpen((open) => !open);
-  }, [isCompactHeader]);
+  }, []);
 
   const { user, isAuthenticated, isInitialized } = useAuthStore(
     useShallow((state) => ({
@@ -241,7 +247,7 @@ export default function SiteHeader({
                 className="site-header__search-submit assets-site-header__menu-search-submit"
                 aria-label="Search"
               >
-                <Search size={16} strokeWidth={2.5} aria-hidden />
+                <Search size={22} strokeWidth={2.5} aria-hidden />
               </button>
             </form>
           ) : (
@@ -350,7 +356,7 @@ export default function SiteHeader({
       </Suspense>
 
       <SiteHeaderMobileDrawer
-        open={isCompactHeader && mobileOpen}
+        open={mobileOpen}
         onClose={() => setMobileOpen(false)}
         onNavigate={() => setMobileOpen(false)}
         brandsMegaMenu={brandsMegaMenu}

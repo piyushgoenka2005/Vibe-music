@@ -16,7 +16,7 @@ describe("imageSpecRatio", () => {
 
 describe("isNearImageSpecRatio", () => {
   it("accepts images within the tolerance", () => {
-    expect(isNearImageSpecRatio(1000, 1000, IMAGE_SPECS.categoryStorefront)).toBe(true);
+    expect(isNearImageSpecRatio(1200, 900, IMAGE_SPECS.categoryThumbnail)).toBe(true);
     expect(isNearImageSpecRatio(1600, 1200, IMAGE_SPECS.browseCategoryCard)).toBe(true);
   });
 

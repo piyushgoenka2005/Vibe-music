@@ -336,8 +336,8 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
               </div>
 
               <BannerImageUpload
-                label="Storefront image"
-                spec={IMAGE_SPECS.categoryStorefront}
+                label="Categories page thumbnail"
+                spec={IMAGE_SPECS.categoryThumbnail}
                 value={form.imageUrl}
                 onChange={(url) => setForm({ ...form, imageUrl: url })}
               />
@@ -685,11 +685,10 @@ export default function AdminCategoriesPage() {
         <AdminShell admin={admin} title="Categories & Subcategories">
           <CategoriesContent
             canWrite={
-              admin.role === "super_admin" || (admin.permissions ?? []).includes("categories:write")
+              admin.role === "super_admin" || admin.permissions.includes("categories:write")
             }
             canDelete={
-              admin.role === "super_admin" ||
-              (admin.permissions ?? []).includes("categories:delete")
+              admin.role === "super_admin" || admin.permissions.includes("categories:delete")
             }
           />
         </AdminShell>

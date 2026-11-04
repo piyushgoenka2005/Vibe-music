@@ -297,9 +297,12 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
           accentLabel: sectionForm.accentLabel ?? activeSection.accentLabel ?? "",
           ctaText: sectionForm.ctaText ?? activeSection.ctaText ?? "",
           ctaLink: sectionForm.ctaLink ?? activeSection.ctaLink ?? "",
+          secondaryCtaText: sectionForm.secondaryCtaText ?? activeSection.secondaryCtaText ?? "",
+          secondaryCtaLink: sectionForm.secondaryCtaLink ?? activeSection.secondaryCtaLink ?? "",
           isActive: sectionForm.isActive ?? activeSection.isActive,
           sourceMode:
             activeKey === "big_names_deals" ||
+            activeKey === "premium_hero" ||
             activeKey === "featured_stories" ||
             activeKey === "featured_categories" ||
             activeKey === "browse_by_categories" ||
@@ -310,11 +313,13 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               ? "manual"
               : (sectionForm.sourceMode ?? activeSection.sourceMode),
           maxItems:
-            activeKey === "big_names_deals"
-              ? BIG_NAMES_DEALS_MAX_ITEMS
-              : activeKey === "shop_the_highlights"
-                ? 3
-                : (sectionForm.maxItems ?? activeSection.maxItems),
+            activeKey === "premium_hero"
+              ? 4
+              : activeKey === "big_names_deals"
+                ? BIG_NAMES_DEALS_MAX_ITEMS
+                : activeKey === "shop_the_highlights"
+                  ? 3
+                  : (sectionForm.maxItems ?? activeSection.maxItems),
           layout: sectionForm.layout ?? activeSection.layout,
         }),
       });
@@ -483,6 +488,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         accentLabel: section.accentLabel,
         ctaText: section.ctaText,
         ctaLink: section.ctaLink,
+        secondaryCtaText: section.secondaryCtaText,
+        secondaryCtaLink: section.secondaryCtaLink,
         isActive: section.isActive,
         sourceMode: section.sourceMode,
         maxItems: section.maxItems,
@@ -518,6 +525,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     accentLabel: sectionForm.accentLabel ?? activeSection.accentLabel ?? "",
     ctaText: sectionForm.ctaText ?? activeSection.ctaText ?? "",
     ctaLink: sectionForm.ctaLink ?? activeSection.ctaLink ?? "",
+    secondaryCtaText: sectionForm.secondaryCtaText ?? activeSection.secondaryCtaText ?? "",
+    secondaryCtaLink: sectionForm.secondaryCtaLink ?? activeSection.secondaryCtaLink ?? "",
     isActive: sectionForm.isActive ?? activeSection.isActive,
     sourceMode: sectionForm.sourceMode ?? activeSection.sourceMode,
     maxItems: sectionForm.maxItems ?? activeSection.maxItems,
@@ -525,6 +534,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
   };
 
   const isStorySection = activeKey === "featured_stories";
+  const isPremiumHeroSection = activeKey === "premium_hero";
   const isBigNamesSection = activeKey === "big_names_deals";
   const isGearStoriesSection = activeKey === "gear_stories";
   const isGearAdvisorsSection = activeKey === "gear_advisors";
@@ -547,6 +557,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     activeKey !== "social_rail";
   const isBrandSection = activeKey === "brand_strip";
   const forceManualSource =
+    activeKey === "premium_hero" ||
     isStorySection ||
     isBigNamesSection ||
     isCategorySection ||
@@ -557,6 +568,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     activeKey === "trending";
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
   const canAddHighlightsItem = !isShopHighlightsSection || sectionItems.length < 3;
+  const canAddPremiumHeroItem = !isPremiumHeroSection || sectionItems.length < 4;
   const showCatalogEmptyWarning =
     isProductSection &&
     !isBigNamesSection &&
@@ -676,6 +688,38 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   }
                 />
               </div>
+            ) : null}
+            {activeKey === "premium_hero" ? (
+              <>
+                <div className="admin-form-group">
+                  <label>Secondary CTA Text</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    value={form.secondaryCtaText}
+                    onChange={(event) =>
+                      setSectionForm((prev) => ({
+                        ...prev,
+                        secondaryCtaText: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="admin-form-group">
+                  <label>Secondary CTA Link</label>
+                  <input
+                    className="admin-input"
+                    style={{ width: "100%" }}
+                    value={form.secondaryCtaLink}
+                    onChange={(event) =>
+                      setSectionForm((prev) => ({
+                        ...prev,
+                        secondaryCtaLink: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </>
             ) : null}
             {!isSocialRailSection ? (
               <div className="admin-form-group">
@@ -1638,6 +1682,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                     (!editingItemId &&
                       (!canAddBigNamesItem ||
                         !canAddHighlightsItem ||
+                        !canAddPremiumHeroItem ||
                         (isGearAdvisorsSection && sectionItems.length >= 1)))
                   }
                   onClick={() => addItemMutation.mutate()}
@@ -1665,7 +1710,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                               ? "Add Editorial Card"
                               : isShopHighlightsSection
                                 ? "Add Highlight Product"
-                                : "Add Item"}
+                                : isPremiumHeroSection
+                                  ? "Add Hero Product"
+                                  : "Add Item"}
                 </button>
               ) : null}
               {canWrite && editingItemId ? (
@@ -1683,6 +1730,11 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               {isBigNamesSection && !canAddBigNamesItem && !editingItemId ? (
                 <p className="admin-form-hint" style={{ marginTop: 8, width: "100%" }}>
                   Maximum {BIG_NAMES_DEALS_MAX_ITEMS} guitars reached.
+                </p>
+              ) : null}
+              {isPremiumHeroSection && !canAddPremiumHeroItem && !editingItemId ? (
+                <p className="admin-form-hint" style={{ marginTop: 8, width: "100%" }}>
+                  Maximum 4 hero products reached.
                 </p>
               ) : null}
               {isGearAdvisorsSection && !editingItemId && sectionItems.length >= 1 ? (

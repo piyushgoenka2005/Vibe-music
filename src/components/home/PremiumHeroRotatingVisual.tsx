@@ -86,8 +86,12 @@ function HeroMosaicCell({ slide, index }: { slide: MarketingHeroSlide; index: nu
   );
 }
 
-export default function PremiumHeroRotatingVisual() {
-  const slides = MARKETING_HERO_SLIDES.slice(0, MOSAIC_COUNT);
+export default function PremiumHeroRotatingVisual({
+  slides: configuredSlides,
+}: {
+  slides?: MarketingHeroSlide[];
+}) {
+  const slides = (configuredSlides ?? MARKETING_HERO_SLIDES).slice(0, MOSAIC_COUNT);
 
   if (slides.length === 0) return null;
 

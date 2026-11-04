@@ -2,6 +2,7 @@ import { cache } from "react";
 import { HEADER_MEGA_MENUS, type MegaMenuItem } from "@/data/headerMegaMenu";
 import { buildCategoryMegaMenus } from "@/lib/navigation/buildCategoryMegaMenus";
 import { listCategories } from "@/lib/server/catalog/categoryRepository";
+import { getTaxonomySubcategoriesForHeader } from "@/lib/server/taxonomy/taxonomyRepository";
 import { isPostgresConfigured } from "@/lib/db/prisma";
 import type { Category } from "@/types/category";
 import {
@@ -290,25 +291,6 @@ const DEFAULT_MAIN_NAV_ITEMS: NavigationMenuItemRecord[] = [
     id: "def_nav_8",
     menuId: "main_nav",
     parentId: null,
-    label: "Today Deals",
-    url: "/deals",
-    categoryId: null,
-    icon: null,
-    sortOrder: 8,
-    itemType: "link",
-    megaMenuData: null,
-    isActive: true,
-    visibleDesktop: true,
-    visibleMobile: true,
-    openInNewTab: false,
-    badgeText: null,
-    createdAt: "",
-    updatedAt: "",
-  },
-  {
-    id: "def_nav_9",
-    menuId: "main_nav",
-    parentId: null,
     label: "Grand Piano",
     url: "/gp9",
     categoryId: null,
@@ -362,9 +344,22 @@ export const loadHeaderData = cache(async (): Promise<ResolvedHeaderData> => {
     // with graceful fallback to static definitions if categories are empty.
     let baseMegaMenus: MegaMenuItem[] = HEADER_MEGA_MENUS;
     try {
-      const categories = await listCategories();
+      const [categories, taxonomySubcategories] = await Promise.all([
+        listCategories(),
+        getTaxonomySubcategoriesForHeader(),
+      ]);
+      for (const menu of HEADER_MEGA_MENUS) {
+        if (!taxonomySubcategories.has(menu.slug)) {
+          taxonomySubcategories.set(menu.slug, []);
+        }
+      }
       if (categories && categories.length > 0) {
-        baseMegaMenus = buildCategoryMegaMenus(categories as unknown as Category[]);
+        baseMegaMenus = buildCategoryMegaMenus(
+          categories as unknown as Category[],
+          taxonomySubcategories,
+        );
+      } else {
+        baseMegaMenus = buildCategoryMegaMenus([], taxonomySubcategories);
       }
     } catch (e) {
       console.warn("[headerDataLoader] Falling back to default mega menus:", e);

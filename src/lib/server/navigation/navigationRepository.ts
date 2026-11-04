@@ -232,13 +232,12 @@ export async function ensureDefaultNavigationMenus(): Promise<void> {
           sortOrder: 6,
         },
         { label: "Deals", url: "/deals", itemType: "link", badgeText: "Hot", sortOrder: 7 },
-        { label: "Today Deals", url: "/deals", itemType: "link", sortOrder: 8 },
         {
           label: "Grand Piano",
           url: "/gp9",
           itemType: "link",
           badgeText: "Flagship",
-          sortOrder: 9,
+          sortOrder: 8,
         },
       ];
 
