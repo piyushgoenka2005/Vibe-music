@@ -12,11 +12,7 @@ function slugVariants(slug: string): string[] {
   if (!normalized) return [];
 
   const variants = new Set<string>([normalized]);
-  if (
-    normalized.endsWith("s") &&
-    !normalized.endsWith("ss") &&
-    normalized.length > 3
-  ) {
+  if (normalized.endsWith("s") && !normalized.endsWith("ss") && normalized.length > 3) {
     variants.add(normalized.slice(0, -1));
   } else if (!normalized.endsWith("s")) {
     variants.add(`${normalized}s`);
@@ -54,7 +50,10 @@ function nameMatch(requested: string, category: Category): boolean {
   const nameNorm = normalizeCategorySlug(category.name);
   if (nameNorm === norm || variantsMatch(nameNorm, norm)) return true;
 
-  const words = category.name.toLowerCase().split(/[\s&]+/).filter(Boolean);
+  const words = category.name
+    .toLowerCase()
+    .split(/[\s&]+/)
+    .filter(Boolean);
   return words.some((word) => {
     const wordNorm = normalizeCategorySlug(word);
     if (wordNorm === norm || variantsMatch(wordNorm, norm)) return true;
@@ -66,31 +65,30 @@ function nameMatch(requested: string, category: Category): boolean {
 /** Resolve a category from a list using normalized slug, aliases, and plural forms. */
 export function findCategoryInList(
   categories: Category[],
-  requestedSlug: string
+  requestedSlug: string,
 ): Category | undefined {
   if (!requestedSlug.trim() || categories.length === 0) return undefined;
 
   const normalized = normalizeCategorySlug(requestedSlug);
 
-  const exact = categories.find(
-    (category) => normalizeCategorySlug(category.slug) === normalized
-  );
+  const exact = categories.find((category) => normalizeCategorySlug(category.slug) === normalized);
   if (exact) return exact;
 
-  const byId = categories.find(
-    (category) => normalizeCategorySlug(category.id) === normalized
-  );
+  const byId = categories.find((category) => normalizeCategorySlug(category.id) === normalized);
   if (byId) return byId;
 
-  const plural = categories.find((category) =>
-    variantsMatch(category.slug, normalized)
-  );
+  const plural = categories.find((category) => variantsMatch(category.slug, normalized));
   if (plural) return plural;
 
-  const segment = categories.find((category) =>
-    slugSegmentMatch(normalized, category.slug)
-  );
+  // Prefer root categories for segment and name matches so departments win over subcategories
+  const rootSegment = categories.find((c) => !c.parentId && slugSegmentMatch(normalized, c.slug));
+  if (rootSegment) return rootSegment;
+
+  const segment = categories.find((category) => slugSegmentMatch(normalized, category.slug));
   if (segment) return segment;
+
+  const rootName = categories.find((c) => !c.parentId && nameMatch(normalized, c));
+  if (rootName) return rootName;
 
   return categories.find((category) => nameMatch(normalized, category));
 }
@@ -98,18 +96,23 @@ export function findCategoryInList(
 /** Alias for findCategoryInList — resolves any slug variant to a canonical category. */
 export function resolveCategory(
   categories: Category[],
-  requestedSlug: string
+  requestedSlug: string,
 ): Category | undefined {
   return findCategoryInList(categories, requestedSlug);
 }
 
-export function isCanonicalCategorySlug(
-  category: Category,
-  requestedSlug: string
-): boolean {
-  return (
-    normalizeCategorySlug(category.slug) === normalizeCategorySlug(requestedSlug)
-  );
+export function isCanonicalCategorySlug(category: Category, requestedSlug: string): boolean {
+  const normCat = normalizeCategorySlug(category.slug);
+  const normReq = normalizeCategorySlug(requestedSlug);
+  if (normCat === normReq) return true;
+  if (normCat === "cables-cases-accessories" && (normReq === "accessories" || normReq === "cables"))
+    return true;
+  if (
+    normCat === "keyboards-synthesizers" &&
+    (normReq === "keyboards-pianos" || normReq === "keyboards")
+  )
+    return true;
+  return false;
 }
 
 /** Normalize a category record read from PostgreSQL or local JSON. */
@@ -139,7 +142,10 @@ function collectAliasCandidates(category: Category): string[] {
   const nameNorm = normalizeCategorySlug(category.name);
   if (nameNorm) aliases.add(nameNorm);
 
-  for (const word of category.name.toLowerCase().split(/[\s&]+/).filter(Boolean)) {
+  for (const word of category.name
+    .toLowerCase()
+    .split(/[\s&]+/)
+    .filter(Boolean)) {
     const wordNorm = normalizeCategorySlug(word);
     if (wordNorm.length < 3) continue;
     aliases.add(wordNorm);
