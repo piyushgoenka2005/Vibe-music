@@ -100,8 +100,19 @@ export default function SiteHeaderNav({
       (baseline) => generatedBySlug.get(baseline.slug) ?? baseline,
     );
     const baselineSlugs = new Set(HEADER_MEGA_MENUS.map((menu) => menu.slug));
+    const additionalMenus = categoryMegaMenus.filter((menu) => !baselineSlugs.has(menu.slug));
 
-    return [...orderedMenus, ...categoryMegaMenus.filter((menu) => !baselineSlugs.has(menu.slug))];
+    // Deduplicate by slug to prevent duplicate keys in rendering
+    const seen = new Set(orderedMenus.map((m) => m.slug));
+    const deduped = additionalMenus.filter((menu) => {
+      if (seen.has(menu.slug)) {
+        return false;
+      }
+      seen.add(menu.slug);
+      return true;
+    });
+
+    return [...orderedMenus, ...deduped];
   }, [categoryMegaMenus]);
 
   const megaMenuBySlug = useMemo(() => {
@@ -471,9 +482,9 @@ export default function SiteHeaderNav({
             role="list"
             onMouseLeave={() => setHoveredKey(null)}
           >
-            {resolvedNavItems.map((item) => (
+            {resolvedNavItems.map((item, index) => (
               <div
-                key={item.key}
+                key={`${item.key}-${index}`}
                 className={`site-header__nav-item-unit${item.active ? " is-active" : ""}${hoveredKey === item.key ? " is-hovered" : ""}`}
                 role="listitem"
                 onMouseEnter={() => {
