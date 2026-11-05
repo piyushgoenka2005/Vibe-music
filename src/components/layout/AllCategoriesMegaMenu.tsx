@@ -143,8 +143,8 @@ export default function AllCategoriesMegaMenu({
                   <ChevronRight size={14} className="all-cats-mega__chevron" />
                 </Link>
                 <ul className="all-cats-mega__links">
-                  {group.subcategories.map((sub) => (
-                    <li key={sub.slug}>
+                  {group.subcategories.map((sub, index) => (
+                    <li key={`${group.slug}-${sub.slug}-${index}`}>
                       <Link
                         href={sub.slug.startsWith("/") ? sub.slug : categoryPath(sub.slug)}
                         className="all-cats-mega__link"
