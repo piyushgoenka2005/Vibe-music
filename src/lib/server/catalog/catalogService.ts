@@ -619,17 +619,47 @@ export function searchInCatalogProducts(
     source = source.filter((product) => product.price > 0);
   }
 
-  if (options.category) {
-    const resolvedSlug = normalizeCategorySlug(options.category);
-    source = source.filter(
-      (product) =>
-        product.categorySlug === resolvedSlug ||
-        normalizeCategorySlug(product.category) === resolvedSlug,
-    );
+  if (options.categorySlugs && options.categorySlugs.length > 0) {
+    // Multiple category slugs - filter using FK relationships
+    const { resolveCategoryIdsForFilter, fetchProductsByCategories } =
+      await import("./categoryFilterFixed");
+
+    // Resolve all slugs to category IDs
+    const allCategoryIds = new Set<string>();
+    for (const slug of options.categorySlugs) {
+      const ids = await resolveCategoryIdsForFilter(slug);
+      ids.forEach((id) => allCategoryIds.add(id));
+    }
+
+    if (allCategoryIds.size > 0) {
+      // Load products via FK
+      const fkProducts = await fetchProductsByCategories(Array.from(allCategoryIds));
+      source = fkProducts.length > 0 ? fkProducts : [];
+    } else {
+      source = [];
+    }
+  } else if (options.category) {
+    // Single category slug - resolve to category ID(s) and use FK
+    const { resolveCategoryIdsForFilter, fetchProductsByCategories } =
+      await import("./categoryFilterFixed");
+
+    const categoryIds = await resolveCategoryIdsForFilter(options.category);
+
+    if (categoryIds.length > 0) {
+      // Load products via FK
+      const fkProducts = await fetchProductsByCategories(categoryIds);
+      source = fkProducts.length > 0 ? fkProducts : [];
+    } else {
+      // No matching category
+      source = [];
+    }
 
     // Keep guitar amps / multi-effects off the main Guitars PLP — they belong
     // under Amplifiers / Effects browse paths (`?category=guitars&subcategory=…`).
-    if (resolvedSlug === "guitars" && !subcategoryRequestsGuitarAccessories(options.subcategory)) {
+    if (
+      normalizeCategorySlug(options.category) === "guitars" &&
+      !subcategoryRequestsGuitarAccessories(options.subcategory)
+    ) {
       source = source.filter((product) => !isNonInstrumentGuitarProduct(product));
     }
   }
@@ -833,9 +863,11 @@ export async function resolveCanonicalProductSlug(slug: string): Promise<string 
 export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
   const categories = await fetchCategories();
   const category = findCategoryInList(categories, categorySlug);
-  const resolvedSlug = category?.slug ?? normalizeCategorySlug(categorySlug);
-  const products = await fetchProductsByCategory(resolvedSlug);
-  return products.map(toProduct);
+  const slugSet = await resolveCategorySlugSet(categorySlug);
+  const slugs = slugSet ?? [category?.slug ?? normalizeCategorySlug(categorySlug)];
+  const products = (await Promise.all(slugs.map((slug) => fetchProductsByCategory(slug)))).flat();
+  const deduped = Array.from(new Map(products.map((p) => [p.id, p])).values());
+  return deduped.map(toProduct);
 }
 
 function sortByPopularity(products: CatalogProduct[]): CatalogProduct[] {
@@ -883,6 +915,11 @@ export async function getRelatedProducts(slug: string, limit = 8): Promise<Produ
 export interface ProductSearchOptions {
   query?: string;
   category?: string;
+  /**
+   * When set, matches products whose `categorySlug` is in this set.
+   * Used for parent categories so child-category products are included.
+   */
+  categorySlugs?: string[];
   /** Case-insensitive substring match against catalog `subcategory`. */
   subcategory?: string;
   brand?: string;
@@ -1058,6 +1095,34 @@ function productMatchesAllSearchTokens(product: CatalogProduct, tokens: string[]
   );
 }
 
+/**
+ * Resolve a category slug to the set of slugs that should be included when
+ * browsing it: the category itself plus every descendant category. Parent
+ * category pages (e.g. Accessories) must surface products assigned to child
+ * categories (Cables, Cases & Bags, Essentials).
+ */
+async function resolveCategorySlugSet(category: string): Promise<string[] | undefined> {
+  const resolved = normalizeCategorySlug(category);
+  if (!resolved) return undefined;
+
+  const categories = await fetchCategories();
+  const match = findCategoryInList(categories, resolved);
+  if (!match) return [resolved];
+
+  const slugs = new Set<string>([normalizeCategorySlug(match.slug)]);
+  const queue = [match.id];
+  while (queue.length > 0) {
+    const parentId = queue.shift();
+    for (const child of categories) {
+      if (child.parentId === parentId) {
+        slugs.add(normalizeCategorySlug(child.slug));
+        queue.push(child.id);
+      }
+    }
+  }
+  return Array.from(slugs);
+}
+
 export async function searchProducts(options: ProductSearchOptions = {}): Promise<Product[]> {
   const includeInactive = options.includeInactive ?? false;
   const query = options.query?.trim() ?? "";
@@ -1065,23 +1130,32 @@ export async function searchProducts(options: ProductSearchOptions = {}): Promis
   const category = options.category?.trim() ?? "";
   const subcategory = options.subcategory?.trim() ?? "";
 
+  const effectiveOptions: ProductSearchOptions = { ...options };
+  if (category && !effectiveOptions.categorySlugs) {
+    effectiveOptions.categorySlugs = await resolveCategorySlugSet(category);
+  }
+
   // Scoped browse: avoid loading the full catalogue snapshot when we can hit
   // indexed brand/category queries first, then apply in-memory filters/sort.
   if (!query && brand && !category && !subcategory) {
     const scoped = await fetchProductsByBrandSlug(slugify(brand), includeInactive);
-    return searchInCatalogProducts(scoped, options);
+    return searchInCatalogProducts(scoped, effectiveOptions);
   }
 
   if (!query && category && !brand) {
     const resolved = normalizeCategorySlug(category);
     if (resolved) {
-      const scoped = await fetchProductsByCategory(resolved, includeInactive);
-      return searchInCatalogProducts(scoped, options);
+      const slugSet = effectiveOptions.categorySlugs ?? [resolved];
+      const scoped = (
+        await Promise.all(slugSet.map((slug) => fetchProductsByCategory(slug, includeInactive)))
+      ).flat();
+      const deduped = Array.from(new Map(scoped.map((p) => [p.id, p])).values());
+      return searchInCatalogProducts(deduped, effectiveOptions);
     }
   }
 
   const source = await fetchSearchCatalogSnapshot(includeInactive);
-  return searchInCatalogProducts(source, options);
+  return searchInCatalogProducts(source, effectiveOptions);
 }
 
 export async function getBrands(): Promise<Brand[]> {

@@ -39,6 +39,8 @@ model Category {
   createdAt       String? @map("created_at")
   updatedAt       String? @map("updated_at")
 
+  productCategories ProductCategory[] @relation("ProductCategories")
+
   @@map("categories")
 }
 
@@ -165,6 +167,8 @@ model Product {
   createdAt          String  @map("created_at")
   updatedAt          String  @map("updated_at")
 
+  productCategories  ProductCategory[] @relation("ProductCategories")
+
   @@index([status])
   @@index([categorySlug])
   @@index([brandSlug])
@@ -175,6 +179,24 @@ model Product {
   @@index([status, categorySlug])
   @@index([status, brandSlug])
   @@map("products")
+}
+
+// ─── Product-Category Relationship ──────────────────────────────────────────
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  isPrimary  Boolean  @default(false)
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  String?  @map("created_at")
+
+  product    Product  @relation("ProductCategories", fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation("ProductCategories", fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+  @@index([isPrimary])
+  @@map("product_categories")
 }
 
 // ─── Orders ─────────────────────────────────────────────────────────────────
