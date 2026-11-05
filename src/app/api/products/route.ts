@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  getTrendingProducts,
-  searchProducts,
-} from "@/lib/server/productRepository";
-import {
-  enforceRateLimit,
-  handleRouteError,
-} from "@/lib/api/route-utils";
+import { getTrendingProducts, searchProducts } from "@/lib/server/productRepository";
+import { enforceRateLimit, handleRouteError } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { getCached } from "@/lib/server/redisCache";
 
@@ -14,11 +8,7 @@ const PRODUCTS_CACHE_TTL = 45; // seconds — matches existing s-maxage
 
 export async function GET(request: Request) {
   try {
-    const rateLimited = await enforceRateLimit(
-      request,
-      "products",
-      RATE_LIMITS.publicApi
-    );
+    const rateLimited = await enforceRateLimit(request, "products", RATE_LIMITS.publicApi);
     if (rateLimited) return rateLimited;
 
     const { searchParams } = new URL(request.url);
@@ -37,17 +27,28 @@ export async function GET(request: Request) {
           headers: {
             "Cache-Control": "public, s-maxage=45, stale-while-revalidate=120",
           },
-        }
+        },
       );
     }
 
     const query = searchParams.get("q") ?? undefined;
     const category = searchParams.get("category") ?? undefined;
+    const subcategoryParam = searchParams.get("subcategory") ?? undefined;
     const brand = searchParams.get("brand") ?? undefined;
     const sort = searchParams.get("sort") ?? undefined;
     const conditionParam = searchParams.get("condition") ?? undefined;
     const limitParam = searchParams.get("limit");
     const limit = limitParam ? Number(limitParam) : undefined;
+
+    // Convert comma-delimited subcategories to pipe-delimited for catalogService
+    // URL param comes from client as "?subcategory=amp,bass" (comma-delimited)
+    // catalogService.searchInCatalogProducts expects "amp|bass" (pipe-delimited)
+    const subcategory = subcategoryParam
+      ? subcategoryParam
+          .split(",")
+          .map((s) => s.trim())
+          .join("|")
+      : undefined;
 
     const conditionValues = conditionParam
       ? conditionParam
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
           .map((value) => value.trim())
           .filter(
             (value): value is "new" | "used" | "open-box" =>
-              value === "new" || value === "used" || value === "open-box"
+              value === "new" || value === "used" || value === "open-box",
           )
       : [];
 
@@ -64,6 +65,7 @@ export async function GET(request: Request) {
       "products",
       query ?? "",
       category ?? "",
+      subcategory ?? "",
       brand ?? "",
       sort ?? "",
       conditionValues.join(","),
@@ -76,18 +78,17 @@ export async function GET(request: Request) {
         searchProducts({
           query,
           category,
+          subcategory,
           brand,
           sort,
-          condition:
-            conditionValues.length === 1 ? conditionValues[0] : undefined,
-          conditions:
-            conditionValues.length > 1 ? conditionValues : undefined,
+          condition: conditionValues.length === 1 ? conditionValues[0] : undefined,
+          conditions: conditionValues.length > 1 ? conditionValues : undefined,
           limit: Number.isFinite(limit) ? limit : undefined,
           // Category browse must include Coming Soon SKUs (₹0) so departments
           // like Microphones aren't empty when prices aren't set yet.
           purchasableOnly: category ? false : undefined,
         }),
-      PRODUCTS_CACHE_TTL
+      PRODUCTS_CACHE_TTL,
     );
 
     return NextResponse.json(
@@ -96,7 +97,7 @@ export async function GET(request: Request) {
         headers: {
           "Cache-Control": "public, s-maxage=45, stale-while-revalidate=120",
         },
-      }
+      },
     );
   } catch (error) {
     return handleRouteError(error, "api/products");

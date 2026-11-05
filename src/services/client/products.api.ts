@@ -8,6 +8,7 @@ interface ProductsResponse {
 export async function fetchProducts(params?: {
   q?: string;
   category?: string;
+  subcategory?: string | string[];
   brand?: string;
   sort?: string;
   condition?: Product["condition"] | Product["condition"][];
@@ -18,6 +19,12 @@ export async function fetchProducts(params?: {
 
   if (params?.q) searchParams.set("q", params.q);
   if (params?.category) searchParams.set("category", params.category);
+  if (params?.subcategory) {
+    searchParams.set(
+      "subcategory",
+      Array.isArray(params.subcategory) ? params.subcategory.join(",") : params.subcategory,
+    );
+  }
   if (params?.brand) searchParams.set("brand", params.brand);
   if (params?.sort) searchParams.set("sort", params.sort);
   if (params?.condition) {

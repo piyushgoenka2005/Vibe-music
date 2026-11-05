@@ -51,6 +51,11 @@ export const loadCategoryProducts = cache(async function loadCategoryProducts(
   // aren't set yet — ProductCard already shows Notify Me for those.
   const categoryProducts = await searchProducts({
     category: categorySlug,
+    // Pass subcategory filter to searchProducts for pre-filtering
+    subcategory:
+      filters.subcategories && filters.subcategories.length > 0
+        ? filters.subcategories.join("|") // Use | to match multiple subcategories
+        : undefined,
     purchasableOnly: false,
   });
   return buildCategoryProductsResult(categoryProducts, filters);

@@ -23,10 +23,11 @@ import "./category.css";
 
 interface CategoryPageProps {
   category: Category;
+  parentCategory?: Category;
   initialData?: CategoryProductsResult;
 }
 
-function CategoryPageContent({ category, initialData }: CategoryPageProps) {
+function CategoryPageContent({ category, parentCategory, initialData }: CategoryPageProps) {
   const {
     filters,
     updateFilters,
@@ -82,6 +83,8 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
         <CategoryBreadcrumb
           categoryName={category.name}
           categorySlug={category.slug}
+          parentCategoryName={parentCategory?.name}
+          parentCategorySlug={parentCategory?.slug}
           activeSubcategorySlug={filters.subcategories[0]}
           subcategoryLabels={facetLabels.subcategories}
         />
@@ -194,11 +197,16 @@ function CategoryPageContent({ category, initialData }: CategoryPageProps) {
   );
 }
 
-function CategoryInitialFallback({ category, initialData }: CategoryPageProps) {
+function CategoryInitialFallback({ category, parentCategory, initialData }: CategoryPageProps) {
   const products = initialData?.products ?? [];
   return (
     <div className="cat-page">
-      <CategoryBreadcrumb categoryName={category.name} categorySlug={category.slug} />
+      <CategoryBreadcrumb
+        categoryName={category.name}
+        categorySlug={category.slug}
+        parentCategoryName={parentCategory?.name}
+        parentCategorySlug={parentCategory?.slug}
+      />
       <h1 className="cat-page__title">{category.name}</h1>
       {category.description ? <p className="cat-page__desc">{category.description}</p> : null}
       <div className="cat-toolbar">
@@ -227,10 +235,22 @@ function CategoryInitialFallback({ category, initialData }: CategoryPageProps) {
   );
 }
 
-export default function CategoryPage({ category, initialData }: CategoryPageProps) {
+export default function CategoryPage({ category, parentCategory, initialData }: CategoryPageProps) {
   return (
-    <Suspense fallback={<CategoryInitialFallback category={category} initialData={initialData} />}>
-      <CategoryPageContent category={category} initialData={initialData} />
+    <Suspense
+      fallback={
+        <CategoryInitialFallback
+          category={category}
+          parentCategory={parentCategory}
+          initialData={initialData}
+        />
+      }
+    >
+      <CategoryPageContent
+        category={category}
+        parentCategory={parentCategory}
+        initialData={initialData}
+      />
     </Suspense>
   );
 }

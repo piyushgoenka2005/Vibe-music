@@ -72,30 +72,37 @@ describe("GET /api/products", () => {
     const _body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(searchProducts).toHaveBeenCalledWith(
-      expect.objectContaining({ query: "fender" })
-    );
+    expect(searchProducts).toHaveBeenCalledWith(expect.objectContaining({ query: "fender" }));
   });
 
   it("filters by category", async () => {
     await GET(makeRequest("http://localhost/api/products?category=guitars"));
 
+    expect(searchProducts).toHaveBeenCalledWith(expect.objectContaining({ category: "guitars" }));
+  });
+
+  it("filters by subcategory", async () => {
+    await GET(
+      makeRequest("http://localhost/api/products?category=guitars&subcategory=bass-amplifiers"),
+    );
+
     expect(searchProducts).toHaveBeenCalledWith(
-      expect.objectContaining({ category: "guitars" })
+      expect.objectContaining({
+        category: "guitars",
+        subcategory: "bass-amplifiers",
+      }),
     );
   });
 
   it("filters by brand", async () => {
     await GET(makeRequest("http://localhost/api/products?brand=fender"));
 
-    expect(searchProducts).toHaveBeenCalledWith(
-      expect.objectContaining({ brand: "fender" })
-    );
+    expect(searchProducts).toHaveBeenCalledWith(expect.objectContaining({ brand: "fender" }));
   });
 
   it("returns 429 when rate limited", async () => {
     (enforceRateLimit as ReturnType<typeof vi.fn>).mockResolvedValue(
-      new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 })
+      new Response(JSON.stringify({ error: "Too many requests" }), { status: 429 }),
     );
 
     const res = await GET(makeRequest("http://localhost/api/products"));
@@ -109,7 +116,7 @@ describe("GET /api/products", () => {
 
   it("handles errors gracefully", async () => {
     (searchProducts as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new Error("DB connection failed")
+      new Error("DB connection failed"),
     );
 
     const res = await GET(makeRequest("http://localhost/api/products"));

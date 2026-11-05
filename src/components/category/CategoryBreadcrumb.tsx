@@ -9,6 +9,10 @@ import { unslugify } from "@/lib/slug";
 interface CategoryBreadcrumbProps {
   categoryName: string;
   categorySlug: string;
+  /** Parent category name (if this is a child category) */
+  parentCategoryName?: string;
+  /** Parent category slug (if this is a child category) */
+  parentCategorySlug?: string;
   /** Active `subcat` filter slug from the category listing URL. */
   activeSubcategorySlug?: string;
   /** Facet slug → display label map for subcategories on this category page. */
@@ -18,6 +22,8 @@ interface CategoryBreadcrumbProps {
 export default function CategoryBreadcrumb({
   categoryName,
   categorySlug,
+  parentCategoryName,
+  parentCategorySlug,
   activeSubcategorySlug,
   subcategoryLabels,
 }: CategoryBreadcrumbProps) {
@@ -39,6 +45,14 @@ export default function CategoryBreadcrumb({
         <span className="cat-breadcrumb__sep" aria-hidden="true">
           /
         </span>
+        {parentCategoryName && parentCategorySlug ? (
+          <>
+            <Link href={categoryPath(parentCategorySlug)}>{parentCategoryName}</Link>
+            <span className="cat-breadcrumb__sep" aria-hidden="true">
+              /
+            </span>
+          </>
+        ) : null}
         {subcategoryLabel ? (
           <>
             <Link href={categoryPath(categorySlug)}>{categoryName}</Link>
@@ -48,13 +62,7 @@ export default function CategoryBreadcrumb({
             <span aria-current="page">{subcategoryLabel}</span>
           </>
         ) : (
-          <>
-            <Link href={ROUTES.categories}>Categories</Link>
-            <span className="cat-breadcrumb__sep" aria-hidden="true">
-              /
-            </span>
-            <span aria-current="page">{categoryName}</span>
-          </>
+          <span aria-current="page">{categoryName}</span>
         )}
       </nav>
     </div>

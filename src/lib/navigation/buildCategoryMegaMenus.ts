@@ -368,5 +368,20 @@ export function buildCategoryMegaMenus(
     });
   }
 
-  return [...baselineMenus, ...dynamicCategoryMenus];
+  const canonicalAccessories = categories.find(
+    (category) => category.slug === "cables-cases-accessories",
+  );
+  const normalizedBaselineMenus = canonicalAccessories
+    ? baselineMenus.map((menu) =>
+        menu.slug === "accessories"
+          ? {
+              ...menu,
+              slug: canonicalAccessories.slug,
+              href: categoryPath(canonicalAccessories.slug),
+            }
+          : menu,
+      )
+    : baselineMenus;
+
+  return [...normalizedBaselineMenus, ...dynamicCategoryMenus];
 }

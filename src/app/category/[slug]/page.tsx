@@ -2,7 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import CategoryPage from "@/components/category/CategoryPage";
 import { loadCategoryProducts } from "@/lib/server/categoryPageLoader";
-import { isCanonicalCategorySlug, resolveCategoryBySlug } from "@/lib/server/categoryResolver";
+import {
+  getCategoryCatalog,
+  isCanonicalCategorySlug,
+  resolveCategoryBySlug,
+} from "@/lib/server/categoryResolver";
 import { categoryPath } from "@/lib/routes";
 import { withServerPageError } from "@/lib/serverPageError";
 import { DEFAULT_FILTERS } from "@/types/filters";
@@ -82,11 +86,32 @@ export default async function CategoryRoute({ params }: CategoryRouteProps) {
       redirect(categoryPath(category.slug));
     }
 
-    const initialData = await loadCategoryProducts(category.slug, DEFAULT_FILTERS);
+    // Resolve parent category if this is a child category
+    const categories = category.parentId ? await getCategoryCatalog() : undefined;
+    const parentCategory = categories?.find((candidate) => candidate.id === category.parentId);
+
+    // Product records keep the department in `categorySlug` and the leaf
+    // taxonomy value in `subcategory`. Resolve leaf routes back to their
+    // department before querying, otherwise `/category/<child>` can never
+    // match products whose category is the parent department.
+    const listingCategory = category.parentId
+      ? categories?.find((candidate) => candidate.id === category.parentId)
+      : category;
+    const childFilters = { ...DEFAULT_FILTERS, subcategories: [category.slug] };
+
+    // FIX: For subcategories, use the parent category slug with subcategory filters
+    const initialData = await loadCategoryProducts(
+      listingCategory?.slug ?? category.slug,
+      category.parentId ? childFilters : DEFAULT_FILTERS,
+    );
 
     return (
       <main className="storefront-page">
-        <CategoryPage category={category} initialData={initialData} />
+        <CategoryPage
+          category={category}
+          parentCategory={parentCategory}
+          initialData={initialData}
+        />
       </main>
     );
   }, "Category");

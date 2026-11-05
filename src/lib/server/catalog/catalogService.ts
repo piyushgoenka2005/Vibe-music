@@ -642,7 +642,16 @@ export function searchInCatalogProducts(
     if (needles.length > 0) {
       source = source.filter((product) => {
         const sub = (product.subcategory ?? "").toLowerCase();
-        return needles.some((needle) => sub.includes(needle));
+        const subSlug = normalizeCategorySlug(sub);
+        return needles.some((needle) => {
+          const needleSlug = normalizeCategorySlug(needle);
+          return (
+            sub.includes(needle) ||
+            subSlug === needleSlug ||
+            subSlug.includes(needleSlug) ||
+            needleSlug.includes(subSlug)
+          );
+        });
       });
     }
   }
@@ -690,20 +699,38 @@ export function searchInCatalogProducts(
         source = source.filter((product) => productMatchesSearchIntent(product, intent));
       }
 
+      // Expand query with approved synonyms for better recall
+      const synonymVariations = expandWithSynonyms(normalized);
+
       source = source
-        .map((product) => ({
-          product,
-          score:
+        .map((product) => {
+          let bestScore = 0;
+          // Score against original query
+          bestScore = Math.max(
+            bestScore,
             scoreProductMatch(product, tokens, normalized) +
-            searchIntentScoreBoost(product, intent),
-        }))
+              searchIntentScoreBoost(product, intent),
+          );
+          // Score against synonym variations and take the best score
+          for (const synonym of synonymVariations) {
+            if (synonym !== normalized) {
+              const synonymTokens = synonym.split(/\s+/).filter(Boolean);
+              bestScore = Math.max(
+                bestScore,
+                scoreProductMatch(product, synonymTokens, synonym) +
+                  searchIntentScoreBoost(product, intent),
+              );
+            }
+          }
+          return { product, score: bestScore };
+        })
         .filter((entry) => entry.score > 0)
         .sort((a, b) => b.score - a.score)
         .map((entry) => entry.product);
 
       // Multi-word queries must match every token (e.g. brand + model), not
-      // just one shared word like "guitar".
-      if (!intent && tokens.length >= 2) {
+      // just one shared word like "guitar". Relaxed for synonym queries.
+      if (!intent && tokens.length >= 2 && synonymVariations.length === 1) {
         source = source.filter((product) => productMatchesAllSearchTokens(product, tokens));
       }
 
@@ -869,6 +896,38 @@ export interface ProductSearchOptions {
   purchasableOnly?: boolean;
 }
 
+/**
+ * Approved search synonyms to improve recall without returning unrelated products.
+ * Maps common variations to canonical search terms.
+ */
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  "instrument cable": ["guitar cable", "instrument lead", "instrument cord"],
+  "mic cable": ["microphone cable", "xlr cable", "mic cord"],
+  "patch cable": ["pedal patch cable", "patch cord"],
+  "power adapter": ["power supply", "adapter", "power brick"],
+  "speaker cable": ["speaker cord", "speaker wire"],
+  "midi cable": ["midi cord"],
+  "audio cable": ["audio cord", "sound cable"],
+};
+
+/**
+ * Expand a search query with approved synonyms.
+ * Returns the original query plus any matching synonym variations.
+ */
+function expandWithSynonyms(query: string): string[] {
+  const normalized = query.toLowerCase().trim();
+  const variations = new Set<string>([normalized]);
+
+  for (const [canonical, synonyms] of Object.entries(SEARCH_SYNONYMS)) {
+    if (normalized === canonical || synonyms.includes(normalized)) {
+      variations.add(canonical);
+      synonyms.forEach((syn) => variations.add(syn));
+    }
+  }
+
+  return Array.from(variations);
+}
+
 /** Light plural/singular variants so `amplifiers` still matches "Amplifier". */
 function expandSearchToken(token: string): string[] {
   const variants = new Set<string>([token]);
@@ -929,6 +988,7 @@ function scoreProductMatch(product: CatalogProduct, tokens: string[], rawQuery =
   const category = product.category.toLowerCase();
   const subcategory = (product.subcategory ?? "").toLowerCase();
   const slug = product.slug.toLowerCase();
+  const sku = (product.sku ?? "").toLowerCase();
   const query = rawQuery.toLowerCase().trim();
   let score = 0;
 
@@ -942,6 +1002,9 @@ function scoreProductMatch(product: CatalogProduct, tokens: string[], rawQuery =
     else if (subcategory === query) score += 120;
     else if (subcategory.includes(query)) score += 90;
     else if (slug.includes(query.replace(/\s+/g, "-"))) score += 70;
+    else if (sku === query)
+      score += 250; // Exact SKU match highest priority
+    else if (sku.includes(query)) score += 180; // Partial SKU match
   }
 
   for (const token of tokens) {
@@ -950,8 +1013,11 @@ function scoreProductMatch(product: CatalogProduct, tokens: string[], rawQuery =
     if (variants.some((variant) => name === variant)) score += 100;
     if (variants.some((variant) => name.startsWith(variant))) score += 60;
     if (variants.some((variant) => brand.startsWith(variant))) score += 40;
+    if (variants.some((variant) => sku === variant)) score += 150; // Exact SKU token match
+    if (variants.some((variant) => sku.startsWith(variant))) score += 80; // Partial SKU token match
     if (fieldIncludes(name, token)) score += 30;
     if (fieldIncludes(brand, token)) score += 20;
+    if (fieldIncludes(sku, token)) score += 50; // SKU field token match
     if (fieldIncludes(subcategory, token)) score += 28;
     if (fieldIncludes(category, token)) score += 15;
     if (fieldIncludes(slug, token)) score += 10;
@@ -976,6 +1042,7 @@ function productMatchesAllSearchTokens(product: CatalogProduct, tokens: string[]
   const category = product.category.toLowerCase();
   const subcategory = (product.subcategory ?? "").toLowerCase();
   const slug = product.slug.toLowerCase();
+  const sku = (product.sku ?? "").toLowerCase();
 
   const fieldIncludes = (field: string, token: string) =>
     expandSearchToken(token).some((variant) => field.includes(variant));
@@ -986,7 +1053,8 @@ function productMatchesAllSearchTokens(product: CatalogProduct, tokens: string[]
       fieldIncludes(brand, token) ||
       fieldIncludes(category, token) ||
       fieldIncludes(subcategory, token) ||
-      fieldIncludes(slug, token),
+      fieldIncludes(slug, token) ||
+      fieldIncludes(sku, token),
   );
 }
 

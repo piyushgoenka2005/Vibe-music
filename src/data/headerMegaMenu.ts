@@ -46,6 +46,20 @@ function featured(
   };
 }
 
+function featuredCategory(
+  slug: string,
+  title: string,
+  variant?: string,
+  imageClassName?: string,
+): MegaMenuFeatured {
+  return {
+    title,
+    href: categoryPath(slug),
+    image: getMegaMenuFeaturedImage(slug, variant),
+    imageClassName,
+  };
+}
+
 export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
   {
     slug: "guitars",
@@ -266,47 +280,47 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
     ],
   },
   {
-    slug: "cables-cases-accessories",
+    slug: "accessories",
     name: "Accessories",
-    href: categoryPath("cables-cases-accessories"),
+    href: categoryPath("accessories"),
     columns: [
       {
         heading: "Cables",
         links: [
           {
             label: "Instrument cables",
-            href: subSearch("cables-cases-accessories", "instrument cable"),
+            href: subSearch("cables", "instrument cable"),
           },
-          { label: "XLR & mic cables", href: subSearch("cables-cases-accessories", "xlr cable") },
-          { label: "Patch cables", href: subSearch("cables-cases-accessories", "patch cable") },
+          { label: "XLR & mic cables", href: subSearch("cables", "xlr cable") },
+          { label: "Patch cables", href: subSearch("cables", "patch cable") },
           {
             label: "Power & adapters",
-            href: subSearch("cables-cases-accessories", "power adapter"),
+            href: subSearch("cables", "power adapter"),
           },
         ],
       },
       {
         heading: "Cases & bags",
         links: [
-          { label: "Guitar cases", href: subSearch("cables-cases-accessories", "guitar case") },
-          { label: "Keyboard bags", href: subSearch("cables-cases-accessories", "keyboard bag") },
-          { label: "Rack cases", href: subSearch("cables-cases-accessories", "rack case") },
-          { label: "Pedalboards", href: subSearch("cables-cases-accessories", "pedalboard") },
+          { label: "Guitar cases", href: subSearch("cases-bags", "guitar case") },
+          { label: "Keyboard bags", href: subSearch("cases-bags", "keyboard bag") },
+          { label: "Rack cases", href: subSearch("cases-bags", "rack case") },
+          { label: "Pedalboards", href: subSearch("cases-bags", "pedalboard") },
         ],
       },
       {
         heading: "Essentials",
         links: [
-          { label: "Stands", href: subSearch("cables-cases-accessories", "mic stand") },
-          { label: "Tuners & metronomes", href: subSearch("cables-cases-accessories", "tuner") },
-          { label: "Care & cleaning", href: subSearch("cables-cases-accessories", "cleaning kit") },
-          { label: "Shop all accessories", href: categoryPath("cables-cases-accessories") },
+          { label: "Stands", href: subSearch("essentials", "mic stand") },
+          { label: "Tuners & metronomes", href: subSearch("essentials", "tuner") },
+          { label: "Care & cleaning", href: subSearch("essentials", "cleaning kit") },
+          { label: "Shop all accessories", href: categoryPath("accessories") },
         ],
       },
     ],
     featured: [
-      featured("cables-cases-accessories", "Cables", "instrument cable", "cables"),
-      featured("cables-cases-accessories", "Cases", "guitar case", "cases"),
+      featuredCategory("cables", "Cables", "cables"),
+      featuredCategory("cases-bags", "Cases", "cases"),
     ],
   },
 ];
@@ -317,9 +331,9 @@ for (const menu of HEADER_MEGA_MENUS) {
   menuEntries.push([`cat_${menu.slug}`, menu]);
   menuEntries.push([`cat-${menu.slug}`, menu]);
 }
-const accessoriesMenu = HEADER_MEGA_MENUS.find((m) => m.slug === "cables-cases-accessories");
+const accessoriesMenu = HEADER_MEGA_MENUS.find((m) => m.slug === "accessories");
 if (accessoriesMenu) {
-  menuEntries.push(["accessories", accessoriesMenu]);
+  menuEntries.push(["cables-cases-accessories", accessoriesMenu]);
   menuEntries.push(["cat_accessories", accessoriesMenu]);
   menuEntries.push(["cat-13", accessoriesMenu]);
 }
