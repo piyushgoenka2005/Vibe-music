@@ -164,7 +164,11 @@ export default function AccountProfileForm() {
     void (async () => {
       try {
         const response = await fetch("/api/account/profile");
-        if (!response.ok) return;
+        if (!response.ok) {
+          console.warn("[AccountProfileForm] Profile fetch failed:", response.status);
+          setLoaded(true);
+          return;
+        }
         const data = (await response.json()) as {
           user?: { phone?: string; dateOfBirth?: string; name?: string | null };
         };
@@ -178,7 +182,8 @@ export default function AccountProfileForm() {
         if (data.user?.name && data.user.name !== user.name) {
           setSessionUser({ ...user, name: data.user.name });
         }
-      } catch {
+      } catch (error) {
+        console.warn("[AccountProfileForm] Profile load error:", error);
         // Keep local persisted values if the profile API is unavailable.
       } finally {
         if (!cancelled) setLoaded(true);

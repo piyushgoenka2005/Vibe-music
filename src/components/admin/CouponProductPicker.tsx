@@ -60,9 +60,15 @@ export default function CouponProductPicker({
     setSearching(true);
     try {
       const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=12`);
+      if (!res.ok) {
+        console.warn("[CouponProductPicker] Search request failed:", res.status);
+        setResults([]);
+        return;
+      }
       const data = (await res.json().catch(() => ({}))) as { products?: AdminProduct[] };
       setResults((data.products ?? []).filter((product) => !productIds.includes(product.id)));
-    } catch {
+    } catch (error) {
+      console.warn("[CouponProductPicker] Search error:", error);
       setResults([]);
     } finally {
       setSearching(false);
@@ -135,7 +141,9 @@ export default function CouponProductPicker({
       }
       setResolveMessage(parts.join(" · ") || "No products resolved");
     } catch (error) {
-      setResolveMessage((error as Error).message || "Could not resolve URLs");
+      const errorMsg = error instanceof Error ? error.message : "Could not resolve URLs";
+      console.warn("[CouponProductPicker] URL resolution error:", error);
+      setResolveMessage(errorMsg);
     } finally {
       setResolving(false);
     }

@@ -51,6 +51,7 @@ const productionRequiredSchema = z.object({
   SMTP_PASS: z.string().min(1),
   UPSTASH_REDIS_REST_URL: z.string().url(),
   UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
+  SENTRY_DSN: z.string().url().optional().pipe(z.string().min(1)),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

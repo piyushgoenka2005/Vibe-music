@@ -13,6 +13,7 @@ import { warnIfGooglePlacesMisconfigured } from "@/lib/server/googlePlaces";
 import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 import { formatIndianPhone } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
+import { logInfo, logError } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,12 @@ export async function GET(_request: Request) {
         process.env.STORE_PHONE?.trim() ||
         settings.storePhone,
     );
+
+    logInfo("Checkout capabilities loaded", "api/checkout/capabilities", {
+      razorpayConfigured,
+      placesAutocomplete,
+      demoPaymentsAllowed,
+    });
 
     return NextResponse.json(
       {
@@ -57,7 +64,7 @@ export async function GET(_request: Request) {
       },
     );
   } catch (error) {
-    console.error("[api/checkout/capabilities] Error:", error);
+    logError("Failed to load checkout capabilities", error, "api/checkout/capabilities");
     return NextResponse.json({ error: "Failed to load checkout capabilities" }, { status: 500 });
   }
 }

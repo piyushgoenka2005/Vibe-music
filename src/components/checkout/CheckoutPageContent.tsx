@@ -188,7 +188,10 @@ export default function CheckoutPageContent() {
             await new Promise((resolve) => window.setTimeout(resolve, 600 * (attempt + 1)));
             if (!cancelled) return loadCapabilities(attempt + 1);
           }
-          if (!cancelled) setCapabilitiesStatus("error");
+          if (!cancelled) {
+            console.warn("[CheckoutPageContent] Capabilities fetch failed:", response.status);
+            setCapabilitiesStatus("error");
+          }
           return;
         }
 
@@ -203,12 +206,21 @@ export default function CheckoutPageContent() {
         if (cancelled) return;
         setCheckoutCapabilities(data);
         setCapabilitiesStatus("ready");
-      } catch {
+      } catch (error) {
         if (attempt < 2 && !cancelled) {
+          console.warn(
+            "[CheckoutPageContent] Capabilities fetch attempt",
+            attempt + 1,
+            "failed:",
+            error,
+          );
           await new Promise((resolve) => window.setTimeout(resolve, 600 * (attempt + 1)));
           return loadCapabilities(attempt + 1);
         }
-        if (!cancelled) setCapabilitiesStatus("error");
+        if (!cancelled) {
+          console.warn("[CheckoutPageContent] Failed to load capabilities after retries:", error);
+          setCapabilitiesStatus("error");
+        }
       }
     };
 
@@ -359,7 +371,12 @@ export default function CheckoutPageContent() {
             state: resolvedAddress.state,
           }),
         });
-        if (!response.ok || cancelled) return;
+        if (!response.ok || cancelled) {
+          if (!response.ok) {
+            console.warn("[CheckoutPageContent] Shipping quote failed:", response.status);
+          }
+          return;
+        }
         const data = (await response.json()) as {
           methods?: Array<{ id: ShippingMethod; charge: number }>;
         };
@@ -368,7 +385,8 @@ export default function CheckoutPageContent() {
           key: shippingQuoteKey,
           charges: Object.fromEntries(data.methods.map((method) => [method.id, method.charge])),
         });
-      } catch {
+      } catch (error) {
+        console.warn("[CheckoutPageContent] Shipping quote error:", error);
         // Keep fallback charges until the next successful quote fetch.
       }
     })();

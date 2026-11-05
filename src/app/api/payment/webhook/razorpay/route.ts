@@ -4,6 +4,7 @@ import { withApiGuards } from "@/lib/api/route-utils";
 import { getRazorpayWebhookSecret, verifyRazorpayWebhookSignature } from "@/lib/razorpay/signature";
 import { enqueueRazorpayWebhook } from "@/lib/server/jobQueue";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
+import { logError, logInfo } from "@/lib/server/logger";
 
 export const runtime = "nodejs";
 
@@ -48,12 +49,17 @@ async function postHandler(request: Request) {
       try {
         webhookSecret = getRazorpayWebhookSecret();
       } catch (error) {
-        console.error("[razorpay-webhook] Configuration error:", error);
+        logError("Razorpay webhook configuration error", error, "api/payment/webhook/razorpay", {
+          eventId,
+        });
         return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
       }
 
       const isValid = verifyRazorpayWebhookSignature(rawBody, signature, webhookSecret);
       if (!isValid) {
+        logInfo("Razorpay webhook signature verification failed", "api/payment/webhook/razorpay", {
+          eventId,
+        });
         return NextResponse.json({ error: "Invalid webhook signature" }, { status: 400 });
       }
 
@@ -79,6 +85,10 @@ async function postHandler(request: Request) {
         });
 
         if (outcome.mode === "queued") {
+          logInfo("Razorpay webhook queued", "api/payment/webhook/razorpay", {
+            eventId,
+            eventType,
+          });
           return NextResponse.json({
             ok: true,
             queued: true,
@@ -88,6 +98,12 @@ async function postHandler(request: Request) {
         }
 
         const result = outcome.result;
+        logInfo("Razorpay webhook processed", "api/payment/webhook/razorpay", {
+          eventId,
+          eventType,
+          orderId: result.orderId,
+          skipped: result.skipped,
+        });
         return NextResponse.json({
           ok: true,
           queued: false,
@@ -98,10 +114,10 @@ async function postHandler(request: Request) {
           message: result.message,
         });
       } catch (error) {
-        console.error("[razorpay-webhook] Processing error:", {
+        logError("Razorpay webhook processing error", error, "api/payment/webhook/razorpay", {
           eventId,
           eventType,
-          error,
+          retryable: isRetryableError(error),
         });
 
         const status = isRetryableError(error) ? 500 : 422;

@@ -1,35 +1,15 @@
 import "server-only";
 
 import { isPostgresConfigured, prisma } from "@/lib/db/prisma";
-
 import { isRazorpayConfigured } from "@/lib/server/env";
+import { logInfo, logError } from "@/lib/server/logger";
 
-export function logPayment(
-  message: string,
-
-  meta?: Record<string, unknown>,
-): void {
-  if (meta) {
-    console.log(`[PAYMENT] ${message}`, meta);
-
-    return;
-  }
-
-  console.log(`[PAYMENT] ${message}`);
+export function logPayment(message: string, meta?: Record<string, unknown>): void {
+  logInfo(message, "payment", meta);
 }
 
-export function logPaymentError(
-  error: unknown,
-
-  meta?: Record<string, unknown>,
-): void {
-  console.error("[PAYMENT_ERROR]", {
-    message: error instanceof Error ? error.message : String(error),
-
-    stack: error instanceof Error ? error.stack : undefined,
-
-    ...meta,
-  });
+export function logPaymentError(error: unknown, meta?: Record<string, unknown>): void {
+  logError("Payment error", error, "payment", meta);
 }
 
 export function getRazorpayEnvPresence(): {
