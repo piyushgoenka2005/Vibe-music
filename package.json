@@ -19,6 +19,7 @@
     "type-check": "tsc --noEmit",
     "seed:admin": "npx tsx --env-file=.env.local scripts/db/seed-admin.mts",
     "seed:admin-credentials": "npx tsx --env-file=.env.local scripts/db/ensure-admin-credentials.mts",
+    "diagnose:admin": "npx tsx --env-file=.env.local scripts/db/diagnose-admin.mts",
     "seed:e2e-admin": "npx tsx scripts/db/seed-e2e-admin.mts",
     "seed:e2e-customers": "npx tsx scripts/db/seed-e2e-customers.mts",
     "seed:catalog": "npx tsx --env-file=.env.local scripts/catalog/seed-catalog.mts",

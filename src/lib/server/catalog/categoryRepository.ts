@@ -227,7 +227,18 @@ export async function listCategories(): Promise<AdminCategory[]> {
       err instanceof Error ? err.message : String(err),
     );
     // Ultimate fallback: return in-memory static categories only on DB failure
-    return staticCategories();
+    try {
+      const fallback = await staticCategories();
+      console.debug(
+        "[categoryRepository] Fallback successful, returning",
+        fallback.length,
+        "static categories",
+      );
+      return fallback;
+    } catch (fallbackErr) {
+      console.error("[categoryRepository] Even fallback failed:", fallbackErr);
+      throw fallbackErr;
+    }
   }
 }
 

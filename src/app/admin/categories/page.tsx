@@ -150,12 +150,26 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
   // Only show ErrorState when there is an actual fetch failure AND we have no data at all.
   // An empty list (0 categories) is a valid state — show the empty-state UI instead.
   if (isError && !data) {
+    let errorMessage = "Unable to load categories.";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Provide more helpful messages for common errors
+      if (errorMessage.includes("401") || errorMessage.includes("Authentication required")) {
+        errorMessage = "Your session has expired. Please log in again.";
+      } else if (
+        errorMessage.includes("403") ||
+        errorMessage.includes("Insufficient permissions")
+      ) {
+        errorMessage =
+          "You don't have permission to view categories. Please contact an administrator.";
+      } else if (errorMessage.includes("503") || errorMessage.includes("temporarily busy")) {
+        errorMessage = "The database is temporarily busy. Please try again in a few moments.";
+      }
+    }
+
     return (
-      <ErrorState
-        message={error instanceof Error ? error.message : "Unable to load categories."}
-        onRetry={() => void refetch()}
-        isRetrying={isFetching}
-      />
+      <ErrorState message={errorMessage} onRetry={() => void refetch()} isRetrying={isFetching} />
     );
   }
   const mainCategories = categories.filter((c) => !c.parentId);

@@ -5,10 +5,21 @@ import { adminCategorySchema } from "@/lib/validations/admin";
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin("categories:read", request);
+    const admin = await requireAdmin("categories:read", request);
+    console.debug("[admin/categories] User", admin.uid, "fetching categories");
     const categories = await listCategories();
+    console.debug(
+      "[admin/categories] Returning",
+      categories.length,
+      "categories to user",
+      admin.uid,
+    );
     return NextResponse.json({ categories });
   } catch (error) {
+    console.error(
+      "[admin/categories] GET failed:",
+      error instanceof Error ? error.message : String(error),
+    );
     return adminErrorResponse(error, request);
   }
 }
