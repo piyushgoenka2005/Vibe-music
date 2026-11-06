@@ -25,6 +25,13 @@ describe("canonicalSubcategorySlug and canonicalSubcategoryLabel", () => {
 
     expect(canonicalSubcategorySlug("Keyboard Stand")).toBe("keyboard-stands");
     expect(canonicalSubcategorySlug("Keyboard Stands")).toBe("keyboard-stands");
+
+    expect(canonicalSubcategorySlug("Guitar & Instrument Cables")).toBe("instrument-cables");
+    expect(canonicalSubcategorySlug("XLR Microphone & Audio Cables")).toBe("xlr-cables");
+    expect(canonicalSubcategorySlug("Audio Interfaces & Recording Mixers")).toBe(
+      "audio-interfaces",
+    );
+    expect(canonicalSubcategorySlug("Performance Synthesizers")).toBe("synthesizers");
   });
 
   it("strips department prefixes from child slugs", () => {

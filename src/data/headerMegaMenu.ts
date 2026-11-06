@@ -1,5 +1,6 @@
-import { ROUTES, categoryPath } from "@/lib/routes";
+import { categoryPath } from "@/lib/routes";
 import { getMegaMenuFeaturedImage } from "@/lib/categoryImages";
+import { slugify } from "@/lib/slug";
 
 export interface MegaMenuLink {
   label: string;
@@ -27,20 +28,29 @@ export interface MegaMenuItem {
   featured: MegaMenuFeatured[];
 }
 
-function subSearch(slug: string, query: string): string {
-  return `${ROUTES.searchResults}?q=${encodeURIComponent(query)}&category=${slug}`;
+export function subCategoryPath(mainSlug: string, subSlugOrLabel: string): string {
+  return `${categoryPath(mainSlug)}?subcat=${encodeURIComponent(slugify(subSlugOrLabel))}`;
+}
+
+/**
+ * Route category/subcategory navigation links to genuine category listing pages
+ * with subcategory query filters instead of search result pages.
+ * @deprecated Use `subCategoryPath` directly.
+ */
+export function subSearch(slug: string, query: string): string {
+  return subCategoryPath(slug, query);
 }
 
 function featured(
   slug: string,
   title: string,
-  query: string,
+  subcatOrQuery: string,
   variant?: string,
   imageClassName?: string,
 ): MegaMenuFeatured {
   return {
     title,
-    href: subSearch(slug, query),
+    href: subCategoryPath(slug, subcatOrQuery),
     image: getMegaMenuFeaturedImage(slug, variant),
     imageClassName,
   };
@@ -69,34 +79,34 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Electric",
         links: [
-          { label: "Solid body", href: subSearch("guitars", "solid body electric") },
-          { label: "Semi-hollow", href: subSearch("guitars", "semi hollow") },
-          { label: "Left-handed", href: subSearch("guitars", "left handed guitar") },
-          { label: "Starter packs", href: subSearch("guitars", "electric guitar pack") },
+          { label: "Solid body", href: subCategoryPath("guitars", "solid-body") },
+          { label: "Semi-hollow", href: subCategoryPath("guitars", "semi-hollow") },
+          { label: "Left-handed", href: subCategoryPath("guitars", "left-handed") },
+          { label: "Starter packs", href: subCategoryPath("guitars", "starter-packs") },
         ],
       },
       {
         heading: "Acoustic",
         links: [
-          { label: "Steel string", href: subSearch("guitars", "acoustic steel") },
-          { label: "Classical & nylon", href: subSearch("guitars", "classical guitar") },
-          { label: "12-string", href: subSearch("guitars", "12 string") },
-          { label: "Travel guitars", href: subSearch("guitars", "travel guitar") },
+          { label: "Steel string", href: subCategoryPath("guitars", "acoustic-guitars") },
+          { label: "Classical & nylon", href: subCategoryPath("guitars", "classical-guitars") },
+          { label: "12-string", href: subCategoryPath("guitars", "12-string") },
+          { label: "Travel guitars", href: subCategoryPath("guitars", "travel-guitars") },
         ],
       },
       {
         heading: "Bass & more",
         links: [
-          { label: "Electric bass", href: subSearch("guitars", "bass guitar") },
-          { label: "Amps & pedals", href: subSearch("guitars", "guitar amp") },
-          { label: "Strings & picks", href: subSearch("guitars", "guitar strings") },
+          { label: "Electric bass", href: subCategoryPath("guitars", "bass-guitars") },
+          { label: "Amps & pedals", href: subCategoryPath("guitars", "guitar-amplifiers") },
+          { label: "Strings & picks", href: subCategoryPath("guitars", "guitar-accessories") },
           { label: "Shop all guitars", href: categoryPath("guitars") },
         ],
       },
     ],
     featured: [
-      featured("guitars", "Electric", "electric guitar", "electric"),
-      featured("guitars", "Acoustic", "acoustic guitar", "acoustic"),
+      featured("guitars", "Electric", "electric-guitars", "electric"),
+      featured("guitars", "Acoustic", "acoustic-guitars", "acoustic"),
     ],
   },
   {
@@ -107,19 +117,34 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Recording",
         links: [
-          { label: "Audio interfaces", href: subSearch("studio-recording", "audio interface") },
-          { label: "Studio monitors", href: subSearch("studio-recording", "studio monitor") },
-          { label: "Microphones", href: subSearch("studio-recording", "condenser mic") },
-          { label: "Headphones", href: subSearch("studio-recording", "studio headphones") },
+          {
+            label: "Audio interfaces",
+            href: subCategoryPath("studio-recording", "audio-interfaces"),
+          },
+          {
+            label: "Studio monitors",
+            href: subCategoryPath("studio-recording", "studio-monitors"),
+          },
+          { label: "Microphones", href: subCategoryPath("studio-recording", "microphones") },
+          { label: "Headphones", href: subCategoryPath("studio-recording", "headphones") },
         ],
       },
       {
         heading: "Production",
         links: [
-          { label: "MIDI controllers", href: subSearch("studio-recording", "midi controller") },
-          { label: "Studio furniture", href: subSearch("studio-recording", "studio desk") },
-          { label: "Acoustic treatment", href: subSearch("studio-recording", "acoustic panel") },
-          { label: "Cables & stands", href: subSearch("studio-recording", "mic stand") },
+          {
+            label: "MIDI controllers",
+            href: subCategoryPath("studio-recording", "midi-controllers"),
+          },
+          {
+            label: "Studio furniture",
+            href: subCategoryPath("studio-recording", "studio-furniture"),
+          },
+          {
+            label: "Acoustic treatment",
+            href: subCategoryPath("studio-recording", "acoustic-treatment"),
+          },
+          { label: "Cables & stands", href: subCategoryPath("studio-recording", "cables-stands") },
         ],
       },
       {
@@ -127,17 +152,17 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
         links: [
           {
             label: "Home studio bundles",
-            href: subSearch("studio-recording", "home studio bundle"),
+            href: subCategoryPath("studio-recording", "home-studio-bundles"),
           },
-          { label: "Podcast gear", href: subSearch("studio-recording", "podcast") },
-          { label: "USB mics", href: subSearch("studio-recording", "usb microphone") },
+          { label: "Podcast gear", href: subCategoryPath("studio-recording", "podcast-gear") },
+          { label: "USB mics", href: subCategoryPath("studio-recording", "usb-mics") },
           { label: "Shop all studio", href: categoryPath("studio-recording") },
         ],
       },
     ],
     featured: [
-      featured("studio-recording", "Interfaces", "audio interface"),
-      featured("studio-recording", "Monitors", "studio monitor", "monitors"),
+      featured("studio-recording", "Interfaces", "audio-interfaces"),
+      featured("studio-recording", "Monitors", "studio-monitors", "monitors"),
     ],
   },
   {
@@ -148,34 +173,46 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Drum kits",
         links: [
-          { label: "Acoustic kits", href: subSearch("drums-percussion", "acoustic drum kit") },
-          { label: "Electronic kits", href: subSearch("drums-percussion", "electronic drum") },
-          { label: "Snare drums", href: subSearch("drums-percussion", "snare drum") },
-          { label: "Cymbals", href: subSearch("drums-percussion", "cymbal") },
+          {
+            label: "Acoustic kits",
+            href: subCategoryPath("drums-percussion", "acoustic-drum-kits"),
+          },
+          {
+            label: "Electronic kits",
+            href: subCategoryPath("drums-percussion", "electronic-drum-kits"),
+          },
+          { label: "Snare drums", href: subCategoryPath("drums-percussion", "snare-drums") },
+          { label: "Cymbals", href: subCategoryPath("drums-percussion", "cymbals") },
         ],
       },
       {
         heading: "Percussion",
         links: [
-          { label: "Hand percussion", href: subSearch("drums-percussion", "hand percussion") },
-          { label: "Congas & bongos", href: subSearch("drums-percussion", "conga") },
-          { label: "Cajons", href: subSearch("drums-percussion", "cajon") },
-          { label: "Drum hardware", href: subSearch("drums-percussion", "drum hardware") },
+          {
+            label: "Hand percussion",
+            href: subCategoryPath("drums-percussion", "hand-percussion"),
+          },
+          { label: "Congas & bongos", href: subCategoryPath("drums-percussion", "congas-bongos") },
+          { label: "Cajons", href: subCategoryPath("drums-percussion", "cajons") },
+          { label: "Drum hardware", href: subCategoryPath("drums-percussion", "drum-hardware") },
         ],
       },
       {
         heading: "Accessories",
         links: [
-          { label: "Sticks & brushes", href: subSearch("drums-percussion", "drum sticks") },
-          { label: "Drum heads", href: subSearch("drums-percussion", "drum head") },
-          { label: "Practice pads", href: subSearch("drums-percussion", "practice pad") },
+          {
+            label: "Sticks & brushes",
+            href: subCategoryPath("drums-percussion", "sticks-brushes"),
+          },
+          { label: "Drum heads", href: subCategoryPath("drums-percussion", "drum-heads") },
+          { label: "Practice pads", href: subCategoryPath("drums-percussion", "practice-pads") },
           { label: "Shop all drums", href: categoryPath("drums-percussion") },
         ],
       },
     ],
     featured: [
-      featured("drums-percussion", "Drum kits", "drum kit"),
-      featured("drums-percussion", "Electronic", "electronic drum", "electronic"),
+      featured("drums-percussion", "Drum kits", "acoustic-drum-kits"),
+      featured("drums-percussion", "Electronic", "electronic-drum-kits", "electronic"),
     ],
   },
   {
@@ -187,14 +224,24 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
         heading: "Keyboards",
         links: [
           { label: "Shop all keys", href: categoryPath("keyboards-synthesizers") },
-          { label: "Stage keyboards", href: subSearch("keyboards-synthesizers", "keyboard") },
-          { label: "Performance pianos", href: subSearch("keyboards-synthesizers", "piano") },
+          {
+            label: "Synthesizers",
+            href: subCategoryPath("keyboards-synthesizers", "synthesizers"),
+          },
+          {
+            label: "Stage keyboards",
+            href: subCategoryPath("keyboards-synthesizers", "stage-keyboards"),
+          },
+          {
+            label: "Performance pianos",
+            href: subCategoryPath("keyboards-synthesizers", "performance-pianos"),
+          },
         ],
       },
     ],
     featured: [
-      featured("keyboards-synthesizers", "Shop all keys", "keyboard"),
-      featured("keyboards-synthesizers", "Stage keyboards", "stage"),
+      featured("keyboards-synthesizers", "Synthesizers", "synthesizers", "keyboard"),
+      featured("keyboards-synthesizers", "Stage keyboards", "stage-keyboards", "stage"),
     ],
   },
   {
@@ -205,23 +252,32 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "PA systems",
         links: [
-          { label: "Active PA speakers", href: subSearch("live-sound-lighting", "PA speaker") },
-          { label: "DSP speakers", href: subSearch("live-sound-lighting", "DSP") },
+          {
+            label: "Active PA speakers",
+            href: subCategoryPath("live-sound-lighting", "active-pa-speakers"),
+          },
+          { label: "DSP speakers", href: subCategoryPath("live-sound-lighting", "dsp-speakers") },
           { label: "Shop all live sound", href: categoryPath("live-sound-lighting") },
         ],
       },
       {
         heading: "Stage essentials",
         links: [
-          { label: "Live performance PA", href: subSearch("live-sound-lighting", "live PA") },
-          { label: "DJ & karaoke PA", href: subSearch("live-sound-lighting", "DJ") },
+          {
+            label: "Live performance PA",
+            href: subCategoryPath("live-sound-lighting", "live-performance-pa"),
+          },
+          {
+            label: "DJ & karaoke PA",
+            href: subCategoryPath("live-sound-lighting", "dj-karaoke-pa"),
+          },
           { label: "Browse live sound", href: categoryPath("live-sound-lighting") },
         ],
       },
     ],
     featured: [
-      featured("live-sound-lighting", "PA speakers", "PA speaker"),
-      featured("live-sound-lighting", "Active speakers", "active speaker"),
+      featured("live-sound-lighting", "PA speakers", "pa-speakers"),
+      featured("live-sound-lighting", "Active speakers", "active-speakers"),
     ],
   },
   {
@@ -232,22 +288,28 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Wired mics",
         links: [
-          { label: "Dynamic mics", href: subSearch("microphones-wireless", "dynamic mic") },
-          { label: "Condenser mics", href: subSearch("microphones-wireless", "condenser mic") },
+          { label: "Dynamic mics", href: subCategoryPath("microphones-wireless", "dynamic-mics") },
+          {
+            label: "Condenser mics",
+            href: subCategoryPath("microphones-wireless", "condenser-mics"),
+          },
           { label: "Shop all microphones", href: categoryPath("microphones-wireless") },
         ],
       },
       {
         heading: "Wireless",
         links: [
-          { label: "Wireless systems", href: subSearch("microphones-wireless", "wireless") },
+          {
+            label: "Wireless systems",
+            href: subCategoryPath("microphones-wireless", "wireless-systems"),
+          },
           { label: "Browse microphones", href: categoryPath("microphones-wireless") },
         ],
       },
     ],
     featured: [
-      featured("microphones-wireless", "Dynamic mics", "dynamic mic"),
-      featured("microphones-wireless", "Wireless", "wireless mic"),
+      featured("microphones-wireless", "Dynamic mics", "dynamic-mics"),
+      featured("microphones-wireless", "Wireless", "wireless-systems"),
     ],
   },
   {
@@ -258,25 +320,28 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
       {
         heading: "Mixers",
         links: [
-          { label: "USB mixers", href: subSearch("dj-equipment", "USB mixer") },
-          { label: "Bluetooth mixers", href: subSearch("dj-equipment", "Bluetooth mixer") },
-          { label: "Multi-channel consoles", href: subSearch("dj-equipment", "mixer console") },
+          { label: "USB mixers", href: subCategoryPath("dj-equipment", "usb-mixers") },
+          { label: "Bluetooth mixers", href: subCategoryPath("dj-equipment", "bluetooth-mixers") },
+          {
+            label: "Multi-channel consoles",
+            href: subCategoryPath("dj-equipment", "mixer-consoles"),
+          },
           { label: "Shop all DJ", href: categoryPath("dj-equipment") },
         ],
       },
       {
         heading: "Live & studio",
         links: [
-          { label: "Karaoke mixers", href: subSearch("dj-equipment", "karaoke") },
-          { label: "PA mixers", href: subSearch("dj-equipment", "PA mixer") },
-          { label: "Open-box mixers", href: subSearch("dj-equipment", "open box") },
+          { label: "Karaoke mixers", href: subCategoryPath("dj-equipment", "karaoke-mixers") },
+          { label: "PA mixers", href: subCategoryPath("dj-equipment", "pa-mixers") },
+          { label: "Open-box mixers", href: subCategoryPath("dj-equipment", "open-box-mixers") },
           { label: "Browse DJ gear", href: categoryPath("dj-equipment") },
         ],
       },
     ],
     featured: [
-      featured("dj-equipment", "Mixers", "mixer"),
-      featured("dj-equipment", "Consoles", "console"),
+      featured("dj-equipment", "Mixers", "mixers"),
+      featured("dj-equipment", "Consoles", "consoles"),
     ],
   },
   {
@@ -289,31 +354,34 @@ export const HEADER_MEGA_MENUS: MegaMenuItem[] = [
         links: [
           {
             label: "Instrument cables",
-            href: subSearch("cables", "instrument cable"),
+            href: subCategoryPath("cables", "instrument-cables"),
           },
-          { label: "XLR & mic cables", href: subSearch("cables", "xlr cable") },
-          { label: "Patch cables", href: subSearch("cables", "patch cable") },
+          { label: "XLR & mic cables", href: subCategoryPath("cables", "xlr-cables") },
+          { label: "Patch cables", href: subCategoryPath("cables", "patch-cables") },
           {
             label: "Power & adapters",
-            href: subSearch("cables", "power adapter"),
+            href: subCategoryPath("cables", "power-adapters"),
           },
         ],
       },
       {
         heading: "Cases & bags",
         links: [
-          { label: "Guitar cases", href: subSearch("cases-bags", "guitar case") },
-          { label: "Keyboard bags", href: subSearch("cases-bags", "keyboard bag") },
-          { label: "Rack cases", href: subSearch("cases-bags", "rack case") },
-          { label: "Pedalboards", href: subSearch("cases-bags", "pedalboard") },
+          { label: "Guitar cases", href: subCategoryPath("accessories", "guitar-cases") },
+          { label: "Keyboard bags", href: subCategoryPath("accessories", "keyboard-bags") },
+          { label: "Rack cases", href: subCategoryPath("accessories", "rack-cases") },
+          { label: "Pedalboards", href: subCategoryPath("accessories", "pedalboards") },
         ],
       },
       {
         heading: "Essentials",
         links: [
-          { label: "Stands", href: subSearch("essentials", "mic stand") },
-          { label: "Tuners & metronomes", href: subSearch("essentials", "tuner") },
-          { label: "Care & cleaning", href: subSearch("essentials", "cleaning kit") },
+          { label: "Stands", href: subCategoryPath("accessories", "stands") },
+          {
+            label: "Tuners & metronomes",
+            href: subCategoryPath("accessories", "tuners-metronomes"),
+          },
+          { label: "Care & cleaning", href: subCategoryPath("accessories", "care-cleaning") },
           { label: "Shop all accessories", href: categoryPath("accessories") },
         ],
       },

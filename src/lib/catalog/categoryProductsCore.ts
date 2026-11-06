@@ -115,6 +115,41 @@ const CANONICAL_SUBCATEGORY_MAP: Record<string, { slug: string; name: string }> 
   "boom-cymbal-stands": { slug: "boom-cymbal-stands", name: "Boom Cymbal Stands" },
   "hi-hat-stand": { slug: "hi-hat-stands", name: "Hi-Hat Stands" },
   "hi-hat-stands": { slug: "hi-hat-stands", name: "Hi-Hat Stands" },
+  "instrument-cable": { slug: "instrument-cables", name: "Instrument Cables" },
+  "instrument-cables": { slug: "instrument-cables", name: "Instrument Cables" },
+  "guitar-instrument-cable": { slug: "instrument-cables", name: "Instrument Cables" },
+  "guitar-instrument-cables": { slug: "instrument-cables", name: "Instrument Cables" },
+  "guitar-and-instrument-cables": { slug: "instrument-cables", name: "Instrument Cables" },
+  "guitar-cable": { slug: "instrument-cables", name: "Instrument Cables" },
+  "guitar-cables": { slug: "instrument-cables", name: "Instrument Cables" },
+  "xlr-cable": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "xlr-cables": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "xlr-mic-cable": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "xlr-mic-cables": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "microphone-cable": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "microphone-cables": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "xlr-microphone-audio-cables": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "patch-cable": { slug: "patch-cables", name: "Patch Cables" },
+  "patch-cables": { slug: "patch-cables", name: "Patch Cables" },
+  "audio-interface": { slug: "audio-interfaces", name: "Audio Interfaces" },
+  "audio-interfaces": { slug: "audio-interfaces", name: "Audio Interfaces" },
+  "audio-interfaces-recording-mixers": { slug: "audio-interfaces", name: "Audio Interfaces" },
+  "studio-monitor": { slug: "studio-monitors", name: "Studio Monitors" },
+  "studio-monitors": { slug: "studio-monitors", name: "Studio Monitors" },
+  "studio-desk": { slug: "studio-furniture", name: "Studio Furniture" },
+  "studio-furniture": { slug: "studio-furniture", name: "Studio Furniture" },
+  "midi-controller": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "midi-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "acoustic-drum-kit": { slug: "acoustic-drum-kits", name: "Acoustic Drum Kits" },
+  "acoustic-drum-kits": { slug: "acoustic-drum-kits", name: "Acoustic Drum Kits" },
+  "acoustic-kit": { slug: "acoustic-drum-kits", name: "Acoustic Drum Kits" },
+  "acoustic-kits": { slug: "acoustic-drum-kits", name: "Acoustic Drum Kits" },
+  synthesizer: { slug: "synthesizers", name: "Synthesizers" },
+  synthesizers: { slug: "synthesizers", name: "Synthesizers" },
+  "performance-synthesizer": { slug: "synthesizers", name: "Synthesizers" },
+  "performance-synthesizers": { slug: "synthesizers", name: "Synthesizers" },
+  "audio-mixer": { slug: "audio-mixers", name: "Audio Mixers" },
+  "audio-mixers": { slug: "audio-mixers", name: "Audio Mixers" },
 };
 
 export function canonicalSubcategorySlug(raw: string): string {
@@ -272,14 +307,22 @@ function applyFilters(
         .flatMap((slug) => [slug.toLowerCase(), canonicalSubcategorySlug(slug)])
         .filter(Boolean),
     );
+    const activeSubList = Array.from(activeSubcategories);
     result = result.filter((product) => {
       const raw = product.subcategory ?? "";
+      if (!raw) return false;
       const rawSlug = slugify(raw);
       const canonSlug = canonicalSubcategorySlug(raw);
-      return (
+      if (
         (rawSlug && activeSubcategories.has(rawSlug)) ||
         (canonSlug && activeSubcategories.has(canonSlug))
-      );
+      ) {
+        return true;
+      }
+      return activeSubList.some((active) => {
+        const stem = active.replace(/s$/, "");
+        return rawSlug.includes(active) || rawSlug.includes(stem) || active.includes(rawSlug);
+      });
     });
   }
 

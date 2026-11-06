@@ -6,6 +6,8 @@ import { useCategoryFilters } from "@/hooks/useCategoryFilters";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import ProductCard from "@/components/common/ProductCard";
 import { trackViewItemList } from "@/lib/analytics/events";
+import { unslugify } from "@/lib/slug";
+import { formatSubcategoryLabel } from "@/lib/product/productBreadcrumb";
 import {
   FilterChips,
   ListingFilterShell,
@@ -56,6 +58,22 @@ function CategoryPageContent({ category, parentCategory, initialData }: Category
     }),
     [facets],
   );
+
+  const pageTitle = useMemo(() => {
+    if (category.parentId) return category.name;
+    const activeSub = filters.subcategories[0];
+    if (!activeSub) return category.name;
+    const rawLabel = facetLabels.subcategories[activeSub] || unslugify(activeSub);
+    return formatSubcategoryLabel(rawLabel);
+  }, [category.name, category.parentId, filters.subcategories, facetLabels.subcategories]);
+
+  const pageDescription = useMemo(() => {
+    if (category.parentId || !filters.subcategories[0]) {
+      return category.description;
+    }
+    return `Explore genuine ${pageTitle.toLowerCase()} in ${category.name} at Vibe Music. Authentic gear, official warranties, and fast free shipping.`;
+  }, [category.description, category.parentId, category.name, filters.subcategories, pageTitle]);
+
   const listContext = useMemo(
     () => ({
       itemListId: `category_${category.slug}`,
@@ -88,8 +106,8 @@ function CategoryPageContent({ category, parentCategory, initialData }: Category
           activeSubcategorySlug={filters.subcategories[0]}
           subcategoryLabels={facetLabels.subcategories}
         />
-        <h1 className="cat-page__title">{category.name}</h1>
-        <p className="cat-page__desc">{category.description}</p>
+        <h1 className="cat-page__title">{pageTitle}</h1>
+        <p className="cat-page__desc">{pageDescription}</p>
 
         <div className="cat-toolbar">
           <div className="cat-toolbar__primary">

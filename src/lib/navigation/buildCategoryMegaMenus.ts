@@ -1,6 +1,7 @@
 import { HEADER_MEGA_MENUS, type MegaMenuItem, type MegaMenuColumn } from "@/data/headerMegaMenu";
-import { categoryPath, ROUTES } from "@/lib/routes";
+import { categoryPath } from "@/lib/routes";
 import { getCategoryHeroImage, getMegaMenuFeaturedImage } from "@/lib/categoryImages";
+import { slugify } from "@/lib/slug";
 import type { Category } from "@/types/category";
 
 type HeaderSubcategory = Pick<Category, "id" | "name" | "slug"> & {
@@ -32,7 +33,7 @@ export function buildCategoryMegaMenus(
           href: categoryPath(subcategory.slug),
           children: subcategory.children?.map((child) => ({
             label: child.name,
-            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+            href: `${categoryPath(baseline.slug)}?subcat=${encodeURIComponent(slugify(child.name))}`,
           })),
         });
       });
@@ -59,7 +60,7 @@ export function buildCategoryMegaMenus(
           href: categoryPath(sub.slug),
           children: sub.children?.map((child) => ({
             label: child.name,
-            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(taxSlug)}`,
+            href: `${categoryPath(taxSlug)}?subcat=${encodeURIComponent(slugify(child.name))}`,
           })),
         });
       });
@@ -170,7 +171,7 @@ export function buildCategoryMegaMenus(
           href: categoryPath(sub.slug),
           children: sub.children?.map((child) => ({
             label: child.name,
-            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+            href: `${categoryPath(baseline.slug)}?subcat=${encodeURIComponent(slugify(child.name))}`,
           })),
         });
       });
@@ -215,7 +216,7 @@ export function buildCategoryMegaMenus(
             href: categoryPath(match.slug),
             children: match.children?.map((child) => ({
               label: child.name,
-              href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+              href: `${categoryPath(baseline.slug)}?subcat=${encodeURIComponent(slugify(child.name))}`,
             })),
           };
         }
@@ -238,7 +239,7 @@ export function buildCategoryMegaMenus(
           href: categoryPath(sub.slug),
           children: sub.children?.map((child) => ({
             label: child.name,
-            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+            href: `${categoryPath(baseline.slug)}?subcat=${encodeURIComponent(slugify(child.name))}`,
           })),
         });
       }
@@ -255,7 +256,7 @@ export function buildCategoryMegaMenus(
             href: categoryPath(sub.slug),
             children: sub.children?.map((child) => ({
               label: child.name,
-              href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(baseline.slug)}`,
+              href: `${categoryPath(baseline.slug)}?subcat=${encodeURIComponent(slugify(child.name))}`,
             })),
           });
         }
@@ -316,7 +317,7 @@ export function buildCategoryMegaMenus(
           href: categoryPath(sub.slug),
           children: sub.children?.map((child) => ({
             label: child.name,
-            href: `${ROUTES.searchResults}?q=${encodeURIComponent(child.name)}&category=${encodeURIComponent(cat.slug)}`,
+            href: `${categoryPath(cat.slug)}?subcat=${encodeURIComponent(slugify(child.name))}`,
           })),
         });
       });
