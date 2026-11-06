@@ -216,7 +216,7 @@ export default function FrequentlyBoughtTogether({
           </button>
           <span className="pdp-fbt__divider-text">OR</span>
           <Link
-            href={categoryPath("cables-cases-accessories")}
+            href={categoryPath("accessories")}
             className="pdp-btn pdp-btn--secondary pdp-fbt__build-own"
           >
             Build Your Own Bundle and Save

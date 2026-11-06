@@ -33,6 +33,7 @@ describe("validateEnv production security", () => {
     process.env.SMTP_PASS = "pass";
     process.env.UPSTASH_REDIS_REST_URL = "https://example.upstash.io";
     process.env.UPSTASH_REDIS_REST_TOKEN = "token";
+    process.env.SENTRY_DSN = "https://examplePublicKey@o0.ingest.sentry.io/0";
     delete process.env.ALLOW_DEMO_PAYMENTS;
     delete process.env.E2E_TEST_MODE;
     delete process.env.ALLOW_JSON_CATALOG_FALLBACK;

@@ -11,11 +11,11 @@
  * ```
  */
 
-import type { CatalogProduct, ProductSearchOptions } from "@/types/product";
-import { normalizeCategorySlug } from "./catalogService";
-import { fetchCategories, findCategoryInList } from "./categoryResolver";
+import type { CatalogProduct } from "@/types/catalog";
+import { normalizeCategorySlug, findCategoryInList } from "@/lib/categorySlug";
+import { getCategoryCatalog } from "./categoryResolver";
+import { prismaToProduct } from "@/lib/server/prisma/mappers";
 import { prisma } from "@/lib/db/prisma";
-import { toProduct } from "./mappers";
 
 /**
  * Resolve a category slug to a set of category IDs to include in search results.
@@ -33,7 +33,7 @@ export async function resolveCategoryIdsForFilter(slug: string): Promise<string[
   if (!normalized) return [];
 
   // Fetch all categories to build tree
-  const categories = await fetchCategories();
+  const categories = await getCategoryCatalog();
   const targetCategory = findCategoryInList(categories, normalized);
 
   if (!targetCategory) {
@@ -100,7 +100,7 @@ export async function fetchProductsByCategories(
   });
 
   // Step 3: Convert to internal format
-  return products.map(toProduct);
+  return products.map(prismaToProduct);
 }
 
 /**

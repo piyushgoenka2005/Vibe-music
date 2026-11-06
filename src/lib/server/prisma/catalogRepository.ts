@@ -449,7 +449,10 @@ export async function fetchBrands(): Promise<Brand[]> {
 export async function fetchCategories(): Promise<Category[]> {
   return withProductFallback(
     async () => {
-      const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+      const rows = await prisma.category.findMany({
+        where: { isArchived: false },
+        orderBy: { sortOrder: "asc" },
+      });
       return rows.map(prismaToCategory);
     },
     async () => {

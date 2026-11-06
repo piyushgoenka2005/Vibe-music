@@ -40,7 +40,7 @@ describe("buildCategoryMegaMenus", () => {
     expect(slugs.slice(microphoneIndex, microphoneIndex + 3)).toEqual([
       "microphones-wireless",
       "dj-equipment",
-      "cables-cases-accessories",
+      "accessories",
     ]);
   });
 

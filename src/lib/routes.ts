@@ -150,6 +150,7 @@ export function brandPath(slug: string): string {
 const PLACEHOLDER_REDIRECTS: Record<string, string> = {
   "/category/recording": categoryPath("studio-recording"),
   "/category/keyboards": categoryPath("keyboards-synthesizers"),
+  "/category/cables-cases-accessories": categoryPath("accessories"),
   "/categories": ROUTES.categories,
   "/products": ROUTES.search,
   "/wishlist": ROUTES.accountWishlist,
@@ -184,11 +185,11 @@ const SHOP_PREFIX_RULES: Array<{ prefix: string; target: string }> = [
   { prefix: "/shop/home-audio-and-electronics", target: categoryPath("home-audio-electronics") },
   { prefix: "/shop/commercial-audio", target: categoryPath("commercial-audio-installation") },
   { prefix: "/shop/video-equipment", target: categoryPath("video-cameras") },
-  { prefix: "/shop/accessories", target: categoryPath("cables-cases-accessories") },
-  { prefix: "/shop/cables", target: categoryPath("cables-cases-accessories") },
-  { prefix: "/shop/cases", target: categoryPath("cables-cases-accessories") },
-  { prefix: "/shop/stands", target: categoryPath("cables-cases-accessories") },
-  { prefix: "/shop/snakes", target: categoryPath("cables-cases-accessories") },
+  { prefix: "/shop/accessories", target: categoryPath("accessories") },
+  { prefix: "/shop/cables", target: categoryPath("cables") },
+  { prefix: "/shop/cases", target: categoryPath("cases-bags") },
+  { prefix: "/shop/stands", target: categoryPath("essentials") },
+  { prefix: "/shop/snakes", target: categoryPath("cables") },
   { prefix: "/shop/by-category", target: ROUTES.search },
   { prefix: "/shop/microphone", target: categoryPath("microphones-wireless") },
 ].sort((a, b) => b.prefix.length - a.prefix.length);
@@ -330,7 +331,7 @@ function resolveShopPath(path: string): string | null {
 export function resolveLegacyPath(pathname: string): string | null {
   const path = normalizePath(pathname);
 
-  const legacyCategoryMatch = path.match(/^\/categories?\/([^/]+)$/i);
+  const legacyCategoryMatch = path.match(/^\/categories\/([^/]+)$/i);
   if (legacyCategoryMatch?.[1]) {
     let categoryName = legacyCategoryMatch[1];
     try {
@@ -338,7 +339,10 @@ export function resolveLegacyPath(pathname: string): string | null {
     } catch {
       // Keep the original segment; slugify still produces a safe fallback.
     }
-    return categoryPath(slugify(categoryName));
+    const target = categoryPath(slugify(categoryName));
+    if (normalizePath(target) !== path) {
+      return target;
+    }
   }
 
   // Retired / placeholder paths first (before /admin/* validity catch-all).

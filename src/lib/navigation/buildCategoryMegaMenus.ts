@@ -368,9 +368,7 @@ export function buildCategoryMegaMenus(
     });
   }
 
-  const canonicalAccessories = categories.find(
-    (category) => category.slug === "cables-cases-accessories",
-  );
+  const canonicalAccessories = categories.find((category) => category.slug === "accessories");
   const normalizedBaselineMenus = canonicalAccessories
     ? baselineMenus.map((menu) =>
         menu.slug === "accessories"

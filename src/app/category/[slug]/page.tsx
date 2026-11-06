@@ -34,10 +34,7 @@ export async function generateMetadata({ params }: CategoryRouteProps): Promise<
     const { slug } = await params;
     const category = await resolveCategoryBySlug(slug);
     if (!category) {
-      return {
-        title: "Category not found | Vibe Music",
-        robots: { index: false, follow: false },
-      };
+      notFound();
     }
 
     const title = `${category.name} | Vibe Music`;
@@ -65,6 +62,18 @@ export async function generateMetadata({ params }: CategoryRouteProps): Promise<
       },
     };
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      (("digest" in error &&
+        typeof (error as { digest?: unknown }).digest === "string" &&
+        (error as { digest: string }).digest.startsWith("NEXT_")) ||
+        ("message" in error &&
+          typeof (error as { message?: unknown }).message === "string" &&
+          (error as { message: string }).message.startsWith("NEXT_")))
+    ) {
+      throw error;
+    }
     console.error("[category:generateMetadata] error generating category metadata", error);
     return {
       title: "Category | Vibe Music",
@@ -74,18 +83,18 @@ export async function generateMetadata({ params }: CategoryRouteProps): Promise<
 }
 
 export default async function CategoryRoute({ params }: CategoryRouteProps) {
+  const { slug } = await params;
+  const category = await resolveCategoryBySlug(slug);
+
+  if (!category) {
+    notFound();
+  }
+
+  if (!isCanonicalCategorySlug(category, slug)) {
+    redirect(categoryPath(category.slug));
+  }
+
   return withServerPageError(async () => {
-    const { slug } = await params;
-    const category = await resolveCategoryBySlug(slug);
-
-    if (!category) {
-      notFound();
-    }
-
-    if (!isCanonicalCategorySlug(category, slug)) {
-      redirect(categoryPath(category.slug));
-    }
-
     // Resolve parent category if this is a child category
     const categories = category.parentId ? await getCategoryCatalog() : undefined;
     const parentCategory = categories?.find((candidate) => candidate.id === category.parentId);

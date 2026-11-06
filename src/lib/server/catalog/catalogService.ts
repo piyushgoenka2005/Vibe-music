@@ -397,6 +397,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     id: catalogProduct.id,
     slug: catalogProduct.slug,
     name: cleanProductName(catalogProduct.name),
+    sku: catalogProduct.sku,
     brand: catalogProduct.brand,
     brandSlug: catalogProduct.brandSlug,
     category: catalogProduct.category,
@@ -620,46 +621,23 @@ export function searchInCatalogProducts(
   }
 
   if (options.categorySlugs && options.categorySlugs.length > 0) {
-    // Multiple category slugs - filter using FK relationships
-    const { resolveCategoryIdsForFilter, fetchProductsByCategories } =
-      await import("./categoryFilterFixed");
-
-    // Resolve all slugs to category IDs
-    const allCategoryIds = new Set<string>();
-    for (const slug of options.categorySlugs) {
-      const ids = await resolveCategoryIdsForFilter(slug);
-      ids.forEach((id) => allCategoryIds.add(id));
-    }
-
-    if (allCategoryIds.size > 0) {
-      // Load products via FK
-      const fkProducts = await fetchProductsByCategories(Array.from(allCategoryIds));
-      source = fkProducts.length > 0 ? fkProducts : [];
-    } else {
-      source = [];
-    }
+    const slugSet = new Set(options.categorySlugs.map((s) => normalizeCategorySlug(s)));
+    source = source.filter(
+      (product) =>
+        slugSet.has(normalizeCategorySlug(product.categorySlug)) ||
+        slugSet.has(normalizeCategorySlug(product.category)),
+    );
   } else if (options.category) {
-    // Single category slug - resolve to category ID(s) and use FK
-    const { resolveCategoryIdsForFilter, fetchProductsByCategories } =
-      await import("./categoryFilterFixed");
-
-    const categoryIds = await resolveCategoryIdsForFilter(options.category);
-
-    if (categoryIds.length > 0) {
-      // Load products via FK
-      const fkProducts = await fetchProductsByCategories(categoryIds);
-      source = fkProducts.length > 0 ? fkProducts : [];
-    } else {
-      // No matching category
-      source = [];
-    }
+    const resolvedSlug = normalizeCategorySlug(options.category);
+    source = source.filter(
+      (product) =>
+        normalizeCategorySlug(product.categorySlug) === resolvedSlug ||
+        normalizeCategorySlug(product.category) === resolvedSlug,
+    );
 
     // Keep guitar amps / multi-effects off the main Guitars PLP — they belong
     // under Amplifiers / Effects browse paths (`?category=guitars&subcategory=…`).
-    if (
-      normalizeCategorySlug(options.category) === "guitars" &&
-      !subcategoryRequestsGuitarAccessories(options.subcategory)
-    ) {
+    if (resolvedSlug === "guitars" && !subcategoryRequestsGuitarAccessories(options.subcategory)) {
       source = source.filter((product) => !isNonInstrumentGuitarProduct(product));
     }
   }
@@ -992,7 +970,7 @@ function subcategoryRequestsGuitarAccessories(subcategory?: string): boolean {
   );
 }
 
-/** True when the shopper is explicitly looking for amps / effects / pedals. */
+/** True when the shopper is explicitly looking for amps / effects / pedals / accessories. */
 function queryRequestsGuitarAccessories(query: string): boolean {
   const value = query.toLowerCase().trim();
   if (!value) return false;
@@ -1006,7 +984,27 @@ function queryRequestsGuitarAccessories(query: string): boolean {
     value.includes("effects pedal") ||
     value.includes("effect pedal") ||
     /(^|\s)pedals?(\s|$)/.test(value) ||
-    value.includes("stomp")
+    value.includes("stomp") ||
+    value.includes("cable") ||
+    value.includes("cables") ||
+    value.includes("lead") ||
+    value.includes("case") ||
+    value.includes("cases") ||
+    value.includes("bag") ||
+    value.includes("bags") ||
+    value.includes("stand") ||
+    value.includes("stands") ||
+    value.includes("strap") ||
+    value.includes("straps") ||
+    value.includes("string") ||
+    value.includes("strings") ||
+    value.includes("pick") ||
+    value.includes("picks") ||
+    value.includes("adapter") ||
+    value.includes("tuner") ||
+    value.includes("tuners") ||
+    value.includes("accessory") ||
+    value.includes("accessories")
   );
 }
 

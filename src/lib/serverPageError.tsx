@@ -22,6 +22,18 @@ export async function withServerPageError<TRender>(
     return await fn();
   } catch (error) {
     unstable_rethrow(error);
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      (("digest" in error &&
+        typeof (error as { digest?: unknown }).digest === "string" &&
+        (error as { digest: string }).digest.startsWith("NEXT_")) ||
+        ("message" in error &&
+          typeof (error as { message?: unknown }).message === "string" &&
+          (error as { message: string }).message.startsWith("NEXT_")))
+    ) {
+      throw error;
+    }
     console.error(`[server-page] ${pageName ?? "Page"} render error:`, error);
     // Dynamic import so the client component is only loaded on error.
     const { default: ServerPageErrorFallback } =
