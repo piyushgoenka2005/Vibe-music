@@ -1083,7 +1083,7 @@ body.site-nav-open .site-header--scroll-hidden {
 
 .header-mega__link-submenu {
   position: absolute;
-  z-index: 3;
+  z-index: 10;
   top: -0.75rem;
   left: calc(100% - 0.25rem);
   min-width: 220px;
@@ -1096,6 +1096,16 @@ body.site-nav-open .site-header--scroll-hidden {
   border: 1px solid var(--border-default);
   border-radius: 0.65rem;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+  pointer-events: auto;
+}
+
+.header-mega__link-submenu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -0.75rem;
+  width: 0.75rem;
 }
 
 .header-mega__link-submenu .header-mega__links {
