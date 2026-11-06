@@ -165,6 +165,27 @@ const nextConfig: NextConfig = {
         destination: "/",
         statusCode: 301,
       },
+      // Legacy WordPress / WooCommerce redirects
+      {
+        source: "/product-category/:slug*",
+        destination: "/category/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/products/:slug*",
+        destination: "/product/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        destination: "/category",
+        permanent: true,
+      },
+      {
+        source: "/shop/:slug*",
+        destination: "/category/:slug*",
+        permanent: true,
+      },
     ];
   },
 };

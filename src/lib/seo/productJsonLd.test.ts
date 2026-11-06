@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
+import { buildProductJsonLd, buildBreadcrumbListJsonLd } from "@/lib/seo/productJsonLd";
 import type { ProductDetail } from "@/types/product";
 
 const sample = {
@@ -30,5 +30,28 @@ describe("buildProductJsonLd", () => {
     expect((json.offers as { priceCurrency: string }).priceCurrency).toBe("INR");
     expect((json.offers as { price: number }).price).toBe(25000);
     expect(json.aggregateRating).toBeTruthy();
+  });
+
+  it("emits BreadcrumbList schema with positional items", () => {
+    const items = [
+      { label: "Home", href: "/" },
+      { label: "Cables", href: "/category/cables" },
+      { label: "Instrument Cables", href: "/category/cables?subcat=instrument-cables" },
+      { label: "HZ CBL12" },
+    ];
+    const json = buildBreadcrumbListJsonLd(items);
+    expect(json["@type"]).toBe("BreadcrumbList");
+    const elements = json.itemListElement as Array<{
+      position: number;
+      name: string;
+      item: string;
+    }>;
+    expect(elements).toHaveLength(3);
+    expect(elements[0].name).toBe("Home");
+    expect(elements[0].position).toBe(1);
+    expect(elements[1].name).toBe("Cables");
+    expect(elements[1].position).toBe(2);
+    expect(elements[2].name).toBe("Instrument Cables");
+    expect(elements[2].position).toBe(3);
   });
 });

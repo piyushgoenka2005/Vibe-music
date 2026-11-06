@@ -939,12 +939,25 @@ export interface ProductSearchOptions {
  */
 const SEARCH_SYNONYMS: Record<string, string[]> = {
   "instrument cable": ["guitar cable", "instrument lead", "instrument cord"],
+  "instrument cables": ["guitar cables", "instrument leads", "instrument cords"],
+  "guitar cable": ["instrument cable", "guitar lead", "guitar cord"],
+  "guitar cables": ["instrument cables", "guitar leads", "guitar cords"],
   "mic cable": ["microphone cable", "xlr cable", "mic cord"],
+  "mic cables": ["microphone cables", "xlr cables", "mic cords"],
+  "microphone cable": ["mic cable", "xlr cable", "microphone cord"],
+  "microphone cables": ["mic cables", "xlr cables", "microphone cords"],
+  "xlr cable": ["mic cable", "microphone cable", "balanced audio cable"],
+  "xlr cables": ["mic cables", "microphone cables", "balanced audio cables"],
   "patch cable": ["pedal patch cable", "patch cord"],
+  "patch cables": ["pedal patch cables", "patch cords"],
   "power adapter": ["power supply", "adapter", "power brick"],
+  "power adapters": ["power supplies", "adapters", "power bricks"],
   "speaker cable": ["speaker cord", "speaker wire"],
+  "speaker cables": ["speaker cords", "speaker wires"],
   "midi cable": ["midi cord"],
+  "midi cables": ["midi cords"],
   "audio cable": ["audio cord", "sound cable"],
+  "audio cables": ["audio cords", "sound cables"],
 };
 
 /**
@@ -1050,7 +1063,18 @@ function scoreProductMatch(product: CatalogProduct, tokens: string[], rawQuery =
   let score = 0;
 
   const fieldIncludes = (field: string, token: string) =>
-    expandSearchToken(token).some((variant) => field.includes(variant));
+    expandSearchToken(token).some((variant) => {
+      if (!variant) return false;
+      // Exact substring if 6 or more characters or contains special SKU/model characters
+      if (variant.length >= 6 || /[-./_0-9]/.test(variant)) {
+        return field.includes(variant);
+      }
+      // Word/prefix boundary match for shorter tokens to prevent false positives (e.g. "recording" matching "cord")
+      const words = field.split(/[^a-z0-9]+/);
+      return words.some(
+        (word) => word === variant || (word.length >= variant.length && word.startsWith(variant)),
+      );
+    });
 
   // Prefer exact / contiguous phrase hits over scattered token matches.
   if (query.length >= 4) {
@@ -1102,7 +1126,18 @@ function productMatchesAllSearchTokens(product: CatalogProduct, tokens: string[]
   const sku = (product.sku ?? "").toLowerCase();
 
   const fieldIncludes = (field: string, token: string) =>
-    expandSearchToken(token).some((variant) => field.includes(variant));
+    expandSearchToken(token).some((variant) => {
+      if (!variant) return false;
+      // Exact substring if 6 or more characters or contains special SKU/model characters
+      if (variant.length >= 6 || /[-./_0-9]/.test(variant)) {
+        return field.includes(variant);
+      }
+      // Word/prefix boundary match for shorter tokens to prevent false positives (e.g. "recording" matching "cord")
+      const words = field.split(/[^a-z0-9]+/);
+      return words.some(
+        (word) => word === variant || (word.length >= variant.length && word.startsWith(variant)),
+      );
+    });
 
   return tokens.every(
     (token) =>
