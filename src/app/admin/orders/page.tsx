@@ -161,10 +161,18 @@ function OrdersContent({
   });
 
   async function exportCsv() {
+    const payload: {
+      export: "csv";
+      status?: string;
+      search?: string;
+    } = { export: "csv" };
+    if (status) payload.status = status;
+    if (search) payload.search = search;
+
     const res = await fetch("/api/admin/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ export: "csv" }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const body = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -174,7 +182,8 @@ function OrdersContent({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "orders.csv";
+    const filterSuffix = [status, search ? `query` : ""].filter(Boolean).join("-");
+    a.download = filterSuffix ? `orders-${filterSuffix}.csv` : "orders.csv";
     a.click();
     URL.revokeObjectURL(url);
   }

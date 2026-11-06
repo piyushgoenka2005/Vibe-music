@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Search, Trash2 } from "lucide-react";
 import { MAX_RELATED_PRODUCTS } from "@/types/relatedProducts";
 import type { AdminProduct } from "@/types/admin";
@@ -35,8 +35,41 @@ export default function ProductRelatedEditor({
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<AdminProduct[]>([]);
   const [searching, setSearching] = useState(false);
+  const [resolvedMap, setResolvedMap] = useState<Record<string, AdminProduct>>({});
 
   const selectedProducts = useMemo(() => related.relatedProductIds, [related.relatedProductIds]);
+
+  useEffect(() => {
+    let active = true;
+    const missing = selectedProducts.filter((id) => !resolvedMap[id]);
+    if (missing.length === 0) return;
+
+    void Promise.all(
+      missing.map(async (id) => {
+        try {
+          const res = await fetch(`/api/admin/products/${id}`);
+          if (!res.ok) return null;
+          const data = (await res.json().catch(() => ({}))) as { product?: AdminProduct };
+          return data.product ?? null;
+        } catch {
+          return null;
+        }
+      }),
+    ).then((products) => {
+      if (!active) return;
+      setResolvedMap((prev) => {
+        const next = { ...prev };
+        for (const p of products) {
+          if (p) next[p.id] = p;
+        }
+        return next;
+      });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [resolvedMap, selectedProducts]);
 
   async function runSearch(query: string) {
     setSearch(query);
@@ -49,7 +82,15 @@ export default function ProductRelatedEditor({
     try {
       const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=12`);
       const data = (await res.json().catch(() => ({}))) as { products?: AdminProduct[] };
-      setResults((data.products ?? []).filter((product) => product.id !== productId));
+      const fetched = (data.products ?? []).filter((product) => product.id !== productId);
+      setResults(fetched);
+      setResolvedMap((prev) => {
+        const next = { ...prev };
+        for (const p of fetched) {
+          next[p.id] = p;
+        }
+        return next;
+      });
     } catch {
       setResults([]);
     } finally {
@@ -57,13 +98,14 @@ export default function ProductRelatedEditor({
     }
   }
 
-  function addProduct(id: string) {
-    if (selectedProducts.includes(id) || selectedProducts.length >= MAX_RELATED_PRODUCTS) {
+  function addProduct(product: AdminProduct) {
+    if (selectedProducts.includes(product.id) || selectedProducts.length >= MAX_RELATED_PRODUCTS) {
       return;
     }
+    setResolvedMap((prev) => ({ ...prev, [product.id]: product }));
     onChange({
       ...related,
-      relatedProductIds: [...selectedProducts, id],
+      relatedProductIds: [...selectedProducts, product.id],
     });
     setSearch("");
     setResults([]);
@@ -145,7 +187,7 @@ export default function ProductRelatedEditor({
                     borderRadius: 0,
                     borderBottom: "1px solid var(--admin-border)",
                   }}
-                  onClick={() => addProduct(product.id)}
+                  onClick={() => addProduct(product)}
                   disabled={
                     selectedProducts.includes(product.id) ||
                     selectedProducts.length >= MAX_RELATED_PRODUCTS
@@ -171,49 +213,99 @@ export default function ProductRelatedEditor({
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Product ID</th>
+                  <th>Product</th>
+                  <th>SKU</th>
+                  <th>Price</th>
                   <th>Order</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {selectedProducts.map((id, index) => (
-                  <tr key={id}>
-                    <td>{id}</td>
-                    <td>
-                      <div style={{ display: "flex", gap: 4 }}>
+                {selectedProducts.map((id, index) => {
+                  const item = resolvedMap[id];
+                  const thumbUrl = item?.images?.[0] || item?.image || "/placeholder.png";
+                  const title = item ? `${item.brand ? `${item.brand} — ` : ""}${item.name}` : id;
+                  const sku = item?.sku || item?.variants?.[0]?.sku || "—";
+                  const price = item ? (item.salePrice ?? item.price ?? 0) : null;
+
+                  return (
+                    <tr key={id}>
+                      <td>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={thumbUrl}
+                            alt={title}
+                            style={{
+                              width: 44,
+                              height: 44,
+                              objectFit: "cover",
+                              borderRadius: 4,
+                              background: "var(--admin-surface-2)",
+                              border: "1px solid var(--admin-border)",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: "0.875rem" }}>{title}</div>
+                            <div
+                              style={{
+                                fontSize: "0.75rem",
+                                color: "var(--admin-muted)",
+                                fontFamily: "monospace",
+                              }}
+                            >
+                              {id}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          className="admin-badge admin-badge--neutral"
+                          style={{ fontFamily: "monospace", fontSize: "0.75rem" }}
+                        >
+                          {sku}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>
+                        {price != null ? `₹${price.toLocaleString("en-IN")}` : "—"}
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: 4 }}>
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--ghost admin-btn--icon"
+                            aria-label="Move up"
+                            disabled={index === 0}
+                            onClick={() => moveProduct(index, -1)}
+                          >
+                            <ArrowUp size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-btn admin-btn--ghost admin-btn--icon"
+                            aria-label="Move down"
+                            disabled={index === selectedProducts.length - 1}
+                            onClick={() => moveProduct(index, 1)}
+                          >
+                            <ArrowDown size={14} />
+                          </button>
+                        </div>
+                      </td>
+                      <td>
                         <button
                           type="button"
                           className="admin-btn admin-btn--ghost admin-btn--icon"
-                          aria-label="Move up"
-                          disabled={index === 0}
-                          onClick={() => moveProduct(index, -1)}
+                          aria-label="Remove"
+                          onClick={() => removeProduct(id)}
                         >
-                          <ArrowUp size={14} />
+                          <Trash2 size={14} />
                         </button>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn--ghost admin-btn--icon"
-                          aria-label="Move down"
-                          disabled={index === selectedProducts.length - 1}
-                          onClick={() => moveProduct(index, 1)}
-                        >
-                          <ArrowDown size={14} />
-                        </button>
-                      </div>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="admin-btn admin-btn--ghost admin-btn--icon"
-                        aria-label="Remove"
-                        onClick={() => removeProduct(id)}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

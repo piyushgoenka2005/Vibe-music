@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminThemeToggle from "@/components/admin/AdminThemeToggle";
 import AdminNotificationBell from "@/components/admin/AdminNotificationBell";
+import ToastContainer from "@/components/common/ToastContainer";
 import { useAdminUiStore } from "@/store/adminUiStore";
 import type { AdminSession } from "@/types/admin";
 // admin.css is loaded once from app/admin/layout.tsx — do not re-import here.
@@ -100,6 +101,7 @@ export default function AdminShell({ admin, title, children, actions }: AdminShe
           <main className="admin-content">{children}</main>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

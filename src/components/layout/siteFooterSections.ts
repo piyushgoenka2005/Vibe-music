@@ -10,8 +10,8 @@ import { SOCIAL_LINKS } from "@/lib/socialLinks";
 import type { FooterAccordionSection } from "@/components/layout/FooterAccordion";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 
-/** Footer "04 / Follow" social links — off until profiles are finalized. */
-const FOOTER_FOLLOW_SECTION_ENABLED = false;
+/** Footer "04 / Follow" social links — enabled with verified working channels. */
+export const FOOTER_FOLLOW_SECTION_ENABLED = true;
 
 export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSection[] {
   const legalNoteLines = [

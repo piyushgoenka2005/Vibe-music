@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useDialogA11y } from "@/hooks/useCartDrawerA11y";
 import { useIsClient } from "@/hooks/useIsClient";
 import SiteHeaderMobileNav from "@/components/layout/SiteHeaderMobileNav";
+import CurrencyLocaleSelector from "@/components/layout/CurrencyLocaleSelector";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
 
 interface SiteHeaderMobileDrawerProps {
@@ -59,6 +60,14 @@ export default function SiteHeaderMobileDrawer({
             categoryMegaMenus={categoryMegaMenus}
           />
         </Suspense>
+        {/* Drawer footer currency & locale hook */}
+        <div
+          className="site-header__mobile-drawer-locale-slot"
+          aria-hidden="true"
+          style={{ display: "none" }}
+        >
+          <CurrencyLocaleSelector variant="mobile" />
+        </div>
       </nav>
     </>,
     document.body,

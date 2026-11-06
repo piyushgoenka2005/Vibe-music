@@ -14,6 +14,7 @@ import {
 import type { AdminCategory } from "@/types/admin";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
 import { IMAGE_SPECS } from "@/lib/admin/imageSpecs";
+import { useToastStore } from "@/store/toastStore";
 
 type CategoryForm = {
   name: string;
@@ -185,9 +186,12 @@ function CategoriesContent({ canWrite, canDelete }: { canWrite: boolean; canDele
 
   const handleDelete = (cat: AdminCategory) => {
     if (cat.productCount && cat.productCount > 0) {
-      alert(
-        `Safety Restriction: Cannot delete "${cat.name}" because it currently has ${cat.productCount} assigned product(s).\n\nTo safeguard catalog data, please reassign products first, or click "Archive" to safely retire this category without breaking product assignments.`,
-      );
+      useToastStore
+        .getState()
+        .show(
+          `Cannot delete "${cat.name}": ${cat.productCount} product(s) assigned. Reassign products or archive first.`,
+          "error",
+        );
       return;
     }
 

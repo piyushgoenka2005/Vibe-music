@@ -1002,6 +1002,28 @@ const SEARCH_SYNONYMS: Record<string, string[]> = {
   "midi cables": ["midi cords"],
   "audio cable": ["audio cord", "sound cable"],
   "audio cables": ["audio cords", "sound cables"],
+  "studio desk": ["studio furniture", "workstation desk", "studio workstation"],
+  "studio desks": ["studio furniture", "workstation desks", "studio workstations"],
+  "studio furniture": ["studio desk", "studio workstation", "workstation desk"],
+  "drum kit": ["drum set", "acoustic drum kit", "electronic drum kit"],
+  "drum kits": ["drum sets", "acoustic drum kits", "electronic drum kits"],
+  "acoustic drum kit": ["acoustic drum kits", "acoustic drums", "drum kit", "drum set"],
+  "acoustic drum kits": ["acoustic drum kit", "acoustic drums", "drum kits", "drum sets"],
+  "electronic drum kit": ["electronic drum kits", "electronic drums", "e-drums", "v-drums"],
+  "electronic drum kits": ["electronic drum kit", "electronic drums", "e-drums", "v-drums"],
+  "midi controller": ["midi keyboard", "keyboard controller", "midi keyboard controller"],
+  "midi controllers": ["midi keyboards", "keyboard controllers", "midi keyboard controllers"],
+  "midi keyboard": ["midi controller", "keyboard controller", "usb keyboard"],
+  "midi keyboards": ["midi controllers", "keyboard controllers", "usb keyboards"],
+  "audio interface": ["recording interface", "sound card", "usb audio interface"],
+  "audio interfaces": ["recording interfaces", "sound cards", "usb audio interfaces"],
+  "studio monitor": ["studio monitors", "monitor speaker", "reference monitor", "studio speaker"],
+  "studio monitors": [
+    "studio monitor",
+    "monitor speakers",
+    "reference monitors",
+    "studio speakers",
+  ],
 };
 
 /**

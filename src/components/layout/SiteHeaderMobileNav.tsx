@@ -10,6 +10,7 @@ import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import { resolveBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
 import { useAuthStore } from "@/store/authStore";
 import { useShallow } from "zustand/react/shallow";
+import CurrencyLocaleSelector from "@/components/layout/CurrencyLocaleSelector";
 
 function MobileSearchParamsWatcher({
   onParamsChange,
@@ -268,6 +269,7 @@ export default function SiteHeaderMobileNav({
       </div>
 
       <div className="site-header__mobile-nav-footer">
+        <CurrencyLocaleSelector variant="mobile" onSelect={handleNavigate} />
         <Link
           href={accountHref}
           className="site-header__mobile-nav-footer-link site-header__mobile-nav-footer-link--primary"

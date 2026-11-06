@@ -15,6 +15,7 @@ import { useIsCompactHeaderViewport } from "@/hooks/useIsMobileViewport";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import SiteHeaderNav from "@/components/layout/SiteHeaderNav";
 import SiteHeaderMobileDrawer from "@/components/layout/SiteHeaderMobileDrawer";
+import CurrencyLocaleSelector from "@/components/layout/CurrencyLocaleSelector";
 import SearchRollingPlaceholder from "@/components/search/SearchRollingPlaceholder";
 import { MIN_QUERY_LENGTH } from "@/services/search.service";
 import { searchStore } from "@/store/searchStore";
@@ -194,11 +195,16 @@ export default function SiteHeader({
       data-vibe-section="header"
     >
       {/* Row 1: Utility / Announcement Bar */}
-      <AnnouncementBar
-        announcement={headerSettings?.shippingAnnouncement || shippingAnnouncement}
-        items={utilityItems ?? undefined}
-        active={headerSettings?.utilityBarActive ?? true}
-      />
+      <div className="site-header__utility-bar">
+        <AnnouncementBar
+          announcement={headerSettings?.shippingAnnouncement || shippingAnnouncement}
+          items={utilityItems ?? undefined}
+          active={headerSettings?.utilityBarActive ?? true}
+        />
+        <div className="site-header__utility-locale">
+          <CurrencyLocaleSelector variant="header" />
+        </div>
+      </div>
 
       {/* Row 2: Main Header Bar */}
       <div className="site-header__bar">

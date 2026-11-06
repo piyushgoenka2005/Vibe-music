@@ -17,8 +17,14 @@ const ProductQASection = dynamic(() => import("./qa/ProductQASection"), {
   loading: () => <p className="pdp-sections__empty">Loading Q&amp;A…</p>,
 });
 
+const AudioPreviewPlayer = dynamic(() => import("./AudioPreviewPlayer"), {
+  ssr: false,
+  loading: () => <p className="pdp-sections__empty">Loading audio preview player…</p>,
+});
+
 const SECTIONS = [
   { id: "details", label: "Product Details" },
+  { id: "audio", label: "Sound & Tone Previews" },
   { id: "reviews", label: "Reviews" },
   { id: "qa", label: "Q&A" },
   { id: "videos", label: "Videos" },
@@ -61,6 +67,9 @@ export default function ProductTabs({ product, productSlug, reviewCount }: Produ
   });
 
   function sectionHeading(sectionId: SectionId, label: string) {
+    if (sectionId === "audio") {
+      return { label, count: 5 };
+    }
     if (sectionId === "reviews") {
       return { label, count: displayedReviewCount > 0 ? displayedReviewCount : undefined };
     }
@@ -98,6 +107,10 @@ export default function ProductTabs({ product, productSlug, reviewCount }: Produ
 
               <div className="pdp-sections__body">
                 {section.id === "details" ? <ProductDetailsPanel product={product} /> : null}
+
+                {section.id === "audio" ? (
+                  <AudioPreviewPlayer productName={product.name} category={product.category} />
+                ) : null}
 
                 {section.id === "reviews" ? (
                   <ProductReviewsSection productSlug={productSlug} productId={product.id} />

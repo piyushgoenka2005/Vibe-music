@@ -35,6 +35,7 @@ import type {
   NavigationMenuRecord,
 } from "@/lib/server/navigation/navigationRepository";
 import type { AdminCategory } from "@/types/admin";
+import { useToastStore } from "@/store/toastStore";
 
 type ActiveTab = "nav" | "utility" | "settings" | "preview";
 
@@ -131,7 +132,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-navigation"] });
-      alert("Header settings updated successfully!");
+      useToastStore.getState().show("Header settings updated successfully!", "success");
     },
   });
 
