@@ -630,6 +630,16 @@ export function searchInCatalogProducts(
 
   if (options.categorySlugs && options.categorySlugs.length > 0) {
     const slugSet = new Set(options.categorySlugs.map((s) => normalizeCategorySlug(s)));
+    for (const slug of Array.from(slugSet)) {
+      if (slug === "guitars") {
+        slugSet.add("bass");
+        slugSet.add("bass-guitars");
+      }
+      if (slug === "studio-recording") {
+        slugSet.add("keyboards-synthesizers");
+        slugSet.add("midi-controllers");
+      }
+    }
     source = source.filter((product) => {
       const pCat = normalizeCategorySlug(product.categorySlug);
       const pName = normalizeCategorySlug(product.category);
@@ -644,16 +654,25 @@ export function searchInCatalogProducts(
     });
   } else if (options.category) {
     const resolvedSlug = normalizeCategorySlug(options.category);
+    const validSlugs = new Set([resolvedSlug]);
+    if (resolvedSlug === "guitars") {
+      validSlugs.add("bass");
+      validSlugs.add("bass-guitars");
+    }
+    if (resolvedSlug === "studio-recording") {
+      validSlugs.add("keyboards-synthesizers");
+      validSlugs.add("midi-controllers");
+    }
     source = source.filter((product) => {
       const pCat = normalizeCategorySlug(product.categorySlug);
       const pName = normalizeCategorySlug(product.category);
       const pSub = normalizeCategorySlug(product.subcategory);
       const pCanonSub = canonicalSubcategorySlug(product.subcategory ?? "");
       return (
-        pCat === resolvedSlug ||
-        pName === resolvedSlug ||
-        pSub === resolvedSlug ||
-        pCanonSub === resolvedSlug
+        validSlugs.has(pCat) ||
+        validSlugs.has(pName) ||
+        validSlugs.has(pSub) ||
+        validSlugs.has(pCanonSub)
       );
     });
 
@@ -1199,6 +1218,14 @@ async function resolveCategorySlugSet(category: string): Promise<string[] | unde
         queue.push(child.id);
       }
     }
+  }
+  if (resolved === "guitars") {
+    slugs.add("bass");
+    slugs.add("bass-guitars");
+  }
+  if (resolved === "studio-recording") {
+    slugs.add("keyboards-synthesizers");
+    slugs.add("midi-controllers");
   }
   return Array.from(slugs);
 }

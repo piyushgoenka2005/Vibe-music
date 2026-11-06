@@ -1037,6 +1037,8 @@ body.site-nav-open .site-header--scroll-hidden {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem 2rem;
+  position: relative;
+  z-index: 2;
 }
 
 .header-mega__heading {
@@ -1061,6 +1063,10 @@ body.site-nav-open .site-header--scroll-hidden {
   position: relative;
 }
 
+.header-mega__link-item--open {
+  z-index: 30;
+}
+
 .header-mega__link {
   display: inline-flex;
   position: relative;
@@ -1083,7 +1089,7 @@ body.site-nav-open .site-header--scroll-hidden {
 
 .header-mega__link-submenu {
   position: absolute;
-  z-index: 10;
+  z-index: 30;
   top: -0.75rem;
   left: calc(100% - 0.25rem);
   min-width: 220px;
