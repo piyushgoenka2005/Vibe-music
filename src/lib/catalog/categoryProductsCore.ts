@@ -10,6 +10,194 @@ export const CATEGORY_PAGE_SIZE = 12;
 /** Category facet slug for guitar/studio amplifiers (split from parent category counts). */
 export const AMPLIFIER_FACET_SLUG = "amplifier";
 
+/** Known irregular or specific subcategory normalizations (maps singular/split variants to canonical plurals). */
+const CANONICAL_SUBCATEGORY_MAP: Record<string, { slug: string; name: string }> = {
+  guitar: { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  guitars: { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "acoustic-guitar": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "acoustic-guitars": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "electric-guitar": { slug: "electric-guitars", name: "Electric Guitars" },
+  "electric-guitars": { slug: "electric-guitars", name: "Electric Guitars" },
+  "electro-acoustic-guitar": { slug: "electro-acoustic-guitars", name: "Electro-Acoustic Guitars" },
+  "electro-acoustic-guitars": {
+    slug: "electro-acoustic-guitars",
+    name: "Electro-Acoustic Guitars",
+  },
+  "semi-acoustic-guitar": { slug: "semi-acoustic-guitars", name: "Semi-Acoustic Guitars" },
+  "semi-acoustic-guitars": { slug: "semi-acoustic-guitars", name: "Semi-Acoustic Guitars" },
+  "cutaway-semi-acoustic-guitar": {
+    slug: "cutaway-semi-acoustic-guitars",
+    name: "Cutaway Semi-Acoustic Guitars",
+  },
+  "cutaway-semi-acoustic-guitars": {
+    slug: "cutaway-semi-acoustic-guitars",
+    name: "Cutaway Semi-Acoustic Guitars",
+  },
+  "dreadnought-cutaway-semi-acoustic-guitar": {
+    slug: "dreadnought-cutaway-semi-acoustic-guitars",
+    name: "Dreadnought Cutaway Semi-Acoustic Guitars",
+  },
+  "dreadnought-cutaway-semi-acoustic-guitars": {
+    slug: "dreadnought-cutaway-semi-acoustic-guitars",
+    name: "Dreadnought Cutaway Semi-Acoustic Guitars",
+  },
+  "grand-auditorium-acoustic-guitar": {
+    slug: "grand-auditorium-acoustic-guitars",
+    name: "Grand Auditorium Acoustic Guitars",
+  },
+  "grand-auditorium-acoustic-guitars": {
+    slug: "grand-auditorium-acoustic-guitars",
+    name: "Grand Auditorium Acoustic Guitars",
+  },
+  "superstrat-electric-guitar": {
+    slug: "superstrat-electric-guitars",
+    name: "SuperStrat Electric Guitars",
+  },
+  "superstrat-electric-guitars": {
+    slug: "superstrat-electric-guitars",
+    name: "SuperStrat Electric Guitars",
+  },
+  "hss-superstrat-electric-guitar": {
+    slug: "hss-superstrat-electric-guitars",
+    name: "HSS SuperStrat Electric Guitars",
+  },
+  "hss-superstrat-electric-guitars": {
+    slug: "hss-superstrat-electric-guitars",
+    name: "HSS SuperStrat Electric Guitars",
+  },
+  cymbal: { slug: "cymbals", name: "Cymbals" },
+  cymbals: { slug: "cymbals", name: "Cymbals" },
+  "crash-cymbal": { slug: "crash-cymbals", name: "Crash Cymbals" },
+  "crash-cymbals": { slug: "crash-cymbals", name: "Crash Cymbals" },
+  "splash-cymbal": { slug: "splash-cymbals", name: "Splash Cymbals" },
+  "splash-cymbals": { slug: "splash-cymbals", name: "Splash Cymbals" },
+  "effect-cymbal": { slug: "effect-cymbals", name: "Effect Cymbals" },
+  "effect-cymbals": { slug: "effect-cymbals", name: "Effect Cymbals" },
+  "music-stand": { slug: "music-stands", name: "Music Stands" },
+  "music-stands": { slug: "music-stands", name: "Music Stands" },
+  "keyboard-stand": { slug: "keyboard-stands", name: "Keyboard Stands" },
+  "keyboard-stands": { slug: "keyboard-stands", name: "Keyboard Stands" },
+  "microphone-stand": { slug: "microphone-stands", name: "Microphone Stands" },
+  "microphone-stands": { slug: "microphone-stands", name: "Microphone Stands" },
+  "guitar-amplifier": { slug: "guitar-amplifiers", name: "Guitar Amplifiers" },
+  "guitar-amplifiers": { slug: "guitar-amplifiers", name: "Guitar Amplifiers" },
+  "portable-keyboard": { slug: "portable-keyboards", name: "Portable Keyboards" },
+  "portable-keyboards": { slug: "portable-keyboards", name: "Portable Keyboards" },
+  "arranger-keyboard": { slug: "arranger-keyboards", name: "Arranger Keyboards" },
+  "arranger-keyboards": { slug: "arranger-keyboards", name: "Arranger Keyboards" },
+  "stage-keyboard": { slug: "stage-keyboards", name: "Stage Keyboards" },
+  "stage-keyboards": { slug: "stage-keyboards", name: "Stage Keyboards" },
+  "digital-piano": { slug: "digital-pianos", name: "Digital Pianos" },
+  "digital-pianos": { slug: "digital-pianos", name: "Digital Pianos" },
+  "drum-throne": { slug: "drum-thrones", name: "Drum Thrones" },
+  "drum-thrones": { slug: "drum-thrones", name: "Drum Thrones" },
+  "drum-rack": { slug: "drum-racks", name: "Drum Racks" },
+  "drum-racks": { slug: "drum-racks", name: "Drum Racks" },
+  "drum-rack-clamp": { slug: "drum-rack-clamps", name: "Drum Rack Clamps" },
+  "drum-rack-clamps": { slug: "drum-rack-clamps", name: "Drum Rack Clamps" },
+  "bass-drum-pedal": { slug: "bass-drum-pedals", name: "Bass Drum Pedals" },
+  "bass-drum-pedals": { slug: "bass-drum-pedals", name: "Bass Drum Pedals" },
+  "double-bass-drum-pedal": { slug: "double-bass-drum-pedals", name: "Double Bass Drum Pedals" },
+  "double-bass-drum-pedals": { slug: "double-bass-drum-pedals", name: "Double Bass Drum Pedals" },
+  "electronic-drum-kit": { slug: "electronic-drum-kits", name: "Electronic Drum Kits" },
+  "electronic-drum-kits": { slug: "electronic-drum-kits", name: "Electronic Drum Kits" },
+  "electronic-percussion-pad": {
+    slug: "electronic-percussion-pads",
+    name: "Electronic Percussion Pads",
+  },
+  "electronic-percussion-pads": {
+    slug: "electronic-percussion-pads",
+    name: "Electronic Percussion Pads",
+  },
+  "tom-mounts-holder": { slug: "tom-mounts-holders", name: "Tom Mounts & Holders" },
+  "tom-mounts-holders": { slug: "tom-mounts-holders", name: "Tom Mounts & Holders" },
+  "boom-cymbal-stand": { slug: "boom-cymbal-stands", name: "Boom Cymbal Stands" },
+  "boom-cymbal-stands": { slug: "boom-cymbal-stands", name: "Boom Cymbal Stands" },
+  "hi-hat-stand": { slug: "hi-hat-stands", name: "Hi-Hat Stands" },
+  "hi-hat-stands": { slug: "hi-hat-stands", name: "Hi-Hat Stands" },
+};
+
+export function canonicalSubcategorySlug(raw: string): string {
+  let s = slugify((raw ?? "").trim().toLowerCase());
+  if (!s) return "";
+
+  // Strip common department prefixes if attached (e.g. "guitars-acoustic-guitars" -> "acoustic-guitars")
+  const prefixes = [
+    "guitars-",
+    "cables-",
+    "accessories-",
+    "drums-percussion-",
+    "keyboards-synthesizers-",
+    "keyboards-pianos-",
+    "microphones-wireless-",
+    "studio-recording-",
+    "live-sound-lighting-",
+    "amplifiers-effects-",
+    "dj-equipment-",
+  ];
+  for (const p of prefixes) {
+    if (s.startsWith(p) && s.length > p.length) {
+      s = s.slice(p.length);
+      break;
+    }
+  }
+
+  const mapped = CANONICAL_SUBCATEGORY_MAP[s];
+  if (mapped) return mapped.slug;
+
+  if (s.endsWith("ies")) return s;
+  if (s.endsWith("y") && !/[aeiou]y$/.test(s)) {
+    return s.slice(0, -1) + "ies";
+  }
+  if (s.endsWith("ss")) return s;
+  if (!s.endsWith("s")) {
+    if (s.endsWith("ch") || s.endsWith("sh") || s.endsWith("x") || s.endsWith("z")) {
+      return s + "es";
+    }
+    return s + "s";
+  }
+  return s;
+}
+
+export function canonicalSubcategoryLabel(raw: string): string {
+  const s = slugify((raw ?? "").trim().toLowerCase());
+  const mapped = CANONICAL_SUBCATEGORY_MAP[s];
+  if (mapped) return mapped.name;
+
+  const label = formatSubcategoryLabel(raw);
+  if (!label) return "";
+
+  const singularEndings = [
+    "Guitar",
+    "Cymbal",
+    "Stand",
+    "Cable",
+    "Microphone",
+    "Speaker",
+    "Monitor",
+    "Headphone",
+    "Recorder",
+    "Synthesizer",
+    "Piano",
+    "Pedal",
+    "Mixer",
+    "Clamp",
+    "Throne",
+    "Pad",
+    "Kit",
+  ];
+  for (const ending of singularEndings) {
+    if (label.endsWith(` ${ending}`)) {
+      return label + "s";
+    }
+    if (label === ending) {
+      return label + "s";
+    }
+  }
+
+  return label;
+}
+
 export function isAmplifierProduct(product: Pick<Product, "subcategory" | "name">): boolean {
   const subcategory = product.subcategory?.trim() ?? "";
   if (/amplifier/i.test(subcategory)) return true;
@@ -79,10 +267,19 @@ function applyFilters(
   }
 
   if (exclude !== "subcategories" && filters.subcategories.length > 0) {
-    const activeSubcategories = new Set(filters.subcategories.map((slug) => slug.toLowerCase()));
+    const activeSubcategories = new Set(
+      filters.subcategories
+        .flatMap((slug) => [slug.toLowerCase(), canonicalSubcategorySlug(slug)])
+        .filter(Boolean),
+    );
     result = result.filter((product) => {
-      const subcategorySlug = slugify(product.subcategory ?? "");
-      return subcategorySlug && activeSubcategories.has(subcategorySlug);
+      const raw = product.subcategory ?? "";
+      const rawSlug = slugify(raw);
+      const canonSlug = canonicalSubcategorySlug(raw);
+      return (
+        (rawSlug && activeSubcategories.has(rawSlug)) ||
+        (canonSlug && activeSubcategories.has(canonSlug))
+      );
     });
   }
 
@@ -149,11 +346,17 @@ function buildSubcategoryFacets(products: Product[]): FacetOption[] {
   products.forEach((product) => {
     const raw = product.subcategory?.trim();
     if (!raw) return;
-    const slug = slugify(raw);
-    const label = formatSubcategoryLabel(raw);
+    const slug = canonicalSubcategorySlug(raw);
+    const label = canonicalSubcategoryLabel(raw);
     const existing = counts.get(slug);
-    if (existing) existing.count += 1;
-    else counts.set(slug, { name: label, count: 1 });
+    if (existing) {
+      existing.count += 1;
+      if (label.endsWith("s") && !existing.name.endsWith("s")) {
+        existing.name = label;
+      }
+    } else {
+      counts.set(slug, { name: label, count: 1 });
+    }
   });
   return Array.from(counts.entries())
     .map(([slug, { name, count }]) => ({ slug, name, count }))

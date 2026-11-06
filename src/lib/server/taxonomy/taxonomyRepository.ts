@@ -659,7 +659,20 @@ export async function getSubcategoriesByCategory(category: string): Promise<stri
   });
   const fromTaxonomy = taxonomyItems.map((item) => item.subcategory).filter(Boolean);
 
-  return mergeSubcategoryNames(fromCategories, fromTaxonomy);
+  const productRows = await prisma.product.findMany({
+    where: {
+      OR: [
+        { categorySlug: parentCat?.slug ?? slugify(category) },
+        { category: { equals: category, mode: "insensitive" } },
+      ],
+    },
+    select: { subcategory: true },
+    distinct: ["subcategory"],
+    orderBy: { subcategory: "asc" },
+  });
+  const fromProducts = productRows.map((p) => p.subcategory).filter(Boolean);
+
+  return mergeSubcategoryNames(fromCategories, fromTaxonomy, fromProducts);
 }
 
 /**

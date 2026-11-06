@@ -275,16 +275,46 @@ export async function fetchProductsByIds(
   );
 }
 
+const CATEGORY_SLUG_EXPANSIONS: Record<string, string[]> = {
+  "keyboards-pianos": ["keyboards-synthesizers", "keyboards-pianos", "grand-piano"],
+  "keyboards-synthesizers": ["keyboards-synthesizers", "keyboards-pianos", "grand-piano"],
+  "grand-piano": ["grand-piano", "keyboards-pianos", "keyboards-synthesizers"],
+  cables: ["cables", "cables-cases-accessories"],
+  "cables-cases-accessories": [
+    "cables-cases-accessories",
+    "cables",
+    "accessories",
+    "cases-bags",
+    "essentials",
+  ],
+  accessories: ["accessories", "cables-cases-accessories", "cables", "cases-bags", "essentials"],
+  "cases-bags": ["cables-cases-accessories", "cases-bags"],
+  essentials: ["cables-cases-accessories", "essentials"],
+  "live-sound": ["live-sound-lighting", "live-sound"],
+  "live-sound-lighting": ["live-sound-lighting", "live-sound"],
+  "software-plugins": ["software-plug-ins", "software-plugins"],
+  "software-plug-ins": ["software-plug-ins", "software-plugins"],
+  amplifiers: ["amplifiers-effects", "amplifiers"],
+  "amplifiers-effects": ["amplifiers-effects", "amplifiers"],
+};
+
 export async function fetchProductsByCategory(
   categorySlug: string,
   includeInactive = false,
 ): Promise<CatalogProduct[]> {
   const resolved = normalizeCategorySlug(categorySlug);
+  const targetSlugs = CATEGORY_SLUG_EXPANSIONS[resolved] ?? [resolved];
 
   return withProductFallback(
     async () => {
       const rows = await prisma.product.findMany({
-        where: { categorySlug: resolved },
+        where: {
+          OR: [
+            { categorySlug: { in: targetSlugs } },
+            { productCategories: { some: { category: { slug: { in: targetSlugs } } } } },
+            { productCategories: { some: { categoryId: { in: targetSlugs } } } },
+          ],
+        },
         orderBy: { name: "asc" },
         select: LEAN_PRODUCT_SELECT,
       });
@@ -295,10 +325,11 @@ export async function fetchProductsByCategory(
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
-      const products = loadProducts().filter(
-        (product) =>
-          product.categorySlug === resolved || normalizeCategorySlug(product.category) === resolved,
-      );
+      const targetSet = new Set(targetSlugs);
+      const products = loadProducts().filter((product) => {
+        const prodSlug = product.categorySlug || normalizeCategorySlug(product.category);
+        return targetSet.has(prodSlug);
+      });
       return filterActive(products, includeInactive);
     },
   );

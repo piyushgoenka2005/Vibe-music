@@ -11,6 +11,7 @@ import { categoryPath } from "@/lib/routes";
 import { withServerPageError } from "@/lib/serverPageError";
 import { DEFAULT_FILTERS } from "@/types/filters";
 import { BRAND } from "@/lib/brand";
+import { slugify } from "@/lib/slug";
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -106,7 +107,10 @@ export default async function CategoryRoute({ params }: CategoryRouteProps) {
     const listingCategory = category.parentId
       ? categories?.find((candidate) => candidate.id === category.parentId)
       : category;
-    const childFilters = { ...DEFAULT_FILTERS, subcategories: [category.slug] };
+    const childFilters = {
+      ...DEFAULT_FILTERS,
+      subcategories: [category.slug, slugify(category.name)].filter(Boolean),
+    };
 
     // FIX: For subcategories, use the parent category slug with subcategory filters
     const initialData = await loadCategoryProducts(

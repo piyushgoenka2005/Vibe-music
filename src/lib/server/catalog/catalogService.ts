@@ -18,6 +18,7 @@ import {
 } from "@/lib/admin/bulkImportCategoryResolver";
 import { findCategoryInList, normalizeCategorySlug, resolveRootCategory } from "@/lib/categorySlug";
 import { extractListingFilterSpecs } from "@/lib/catalog/listingFilterSpecs";
+import { canonicalSubcategorySlug } from "@/lib/catalog/categoryProductsCore";
 import {
   enrichGuitarSpecifications,
   GUITAR_SHOWCASE_FIELD_LABELS,
@@ -658,11 +659,14 @@ export function searchInCatalogProducts(
       source = source.filter((product) => {
         const sub = (product.subcategory ?? "").toLowerCase();
         const subSlug = normalizeCategorySlug(sub);
+        const canonSub = canonicalSubcategorySlug(sub);
         return needles.some((needle) => {
           const needleSlug = normalizeCategorySlug(needle);
+          const canonNeedle = canonicalSubcategorySlug(needle);
           return (
             sub.includes(needle) ||
             subSlug === needleSlug ||
+            (canonSub && canonSub === canonNeedle) ||
             subSlug.includes(needleSlug) ||
             needleSlug.includes(subSlug)
           );
@@ -743,10 +747,21 @@ export function searchInCatalogProducts(
         .sort((a, b) => b.score - a.score)
         .map((entry) => entry.product);
 
-      // Multi-word queries must match every token (e.g. brand + model), not
-      // just one shared word like "guitar". Relaxed for synonym queries.
-      if (!intent && tokens.length >= 2 && synonymVariations.length === 1) {
-        source = source.filter((product) => productMatchesAllSearchTokens(product, tokens));
+      // Multi-word queries must match every token in the query or all tokens in at least one synonym phrase.
+      // This prevents single-word partial matches (e.g. guitar cable matching when searching "xlr cable").
+      if (!intent && tokens.length >= 2) {
+        source = source.filter((product) => {
+          if (productMatchesAllSearchTokens(product, tokens)) return true;
+          for (const syn of synonymVariations) {
+            if (syn !== normalized) {
+              const synTokens = syn.split(/\s+/).filter(Boolean);
+              if (synTokens.length >= 2 && productMatchesAllSearchTokens(product, synTokens)) {
+                return true;
+              }
+            }
+          }
+          return false;
+        });
       }
 
       // "guitar" should surface instruments — not guitar amplifiers / multi-effects
