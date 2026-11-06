@@ -16,7 +16,7 @@ import {
   isGenericBulkCategoryValue,
   resolveBulkImportCategory,
 } from "@/lib/admin/bulkImportCategoryResolver";
-import { findCategoryInList, normalizeCategorySlug } from "@/lib/categorySlug";
+import { findCategoryInList, normalizeCategorySlug, resolveRootCategory } from "@/lib/categorySlug";
 import { extractListingFilterSpecs } from "@/lib/catalog/listingFilterSpecs";
 import {
   enrichGuitarSpecifications,
@@ -121,6 +121,13 @@ function resolveCategoryFromList(
   categories: Awaited<ReturnType<typeof fetchCategories>>,
   categoryInput: string,
 ): { name: string; slug: string } | null {
+  const root = resolveRootCategory(categories, {
+    categorySlug: categoryInput,
+    category: categoryInput,
+  });
+  if (root) {
+    return { name: root.name, slug: root.slug };
+  }
   const found = findCategoryInList(categories, categoryInput);
   if (!found) return null;
   return { name: found.name, slug: found.slug };
@@ -2042,6 +2049,12 @@ export async function bulkImportProducts(
   for (const row of createRows) {
     const category =
       (row.resolvedCategorySlug ? categoryBySlug.get(row.resolvedCategorySlug) : undefined) ??
+      resolveRootCategory(categories, {
+        categorySlug: row.resolvedCategorySlug ?? row.category,
+        category: row.category,
+        subcategory: row.subcategory,
+        name: row.name,
+      }) ??
       findCategoryInList(categories, row.category);
     if (!category) {
       runtimeFailures.push({ ...row, reason: `Category "${row.category}" not found in catalog` });
@@ -2049,6 +2062,9 @@ export async function bulkImportProducts(
     }
     try {
       const product = buildBulkImportCatalogProduct(row, category, importOptions.publishStatus);
+      if (!row.subcategory && row.category && row.category !== category.name) {
+        product.subcategory = row.category;
+      }
       if (!candidatesByCategory.has(category.slug)) {
         candidatesByCategory.set(
           category.slug,

@@ -101,6 +101,199 @@ export function resolveCategory(
   return findCategoryInList(categories, requestedSlug);
 }
 
+export interface CategoryResolutionCandidate {
+  categorySlug?: string;
+  category?: string;
+  subcategory?: string;
+  name?: string;
+}
+
+/**
+ * Resolves any category input (slug, name, child subcategory, or product metadata)
+ * to its canonical root/main category (where parentId is null/undefined).
+ */
+export function resolveRootCategory<
+  T extends { id: string; name: string; slug: string; parentId?: string | null },
+>(categories: T[], candidate?: CategoryResolutionCandidate): T | undefined {
+  if (!categories || categories.length === 0 || !candidate) return undefined;
+
+  const rootCategories = categories.filter((c) => !c.parentId);
+  if (rootCategories.length === 0) return undefined;
+
+  const categorySlug = (candidate.categorySlug ?? "").trim();
+  const category = (candidate.category ?? "").trim();
+  const subcategory = (candidate.subcategory ?? "").trim();
+  const name = (candidate.name ?? "").trim();
+
+  // Helper: map by id to walk parent hierarchy
+  const byId = new Map<string, T>(categories.map((c) => [c.id, c]));
+  const getRootOf = (item: T): T => {
+    let cur = item;
+    const seen = new Set<string>();
+    while (cur.parentId && !seen.has(cur.id)) {
+      seen.add(cur.id);
+      const parent = byId.get(cur.parentId);
+      if (!parent) break;
+      cur = parent;
+    }
+    return cur;
+  };
+
+  // 1. Direct match on root category slug
+  if (categorySlug) {
+    const normSlug = normalizeCategorySlug(categorySlug);
+    const direct = rootCategories.find(
+      (c) =>
+        c.slug.toLowerCase() === categorySlug.toLowerCase() ||
+        normalizeCategorySlug(c.slug) === normSlug,
+    );
+    if (direct) return direct;
+  }
+
+  // 2. Direct match on root category name
+  if (category) {
+    const normCat = normalizeCategorySlug(category);
+    const direct = rootCategories.find(
+      (c) =>
+        c.name.toLowerCase() === category.toLowerCase() ||
+        normalizeCategorySlug(c.name) === normCat,
+    );
+    if (direct) return direct;
+  }
+
+  // 3. Child category match by slug -> walk to root
+  if (categorySlug) {
+    const normSlug = normalizeCategorySlug(categorySlug);
+    const child = categories.find(
+      (c) =>
+        c.slug.toLowerCase() === categorySlug.toLowerCase() ||
+        normalizeCategorySlug(c.slug) === normSlug,
+    );
+    if (child) {
+      const root = getRootOf(child);
+      if (!root.parentId) return root;
+    }
+  }
+
+  // 4. Child category match by name -> walk to root
+  if (category) {
+    const normCat = normalizeCategorySlug(category);
+    const child = categories.find(
+      (c) =>
+        c.name.toLowerCase() === category.toLowerCase() ||
+        normalizeCategorySlug(c.name) === normCat,
+    );
+    if (child) {
+      const root = getRootOf(child);
+      if (!root.parentId) return root;
+    }
+  }
+
+  // 5. Match by subcategory in categories -> walk to root
+  if (subcategory) {
+    const normSub = normalizeCategorySlug(subcategory);
+    const child = categories.find(
+      (c) =>
+        c.name.toLowerCase() === subcategory.toLowerCase() ||
+        normalizeCategorySlug(c.name) === normSub,
+    );
+    if (child) {
+      const root = getRootOf(child);
+      if (!root.parentId) return root;
+    }
+  }
+
+  // 6. Plural / Alias resolution via findCategoryInList
+  const aliasCandidates = [categorySlug, category, subcategory].filter(Boolean);
+  for (const token of aliasCandidates) {
+    const match = findCategoryInList(categories as unknown as Category[], token);
+    if (match) {
+      const full = byId.get(match.id);
+      if (full) {
+        const root = getRootOf(full);
+        if (!root.parentId) return root;
+      }
+    }
+  }
+
+  // 7. Keyword / semantic heuristics on combined text
+  const combined = `${categorySlug} ${category} ${subcategory} ${name}`.toLowerCase();
+  const keywordMappings: Array<{ regex: RegExp; targetSlugs: string[] }> = [
+    {
+      regex:
+        /\b(keyboards?|synthesizers?|workstations?|digital pianos?|arranger keyboards?|portable keyboards?)\b/i,
+      targetSlugs: ["keyboards-synthesizers", "keyboards-pianos"],
+    },
+    {
+      regex: /\b(grand pianos?|upright pianos?|acoustic pianos?)\b/i,
+      targetSlugs: ["grand-piano", "keyboards-pianos", "keyboards-synthesizers"],
+    },
+    {
+      regex: /\b(guitars?|stratocaster|telecaster|les paul|acoustic guitar|electric guitar)\b/i,
+      targetSlugs: ["guitars"],
+    },
+    {
+      regex: /\b(amplifiers?|amps?|effects?|pedals?|stompboxes?)\b/i,
+      targetSlugs: ["amplifiers-effects", "guitars"],
+    },
+    {
+      regex: /\b(drums?|percussions?|cymbals?|snares?|drumkits?|drum kit|hi-hat)\b/i,
+      targetSlugs: ["drums-percussion"],
+    },
+    {
+      regex: /\b(cables?|xlr|patch cords?|patch cables?|instrument cables?|interconnects?)\b/i,
+      targetSlugs: ["cables", "cables-cases-accessories"],
+    },
+    {
+      regex: /\b(microphones?|mics?|wireless systems?|condenser mics?|dynamic mics?)\b/i,
+      targetSlugs: ["microphones-wireless"],
+    },
+    {
+      regex:
+        /\b(speakers?|pa systems?|active speakers?|loudspeakers?|audio mixers?|soundboards?|live sound|lighting)\b/i,
+      targetSlugs: ["live-sound-lighting"],
+    },
+    {
+      regex:
+        /\b(studio|recorders?|audio interfaces?|studio monitors?|headphone amps?|audio recorders?)\b/i,
+      targetSlugs: ["studio-recording"],
+    },
+    {
+      regex: /\b(ukuleles?|violins?|banjos?|mandolins?)\b/i,
+      targetSlugs: ["ukuleles-violins"],
+    },
+    {
+      regex: /\b(bass|bass guitars?|bass amps?)\b/i,
+      targetSlugs: ["bass", "guitars"],
+    },
+    {
+      regex: /\b(dj|turntables?|dj controllers?|dj mixers?)\b/i,
+      targetSlugs: ["dj-equipment"],
+    },
+    {
+      regex: /\b(software|plugins?|plug-ins?|daws?|virtual instruments?)\b/i,
+      targetSlugs: ["software-plug-ins"],
+    },
+    {
+      regex: /\b(accessories|stands?|cases?|bags?|gig bags?|components?)\b/i,
+      targetSlugs: ["accessories", "cables-cases-accessories"],
+    },
+  ];
+
+  for (const { regex, targetSlugs } of keywordMappings) {
+    if (regex.test(combined)) {
+      for (const slug of targetSlugs) {
+        const found = rootCategories.find(
+          (c) => c.slug.toLowerCase() === slug || normalizeCategorySlug(c.slug) === slug,
+        );
+        if (found) return found;
+      }
+    }
+  }
+
+  return undefined;
+}
+
 export function isCanonicalCategorySlug(category: Category, requestedSlug: string): boolean {
   const normCat = normalizeCategorySlug(category.slug);
   const normReq = normalizeCategorySlug(requestedSlug);

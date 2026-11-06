@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { slugify } from "@/lib/slug";
@@ -28,6 +28,7 @@ import ProductInTheBoxEditor from "@/components/admin/ProductInTheBoxEditor";
 import ProductSpecsEditor from "@/components/admin/ProductSpecsEditor";
 import ProductVideosEditor from "@/components/admin/ProductVideosEditor";
 import { isGuitarProduct } from "@/lib/product/guitarShowcaseSpecs";
+import { resolveRootCategory } from "@/lib/categorySlug";
 import { adminFetchJson, safeReadApiResponse } from "@/lib/admin/adminFetch";
 import type { AdminCategory, AdminProduct } from "@/types/admin";
 import type { Brand } from "@/types/brand";
@@ -139,6 +140,10 @@ export default function ProductFormPage({
   const queryClient = useQueryClient();
   const [form, setForm] = useState(EMPTY);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const categoriesRef = useRef<AdminCategory[]>(categories);
+  useEffect(() => {
+    categoriesRef.current = categories;
+  }, [categories]);
   const mainCategories = useMemo(
     () =>
       categories
@@ -154,9 +159,59 @@ export default function ProductFormPage({
   const [descriptionEditorKey, setDescriptionEditorKey] = useState(0);
   const [loaded, setLoaded] = useState(!productId);
 
+  // Derive the canonical root category slug for display and validation
+  const selectedCategorySlug = useMemo(() => {
+    if (mainCategories.some((c) => c.slug === form.categorySlug)) {
+      return form.categorySlug;
+    }
+    if (
+      categories.length > 0 &&
+      (form.categorySlug || form.category || form.subcategory || form.name)
+    ) {
+      const resolved = resolveRootCategory(categories, {
+        categorySlug: form.categorySlug,
+        category: form.category,
+        subcategory: form.subcategory,
+        name: form.name,
+      });
+      if (resolved) return resolved.slug;
+    }
+    return form.categorySlug;
+  }, [mainCategories, categories, form.categorySlug, form.category, form.subcategory, form.name]);
+
   useEffect(() => {
     adminFetchJson<{ categories: AdminCategory[] }>("/api/admin/categories")
-      .then((d) => setCategories(d.categories ?? []))
+      .then((d) => {
+        const cats = d.categories ?? [];
+        setCategories(cats);
+        setForm((prev) => {
+          const mainCats = cats.filter((c) => !c.parentId);
+          const isDirectMain = mainCats.some((c) => c.slug === prev.categorySlug);
+          if (
+            !isDirectMain &&
+            (prev.categorySlug || prev.category || prev.subcategory || prev.name)
+          ) {
+            const resolved = resolveRootCategory(cats, {
+              categorySlug: prev.categorySlug,
+              category: prev.category,
+              subcategory: prev.subcategory,
+              name: prev.name,
+            });
+            if (resolved) {
+              const sub =
+                prev.subcategory ||
+                (prev.category && prev.category !== resolved.name ? prev.category : "");
+              return {
+                ...prev,
+                categorySlug: resolved.slug,
+                category: resolved.name,
+                subcategory: sub,
+              };
+            }
+          }
+          return prev;
+        });
+      })
       .catch(() => undefined);
 
     fetch("/api/admin/brands")
@@ -167,6 +222,7 @@ export default function ProductFormPage({
 
   useEffect(() => {
     const activeCategory =
+      selectedCategorySlug ||
       form.categorySlug ||
       categories.find((category) => category.name === form.category)?.slug ||
       form.category;
@@ -195,7 +251,7 @@ export default function ProductFormPage({
     return () => {
       active = false;
     };
-  }, [categories, form.category, form.categorySlug, form.subcategory]);
+  }, [categories, form.category, form.categorySlug, form.subcategory, selectedCategorySlug]);
 
   useEffect(() => {
     if (!productId) return;
@@ -205,7 +261,25 @@ export default function ProductFormPage({
       )
       .then((d: { product?: AdminProduct }) => {
         if (d.product) {
-          setForm(mapAdminProductToForm(d.product));
+          const mapped = mapAdminProductToForm(d.product);
+          const currentCats = categoriesRef.current;
+          if (currentCats.length > 0) {
+            const resolved = resolveRootCategory(currentCats, {
+              categorySlug: mapped.categorySlug,
+              category: mapped.category,
+              subcategory: mapped.subcategory,
+              name: mapped.name,
+            });
+            if (resolved) {
+              const sub =
+                mapped.subcategory ||
+                (mapped.category && mapped.category !== resolved.name ? mapped.category : "");
+              mapped.categorySlug = resolved.slug;
+              mapped.category = resolved.name;
+              mapped.subcategory = sub;
+            }
+          }
+          setForm(mapped);
         }
         setLoaded(true);
       })
@@ -266,11 +340,17 @@ export default function ProductFormPage({
   const saveMutation = useMutation({
     mutationFn: async () => {
       const slug = slugify(form.slug || `${form.brand}-${form.name}`);
-      const selectedCategory = mainCategories.find(
-        (c) => c.slug === form.categorySlug || c.name === form.category,
-      );
+      const categorySlugToUse = selectedCategorySlug || form.categorySlug;
+      const selectedCategory =
+        mainCategories.find((c) => c.slug === categorySlugToUse || c.name === form.category) ??
+        resolveRootCategory(categories, {
+          categorySlug: categorySlugToUse,
+          category: form.category,
+          subcategory: form.subcategory,
+          name: form.name,
+        });
       const categoryName = selectedCategory?.name ?? form.category;
-      const categorySlug = selectedCategory?.slug ?? form.categorySlug ?? slugify(form.category);
+      const categorySlug = selectedCategory?.slug ?? categorySlugToUse ?? slugify(form.category);
       const isGuitar = isGuitarProduct(categorySlug, categoryName);
       const guitarSpecs = isGuitar
         ? Object.fromEntries(Object.entries(form.guitarSpecs).filter(([, value]) => value.trim()))
@@ -435,7 +515,20 @@ export default function ProductFormPage({
               className="admin-input"
               style={{ width: "100%" }}
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) => {
+                const newName = e.target.value;
+                setForm((prev) => {
+                  const next = { ...prev, name: newName };
+                  if (!prev.categorySlug && newName.trim().length >= 4 && categories.length > 0) {
+                    const auto = resolveRootCategory(categories, { name: newName.trim() });
+                    if (auto) {
+                      next.categorySlug = auto.slug;
+                      next.category = auto.name;
+                    }
+                  }
+                  return next;
+                });
+              }}
               required
             />
           </div>
@@ -494,7 +587,7 @@ export default function ProductFormPage({
             <select
               id="product-form-category"
               className="admin-select"
-              value={form.categorySlug}
+              value={selectedCategorySlug}
               onChange={(e) => {
                 const category = categories.find((c) => c.slug === e.target.value);
                 setForm({
@@ -550,7 +643,20 @@ export default function ProductFormPage({
                 id="product-form-subcategory"
                 className="admin-select"
                 value={form.subcategory ?? ""}
-                onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setForm((prev) => {
+                    const next = { ...prev, subcategory: val };
+                    if (!prev.categorySlug && val && categories.length > 0) {
+                      const auto = resolveRootCategory(categories, { subcategory: val });
+                      if (auto) {
+                        next.categorySlug = auto.slug;
+                        next.category = auto.name;
+                      }
+                    }
+                    return next;
+                  });
+                }}
               >
                 <option value="">Select subcategory</option>
                 {subcategoryOptions.map((sub) => (
@@ -565,7 +671,20 @@ export default function ProductFormPage({
                 className="admin-input"
                 style={{ width: "100%" }}
                 value={form.subcategory ?? ""}
-                onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setForm((prev) => {
+                    const next = { ...prev, subcategory: val };
+                    if (!prev.categorySlug && val.trim().length >= 3 && categories.length > 0) {
+                      const auto = resolveRootCategory(categories, { subcategory: val.trim() });
+                      if (auto) {
+                        next.categorySlug = auto.slug;
+                        next.category = auto.name;
+                      }
+                    }
+                    return next;
+                  });
+                }}
                 placeholder={
                   form.category
                     ? "e.g. Electric Guitars, Bass Guitars..."
