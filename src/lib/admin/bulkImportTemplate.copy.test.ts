@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   buildBulkImportIntroCopy,
+  buildBulkImportSheetHintCopy,
   buildBulkImportTemplateHintCopy,
   buildBulkImportZipHintCopy,
   VIBEMUSIC_BULK_COLUMN_COUNT,
   VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+  VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
 } from "@/lib/admin/bulkImportTemplate";
 
 describe("bulk import copy", () => {
@@ -14,10 +16,20 @@ describe("bulk import copy", () => {
       VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
       VIBEMUSIC_BULK_COLUMN_COUNT,
       12,
+      VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
     );
     expect(intro).toMatch(/81-column template/i);
     expect(intro).toMatch(/image1–image12/i);
     expect(intro).toMatch(/12 images per SKU/i);
+    expect(intro).toMatch(/up to 100 columns/i);
+
+    const sheetHint = buildBulkImportSheetHintCopy(
+      25,
+      2000,
+      VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
+      VIBEMUSIC_BULK_COLUMN_COUNT,
+    );
+    expect(sheetHint).toMatch(/Accepts sheets up to 100 columns/i);
 
     const templateHint = buildBulkImportTemplateHintCopy(
       VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
