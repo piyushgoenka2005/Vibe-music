@@ -76,30 +76,17 @@ export async function fetchProductsByCategories(
 
   const statuses = includeInactive ? ["active", "draft", "archived"] : ["active"];
 
-  // Step 1: Find all products assigned to these categories
-  const productCategoryAssignments = await prisma.productCategory.findMany({
-    where: {
-      categoryId: { in: categoryIds },
-    },
-    select: { productId: true },
-    distinct: ["productId"],
-  });
-
-  const productIds = productCategoryAssignments.map((a) => a.productId);
-
-  if (productIds.length === 0) {
-    return [];
-  }
-
-  // Step 2: Load product details
   const products = await prisma.product.findMany({
     where: {
-      id: { in: productIds },
+      productCategories: {
+        some: {
+          categoryId: { in: categoryIds },
+        },
+      },
       status: { in: statuses },
     },
   });
 
-  // Step 3: Convert to internal format
   return products.map(prismaToProduct);
 }
 
