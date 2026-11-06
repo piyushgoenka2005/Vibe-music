@@ -134,12 +134,59 @@ const CANONICAL_SUBCATEGORY_MAP: Record<string, { slug: string; name: string }> 
   "audio-interface": { slug: "audio-interfaces", name: "Audio Interfaces" },
   "audio-interfaces": { slug: "audio-interfaces", name: "Audio Interfaces" },
   "audio-interfaces-recording-mixers": { slug: "audio-interfaces", name: "Audio Interfaces" },
+  "podcast-recorders-audio-interfaces": { slug: "audio-interfaces", name: "Audio Interfaces" },
+  "audio-equipment": { slug: "audio-interfaces", name: "Audio Interfaces" },
   "studio-monitor": { slug: "studio-monitors", name: "Studio Monitors" },
   "studio-monitors": { slug: "studio-monitors", name: "Studio Monitors" },
+  "5-inch-powered-studio-monitor": { slug: "studio-monitors", name: "Studio Monitors" },
+  "5-inch-powered-studio-monitors": { slug: "studio-monitors", name: "Studio Monitors" },
+  "6-5-inch-studio-monitor": { slug: "studio-monitors", name: "Studio Monitors" },
+  "6-5-inch-studio-monitors": { slug: "studio-monitors", name: "Studio Monitors" },
+  "monitor-speakers": { slug: "studio-monitors", name: "Studio Monitors" },
+  "monitor-speaker": { slug: "studio-monitors", name: "Studio Monitors" },
   "studio-desk": { slug: "studio-furniture", name: "Studio Furniture" },
   "studio-furniture": { slug: "studio-furniture", name: "Studio Furniture" },
   "midi-controller": { slug: "midi-controllers", name: "MIDI Controllers" },
   "midi-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "midi-keyboard": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "midi-keyboards": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "midi-keyboards-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "midi-keyboards-and-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "midi-keyboard-controller": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "midi-keyboard-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "61-key-usb-midi-keyboard-controller": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "61-key-usb-midi-keyboard-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "49-key-usb-midi-keyboard-controller": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "49-key-usb-midi-keyboard-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "32-key-compact-usb-midi-keyboard-controller": {
+    slug: "midi-controllers",
+    name: "MIDI Controllers",
+  },
+  "32-key-compact-usb-midi-keyboard-controllers": {
+    slug: "midi-controllers",
+    name: "MIDI Controllers",
+  },
+  "usb-midi-keyboard-controller": { slug: "midi-controllers", name: "MIDI Controllers" },
+  "usb-midi-keyboard-controllers": { slug: "midi-controllers", name: "MIDI Controllers" },
+  microphone: { slug: "microphones", name: "Microphones" },
+  microphones: { slug: "microphones", name: "Microphones" },
+  "dynamic-microphone": { slug: "microphones", name: "Microphones" },
+  "dynamic-microphones": { slug: "microphones", name: "Microphones" },
+  "dynamic-vocal-microphone": { slug: "microphones", name: "Microphones" },
+  "dynamic-vocal-microphones": { slug: "microphones", name: "Microphones" },
+  "condenser-microphone": { slug: "microphones", name: "Microphones" },
+  "condenser-microphones": { slug: "microphones", name: "Microphones" },
+  "shotgun-vocal-microphones": { slug: "microphones", name: "Microphones" },
+  "gooseneck-microphones": { slug: "microphones", name: "Microphones" },
+  headphone: { slug: "headphones", name: "Headphones" },
+  headphones: { slug: "headphones", name: "Headphones" },
+  "drum-monitor-headphones": { slug: "headphones", name: "Headphones" },
+  "stage-piano": { slug: "stage-keyboards", name: "Stage Keyboards" },
+  "stage-pianos": { slug: "stage-keyboards", name: "Stage Keyboards" },
+  "music-workstation": { slug: "stage-keyboards", name: "Stage Keyboards" },
+  "music-workstations": { slug: "stage-keyboards", name: "Stage Keyboards" },
+  "portable-arranger-keyboard": { slug: "portable-keyboards", name: "Portable Keyboards" },
+  "portable-arranger-keyboards": { slug: "portable-keyboards", name: "Portable Keyboards" },
   "acoustic-drum-kit": { slug: "acoustic-drum-kits", name: "Acoustic Drum Kits" },
   "acoustic-drum-kits": { slug: "acoustic-drum-kits", name: "Acoustic Drum Kits" },
   "acoustic-kit": { slug: "acoustic-drum-kits", name: "Acoustic Drum Kits" },
@@ -150,6 +197,13 @@ const CANONICAL_SUBCATEGORY_MAP: Record<string, { slug: string; name: string }> 
   "performance-synthesizers": { slug: "synthesizers", name: "Synthesizers" },
   "audio-mixer": { slug: "audio-mixers", name: "Audio Mixers" },
   "audio-mixers": { slug: "audio-mixers", name: "Audio Mixers" },
+  "microphone-balanced-audio-cables": { slug: "xlr-cables", name: "XLR & Mic Cables" },
+  "acoustic-electric-guitar": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "acoustic-electric-guitars": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "classical-guitar": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "classical-guitars": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "nylon-string-classical-guitar": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
+  "nylon-string-classical-guitars": { slug: "acoustic-guitars", name: "Acoustic Guitars" },
 };
 
 export function canonicalSubcategorySlug(raw: string): string {
@@ -321,7 +375,23 @@ function applyFilters(
       }
       return activeSubList.some((active) => {
         const stem = active.replace(/s$/, "");
-        return rawSlug.includes(active) || rawSlug.includes(stem) || active.includes(rawSlug);
+        if (rawSlug.includes(active) || rawSlug.includes(stem) || active.includes(rawSlug)) {
+          return true;
+        }
+        // Multi-token overlap matching (e.g., active='midi-controllers' matches '61-key-usb-midi-keyboard-controller' or product.name)
+        const tokens = active.split("-").filter((t) => t.length > 2 && t !== "and");
+        if (
+          tokens.length > 0 &&
+          tokens.every(
+            (t) =>
+              rawSlug.includes(t) ||
+              product.name.toLowerCase().includes(t) ||
+              canonSlug.includes(t),
+          )
+        ) {
+          return true;
+        }
+        return false;
       });
     });
   }

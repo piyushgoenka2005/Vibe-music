@@ -630,18 +630,32 @@ export function searchInCatalogProducts(
 
   if (options.categorySlugs && options.categorySlugs.length > 0) {
     const slugSet = new Set(options.categorySlugs.map((s) => normalizeCategorySlug(s)));
-    source = source.filter(
-      (product) =>
-        slugSet.has(normalizeCategorySlug(product.categorySlug)) ||
-        slugSet.has(normalizeCategorySlug(product.category)),
-    );
+    source = source.filter((product) => {
+      const pCat = normalizeCategorySlug(product.categorySlug);
+      const pName = normalizeCategorySlug(product.category);
+      const pSub = normalizeCategorySlug(product.subcategory);
+      const pCanonSub = canonicalSubcategorySlug(product.subcategory ?? "");
+      return (
+        slugSet.has(pCat) ||
+        slugSet.has(pName) ||
+        Boolean(pSub && slugSet.has(pSub)) ||
+        Boolean(pCanonSub && slugSet.has(pCanonSub))
+      );
+    });
   } else if (options.category) {
     const resolvedSlug = normalizeCategorySlug(options.category);
-    source = source.filter(
-      (product) =>
-        normalizeCategorySlug(product.categorySlug) === resolvedSlug ||
-        normalizeCategorySlug(product.category) === resolvedSlug,
-    );
+    source = source.filter((product) => {
+      const pCat = normalizeCategorySlug(product.categorySlug);
+      const pName = normalizeCategorySlug(product.category);
+      const pSub = normalizeCategorySlug(product.subcategory);
+      const pCanonSub = canonicalSubcategorySlug(product.subcategory ?? "");
+      return (
+        pCat === resolvedSlug ||
+        pName === resolvedSlug ||
+        pSub === resolvedSlug ||
+        pCanonSub === resolvedSlug
+      );
+    });
 
     // Keep guitar amps / multi-effects off the main Guitars PLP — they belong
     // under Amplifiers / Effects browse paths (`?category=guitars&subcategory=…`).
@@ -660,16 +674,27 @@ export function searchInCatalogProducts(
         const sub = (product.subcategory ?? "").toLowerCase();
         const subSlug = normalizeCategorySlug(sub);
         const canonSub = canonicalSubcategorySlug(sub);
+        const prodName = product.name.toLowerCase();
         return needles.some((needle) => {
           const needleSlug = normalizeCategorySlug(needle);
           const canonNeedle = canonicalSubcategorySlug(needle);
-          return (
+          if (
             sub.includes(needle) ||
             subSlug === needleSlug ||
             (canonSub && canonSub === canonNeedle) ||
             subSlug.includes(needleSlug) ||
             needleSlug.includes(subSlug)
-          );
+          ) {
+            return true;
+          }
+          const tokens = needleSlug.split("-").filter((t) => t.length > 2 && t !== "and");
+          if (
+            tokens.length > 0 &&
+            tokens.every((t) => sub.includes(t) || prodName.includes(t) || subSlug.includes(t))
+          ) {
+            return true;
+          }
+          return false;
         });
       });
     }

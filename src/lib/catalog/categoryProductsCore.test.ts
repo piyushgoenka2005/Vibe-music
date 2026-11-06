@@ -32,6 +32,16 @@ describe("canonicalSubcategorySlug and canonicalSubcategoryLabel", () => {
       "audio-interfaces",
     );
     expect(canonicalSubcategorySlug("Performance Synthesizers")).toBe("synthesizers");
+    expect(canonicalSubcategorySlug("MIDI Keyboards & Controllers")).toBe("midi-controllers");
+    expect(canonicalSubcategorySlug("61-Key USB MIDI Keyboard Controller")).toBe(
+      "midi-controllers",
+    );
+    expect(canonicalSubcategorySlug("32-Key Compact USB MIDI Keyboard Controller")).toBe(
+      "midi-controllers",
+    );
+    expect(canonicalSubcategoryLabel("MIDI Keyboards & Controllers")).toBe("MIDI Controllers");
+    expect(canonicalSubcategorySlug("5-Inch Powered Studio Monitor")).toBe("studio-monitors");
+    expect(canonicalSubcategorySlug("Dynamic Vocal Microphones")).toBe("microphones");
   });
 
   it("strips department prefixes from child slugs", () => {

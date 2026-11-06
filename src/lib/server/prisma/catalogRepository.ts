@@ -276,10 +276,29 @@ export async function fetchProductsByIds(
 }
 
 const CATEGORY_SLUG_EXPANSIONS: Record<string, string[]> = {
-  "keyboards-pianos": ["keyboards-synthesizers", "keyboards-pianos", "grand-piano"],
-  "keyboards-synthesizers": ["keyboards-synthesizers", "keyboards-pianos", "grand-piano"],
+  "keyboards-pianos": [
+    "keyboards-synthesizers",
+    "keyboards-pianos",
+    "grand-piano",
+    "studio-recording",
+  ],
+  "keyboards-synthesizers": [
+    "keyboards-synthesizers",
+    "keyboards-pianos",
+    "grand-piano",
+    "studio-recording",
+  ],
+  "studio-recording": [
+    "studio-recording",
+    "software-plugins",
+    "software-plug-ins",
+    "keyboards-synthesizers",
+    "live-sound-lighting",
+    "microphones-wireless",
+    "dj-equipment",
+  ],
   "grand-piano": ["grand-piano", "keyboards-pianos", "keyboards-synthesizers"],
-  cables: ["cables", "cables-cases-accessories"],
+  cables: ["cables", "cables-cases-accessories", "accessories"],
   "cables-cases-accessories": [
     "cables-cases-accessories",
     "cables",
@@ -290,12 +309,14 @@ const CATEGORY_SLUG_EXPANSIONS: Record<string, string[]> = {
   accessories: ["accessories", "cables-cases-accessories", "cables", "cases-bags", "essentials"],
   "cases-bags": ["cables-cases-accessories", "cases-bags"],
   essentials: ["cables-cases-accessories", "essentials"],
-  "live-sound": ["live-sound-lighting", "live-sound"],
-  "live-sound-lighting": ["live-sound-lighting", "live-sound"],
+  "live-sound": ["live-sound-lighting", "live-sound", "studio-recording", "dj-equipment"],
+  "live-sound-lighting": ["live-sound-lighting", "live-sound", "studio-recording", "dj-equipment"],
+  "dj-equipment": ["dj-equipment", "live-sound-lighting", "studio-recording"],
   "software-plugins": ["software-plug-ins", "software-plugins"],
   "software-plug-ins": ["software-plug-ins", "software-plugins"],
-  amplifiers: ["amplifiers-effects", "amplifiers"],
-  "amplifiers-effects": ["amplifiers-effects", "amplifiers"],
+  amplifiers: ["amplifiers-effects", "amplifiers", "guitars"],
+  "amplifiers-effects": ["amplifiers-effects", "amplifiers", "guitars"],
+  guitars: ["guitars", "amplifiers-effects", "amplifiers", "bass", "band-orchestra"],
 };
 
 export async function fetchProductsByCategory(
