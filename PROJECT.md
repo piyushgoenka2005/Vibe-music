@@ -54,12 +54,12 @@ Vibe Music is a production musical instruments and pro audio e-commerce platform
 
 ## Milestones
 
-| #   | Name                                      | Scope                                                                                                                                     | Dependencies | Status      |
-| --- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------- |
-| M1  | Storefront & Mobile Remediation           | Currency/Locale selector UI, account mobile nav z-index fix, audio preview player on PDP, footer follow enable                            | none         | DONE        |
-| M2  | Admin Portal Remediation                  | Sidebar routing fixes, live reports database aggregations, filtered orders CSV export, bundle/related UI resolution, toast alerts, tax UI | none         | DONE        |
-| M3  | Dual-Track E2E Testing & Hardening        | Requirements-driven E2E test suite (Tiers 1-4) + 100% pass execution + Tier 5 coverage hardening                                          | M1, M2       | DONE        |
-| M4  | Live Production Deployment & Verification | Deployment to VPS 109.122.56.126, PM2 process reload, live SSL & health verification on https://vibemusic.in                              | M3           | IN_PROGRESS |
+| #   | Name                                      | Scope                                                                                                                                     | Dependencies | Status |
+| --- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------ |
+| M1  | Storefront & Mobile Remediation           | Currency/Locale selector UI, account mobile nav z-index fix, audio preview player on PDP, footer follow enable                            | none         | DONE   |
+| M2  | Admin Portal Remediation                  | Sidebar routing fixes, live reports database aggregations, filtered orders CSV export, bundle/related UI resolution, toast alerts, tax UI | none         | DONE   |
+| M3  | Dual-Track E2E Testing & Hardening        | Requirements-driven E2E test suite (Tiers 1-4) + 100% pass execution + Tier 5 coverage hardening                                          | M1, M2       | DONE   |
+| M4  | Live Production Deployment & Verification | Deployment to VPS 109.122.56.126, PM2 process reload, live SSL & health verification on https://vibemusic.in                              | M3           | DONE   |
 
 ---
 
