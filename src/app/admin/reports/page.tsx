@@ -18,7 +18,7 @@ import { ErrorState, adminFetchJson } from "@/components/admin/AdminQueryState";
 import type { SalesReportSummary } from "@/app/api/admin/reports/route";
 
 function ReportsContent() {
-  const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
+  const [range, setRange] = useState<"7d" | "30d" | "90d" | "1y">("30d");
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["admin-reports", range],
@@ -99,7 +99,7 @@ function ReportsContent() {
                 padding: "0.2rem",
               }}
             >
-              {(["7d", "30d", "90d"] as const).map((r) => (
+              {(["7d", "30d", "90d", "1y"] as const).map((r) => (
                 <button
                   key={r}
                   type="button"
@@ -107,7 +107,13 @@ function ReportsContent() {
                   className={`admin-btn ${range === r ? "admin-btn--primary" : "admin-btn--secondary"}`}
                   style={{ padding: "0.35rem 0.75rem", fontSize: "0.8125rem" }}
                 >
-                  {r === "7d" ? "7 Days" : r === "30d" ? "30 Days" : "90 Days"}
+                  {r === "7d"
+                    ? "7 Days"
+                    : r === "30d"
+                      ? "30 Days"
+                      : r === "90d"
+                        ? "90 Days"
+                        : "1 Year"}
                 </button>
               ))}
             </div>

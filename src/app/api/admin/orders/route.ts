@@ -62,9 +62,20 @@ function buildExportWhere(filters: {
     ];
   }
   if (filters.from || filters.to) {
+    const fromIso = filters.from
+      ? filters.from.length === 10
+        ? `${filters.from}T00:00:00.000Z`
+        : filters.from
+      : undefined;
+    const toIso = filters.to
+      ? filters.to.length === 10
+        ? `${filters.to}T23:59:59.999Z`
+        : filters.to
+      : undefined;
+
     where.createdAt = {
-      ...(filters.from ? { gte: filters.from } : {}),
-      ...(filters.to ? { lte: filters.to } : {}),
+      ...(fromIso ? { gte: fromIso } : {}),
+      ...(toIso ? { lte: toIso } : {}),
     };
   }
 

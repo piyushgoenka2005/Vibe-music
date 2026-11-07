@@ -27,12 +27,22 @@ import type { Order, OrderStatus } from "@/types/order";
 import type { OrderTimelineEvent } from "@/types/order";
 
 async function fetchOrders(
-  params: { search: string; status: string; cursor?: string },
+  params: {
+    search: string;
+    status: string;
+    paymentStatus?: string;
+    from?: string;
+    to?: string;
+    cursor?: string;
+  },
   signal?: AbortSignal,
 ) {
   const sp = new URLSearchParams({ limit: "20" });
   if (params.search) sp.set("search", params.search);
   if (params.status) sp.set("status", params.status);
+  if (params.paymentStatus) sp.set("paymentStatus", params.paymentStatus);
+  if (params.from) sp.set("from", params.from);
+  if (params.to) sp.set("to", params.to);
   if (params.cursor) sp.set("cursor", params.cursor);
   return adminFetchJson<{
     orders: Order[];
@@ -64,6 +74,9 @@ function OrdersContent({
     isDebouncing: searchPending,
   } = useAdminSearchTerm();
   const [status, setStatus] = useState(() => deepLinkStatus ?? "");
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
   const [selectedId, setSelectedId] = useState<string | null>(deepLinkOrderId);
   const [newStatus, setNewStatus] = useState<OrderStatus>("processing");
@@ -83,8 +96,9 @@ function OrdersContent({
   }, [deepLinkStatus, reset]);
 
   const { data, isLoading, isError, refetch, isFetching, isPlaceholderData } = useQuery({
-    queryKey: ["admin-orders", search, status, cursor],
-    queryFn: ({ signal }) => fetchOrders({ search, status, cursor }, signal),
+    queryKey: ["admin-orders", search, status, paymentStatus, from, to, cursor],
+    queryFn: ({ signal }) =>
+      fetchOrders({ search, status, paymentStatus, from, to, cursor }, signal),
     placeholderData: keepPreviousData,
     staleTime: 60_000,
   });
@@ -164,10 +178,16 @@ function OrdersContent({
     const payload: {
       export: "csv";
       status?: string;
+      paymentStatus?: string;
       search?: string;
+      from?: string;
+      to?: string;
     } = { export: "csv" };
     if (status) payload.status = status;
+    if (paymentStatus) payload.paymentStatus = paymentStatus;
     if (search) payload.search = search;
+    if (from) payload.from = from;
+    if (to) payload.to = to;
 
     const res = await fetch("/api/admin/orders", {
       method: "POST",
@@ -182,7 +202,15 @@ function OrdersContent({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const filterSuffix = [status, search ? `query` : ""].filter(Boolean).join("-");
+    const filterSuffix = [
+      status,
+      paymentStatus ? `pay-${paymentStatus}` : "",
+      search ? `query` : "",
+      from ? `from-${from}` : "",
+      to ? `to-${to}` : "",
+    ]
+      .filter(Boolean)
+      .join("-");
     a.download = filterSuffix ? `orders-${filterSuffix}.csv` : "orders.csv";
     a.click();
     URL.revokeObjectURL(url);
@@ -225,6 +253,7 @@ function OrdersContent({
             setStatus(e.target.value);
             reset();
           }}
+          aria-label="Filter by order status"
         >
           <option value="">All statuses</option>
           <option value="pending">Pending</option>
@@ -235,6 +264,46 @@ function OrdersContent({
           <option value="cancelled">Cancelled</option>
           <option value="refunded">Refunded</option>
         </select>
+        <select
+          className="admin-select"
+          style={{ width: "auto" }}
+          value={paymentStatus}
+          onChange={(e) => {
+            setPaymentStatus(e.target.value);
+            reset();
+          }}
+          aria-label="Filter by payment status"
+        >
+          <option value="">All payment statuses</option>
+          <option value="pending">Payment: Pending</option>
+          <option value="paid">Payment: Paid</option>
+          <option value="failed">Payment: Failed</option>
+          <option value="refunded">Payment: Refunded</option>
+        </select>
+        <input
+          type="date"
+          className="admin-input"
+          style={{ width: "auto" }}
+          value={from}
+          onChange={(e) => {
+            setFrom(e.target.value);
+            reset();
+          }}
+          aria-label="Filter from date"
+          title="From Date"
+        />
+        <input
+          type="date"
+          className="admin-input"
+          style={{ width: "auto" }}
+          value={to}
+          onChange={(e) => {
+            setTo(e.target.value);
+            reset();
+          }}
+          aria-label="Filter to date"
+          title="To Date"
+        />
         <button
           type="button"
           className="admin-btn admin-btn--secondary"

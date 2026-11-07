@@ -18,6 +18,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { blogEditorExtensions, EMPTY_BLOG_CONTENT, parseBlogContent } from "@/lib/blog/editor";
 import { safeReadApiResponse } from "@/lib/admin/adminFetch";
+import { useToastStore } from "@/store/toastStore";
 import "./tiptap-editor.css";
 
 interface TipTapEditorProps {
@@ -107,7 +108,7 @@ export default function TipTapEditor({
   async function uploadInlineImage(file: File) {
     if (!editor || !file.type.startsWith("image/")) return;
     if (file.size > 10 * 1024 * 1024) {
-      window.alert("Image must be smaller than 10MB");
+      useToastStore.getState().show("Image must be smaller than 10MB", "error");
       return;
     }
 
@@ -125,7 +126,9 @@ export default function TipTapEditor({
       }
       editor.chain().focus().setImage({ src: parsed.data.url, alt: "" }).run();
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Image upload failed");
+      useToastStore
+        .getState()
+        .show(error instanceof Error ? error.message : "Image upload failed", "error");
     } finally {
       setUploadingImage(false);
     }
