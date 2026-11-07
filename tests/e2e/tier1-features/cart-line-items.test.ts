@@ -18,6 +18,7 @@ vi.mock("@/lib/analytics/events", () => ({
 
 describe("Tier 1: Cart Line Items & Storage Operations", () => {
   beforeEach(() => {
+    useCartStore.setState({ isUpdating: false });
     useCartStore.getState().clearCart();
   });
 
@@ -67,17 +68,17 @@ describe("Tier 1: Cart Line Items & Storage Operations", () => {
   });
 
   it("removes line item when quantity is reduced to 0 or removeItem is called", () => {
-    const product = sampleProducts[0];
-    useCartStore.getState().addItem(product, 2);
+    useCartStore.getState().addItem(sampleProducts[0], 2);
 
     const lineId = useCartStore.getState().items[0].lineId;
 
-    // Reducing to 0 triggers removal
+    // Reset update throttle and reduce to 0
+    useCartStore.setState({ isUpdating: false });
     useCartStore.getState().updateQuantity(lineId, 0);
     expect(useCartStore.getState().items.length).toBe(0);
 
     // Re-add and remove via removeItem
-    useCartStore.getState().addItem(product, 1);
+    useCartStore.getState().addItem(sampleProducts[0], 1);
     expect(useCartStore.getState().items.length).toBe(1);
 
     const newLineId = useCartStore.getState().items[0].lineId;
@@ -86,22 +87,33 @@ describe("Tier 1: Cart Line Items & Storage Operations", () => {
   });
 
   it("calculates free shipping milestones based on cart subtotal", () => {
-    const config = {
+    // Single threshold: free shipping only
+    const configShippingOnly = {
+      freeShippingThreshold: 5000,
+      freeGiftThreshold: 0,
+      giftProductId: null,
+      giftProduct: null,
+    };
+
+    const stateBelow = buildCartMilestoneState(3000, configShippingOnly);
+    expect(stateBelow.milestones[0].unlocked).toBe(false);
+    expect(stateBelow.progressRatio).toBeCloseTo(3000 / 5000, 2);
+
+    const stateAbove = buildCartMilestoneState(6000, configShippingOnly);
+    expect(stateAbove.milestones[0].unlocked).toBe(true);
+    expect(stateAbove.progressRatio).toBe(1.0);
+
+    // Multi-threshold: shipping + free gift
+    const configWithGift = {
       freeShippingThreshold: 5000,
       freeGiftThreshold: 10000,
       giftProductId: "prod-free-picks",
       giftProduct: null,
     };
-
-    // Below shipping threshold
-    const stateBelow = buildCartMilestoneState(3000, config);
-    expect(stateBelow.milestones[0].unlocked).toBe(false);
-    expect(stateBelow.progressRatio).toBeCloseTo(3000 / 5000, 2);
-
-    // Above shipping threshold
-    const stateAbove = buildCartMilestoneState(6000, config);
-    expect(stateAbove.milestones[0].unlocked).toBe(true);
-    expect(stateAbove.progressRatio).toBeGreaterThanOrEqual(1.0);
+    const stateWithGift = buildCartMilestoneState(3000, configWithGift);
+    expect(stateWithGift.milestones[0].unlocked).toBe(false);
+    expect(stateWithGift.milestones[1].unlocked).toBe(false);
+    expect(stateWithGift.progressRatio).toBeCloseTo(3000 / 10000, 2);
   });
 
   it("clears entire cart on clearCart action", () => {

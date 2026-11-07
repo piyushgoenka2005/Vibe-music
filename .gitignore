@@ -95,3 +95,7 @@ cdn-upload-manifest.json
 
 # internal audit exports (not for the repo)
 docs/Vibemusic_*.docx
+
+# agent metadata
+.agents/
+
