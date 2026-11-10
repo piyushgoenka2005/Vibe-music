@@ -165,6 +165,25 @@ const nextConfig: NextConfig = {
         destination: "/",
         statusCode: 301,
       },
+      // Category slug vanity redirects (e.g. /guitars -> /category/guitars)
+      ...[
+        "guitars",
+        "amplifiers",
+        "keyboards-synthesizers",
+        "drums-percussion",
+        "microphones",
+        "studio-recording",
+        "live-sound-pa",
+        "dj-gear",
+        "accessories",
+        "traditional-instruments",
+        "cables-connectors",
+        "lighting-effects",
+      ].map((slug) => ({
+        source: `/${slug}`,
+        destination: `/category/${slug}`,
+        permanent: true,
+      })),
       // Legacy WordPress / WooCommerce redirects
       {
         source: "/product-category/:slug*",
