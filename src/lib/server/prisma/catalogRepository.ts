@@ -222,26 +222,30 @@ export async function countActiveProducts(): Promise<number> {
 }
 
 export async function fetchProductById(id: string): Promise<CatalogProduct | null> {
+  const cleanId = id?.trim();
+  if (!cleanId) return null;
   return withProductFallback(
     async () => {
-      const row = await prisma.product.findUnique({ where: { id } });
+      const row = await prisma.product.findUnique({ where: { id: cleanId } });
       return row ? prismaToProduct(row) : null;
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
-      return loadProducts().find((product) => product.id === id) ?? null;
+      return loadProducts().find((product) => product.id === cleanId) ?? null;
     },
   );
 }
 
 export async function fetchProductBySlug(slug: string): Promise<CatalogProduct | null> {
+  const cleanSlug = slug?.trim();
+  if (!cleanSlug) return null;
   const fromLocal = async () => {
     const { loadProducts } = await import("@/lib/server/catalogRepository");
-    return loadProducts().find((product) => product.slug === slug) ?? null;
+    return loadProducts().find((product) => product.slug === cleanSlug) ?? null;
   };
 
   return withProductFallback(async () => {
-    const row = await prisma.product.findUnique({ where: { slug } });
+    const row = await prisma.product.findUnique({ where: { slug: cleanSlug } });
     if (row) return prismaToProduct(row);
     // Dev/seed only: resolve curated JSON SKUs that lag DB sync.
     if (isJsonCatalogFallbackAllowed()) return fromLocal();

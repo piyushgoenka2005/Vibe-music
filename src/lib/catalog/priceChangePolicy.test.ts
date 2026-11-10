@@ -108,6 +108,38 @@ describe("evaluatePriceChangeGuard", () => {
     }
   });
 
+  it("rejects negative MRP even for privileged admins", () => {
+    const result = evaluatePriceChangeGuard(
+      {
+        sku: "VM-1",
+        previousPrice: 10_000,
+        nextPrice: 9_000,
+        mrp: -500,
+      },
+      { role: "admin" },
+    );
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.reason).toContain("MRP must be a non-negative number.");
+    }
+  });
+
+  it("rejects sale price exceeding MRP even for privileged admins", () => {
+    const result = evaluatePriceChangeGuard(
+      {
+        sku: "VM-1",
+        previousPrice: 10_000,
+        nextPrice: 15_000,
+        mrp: 12_000,
+      },
+      { role: "admin" },
+    );
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.reason).toContain("Sale price cannot exceed MRP.");
+    }
+  });
+
   it("requires manager approval for 0 price when unprivileged", () => {
     const result = evaluatePriceChangeGuard({
       sku: "VM-1",

@@ -208,8 +208,8 @@ function applyGuitarSpecifications(
 /** When a product has one default variant, keep it aligned with top-level price/stock edits. */
 export function syncDefaultVariantPatch(
   variants: NonNullable<CreateProductInput["variants"]>,
-  price: number,
-  stock: number,
+  price?: number,
+  stock?: number,
 ): NonNullable<CreateProductInput["variants"]> {
   if (variants.length !== 1) return variants;
   const only = variants[0];
@@ -217,8 +217,8 @@ export function syncDefaultVariantPatch(
   return [
     {
       ...only,
-      price,
-      stock,
+      price: price ?? only.price,
+      stock: stock ?? only.stock,
       isDefault: only.isDefault ?? true,
     },
   ];
@@ -1679,9 +1679,9 @@ export async function updateProduct(
 
   if (patch.variants !== undefined) {
     const existingSkus = await fetchAllVariantSkus(id);
-    const variantsForWrite = syncDefaultVariantPatch(patch.variants, price, stock);
+    const variantsForWrite = syncDefaultVariantPatch(patch.variants, patch.price, patch.stock);
     const withVariants = applyVariantsToProduct(
-      { ...updated, detail: preservedDetail, price, stock },
+      { ...updated, detail: preservedDetail, price, stock, originalPrice },
       variantsForWrite,
       existingSkus,
     );
@@ -1689,11 +1689,12 @@ export async function updateProduct(
       ...preservedDetail,
       ...withVariants.detail,
       specs: withVariants.detail?.specs ?? preservedDetail.specs,
-      msrp: originalPrice > withVariants.price ? originalPrice : null,
-      salePrice: originalPrice > withVariants.price ? withVariants.price : null,
+      msrp: withVariants.originalPrice > withVariants.price ? withVariants.originalPrice : null,
+      salePrice: withVariants.originalPrice > withVariants.price ? withVariants.price : null,
     };
     updated.price = withVariants.price;
-    updated.discountPercentage = computeDiscount(withVariants.price, updated.originalPrice);
+    updated.originalPrice = withVariants.originalPrice;
+    updated.discountPercentage = withVariants.discountPercentage;
     updated.stock = withVariants.stock;
     updated.availability = withVariants.availability;
   } else if (

@@ -77,7 +77,7 @@ function invoicePdfStatus(): IntegrationStatus {
 export function getIntegrationChecks(): IntegrationChecks {
   return {
     database: isPostgresConfigured() ? "ok" : "missing",
-    auth: secretWithMinLength(process.env.AUTH_SECRET, 32),
+    auth: secretWithMinLength(process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET, 32),
     smtp: isSmtpConfigured() ? "ok" : "missing",
     razorpay:
       isRazorpayConfigured() &&
@@ -97,7 +97,10 @@ export function getIntegrationChecks(): IntegrationChecks {
     googleOAuth: isGoogleAuthConfigured() ? "ok" : "missing",
     places: isAddressAutocompleteConfigured() ? "ok" : "missing",
     invoicePdf: invoicePdfStatus(),
-    guestOrderSecret: secretWithMinLength(process.env.GUEST_ORDER_ACCESS_SECRET, 32),
+    guestOrderSecret: secretWithMinLength(
+      process.env.GUEST_ORDER_ACCESS_SECRET ?? process.env.INVOICE_ACCESS_SECRET,
+      32,
+    ),
     analyticsClient: isClientAnalyticsConfigured() ? "ok" : "missing",
     analyticsServer: isServerAnalyticsConfigured()
       ? "ok"

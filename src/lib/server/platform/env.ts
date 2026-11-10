@@ -80,6 +80,10 @@ export function isRazorpayConfigured(): boolean {
 /** Throw if production/vibemusic tries to charge with test keys. */
 export function assertLiveRazorpayKeys(): void {
   if (!requiresLiveRazorpay()) return;
+  const misconfigured = describeRazorpayMisconfiguration();
+  if (misconfigured) {
+    throw new Error(`Razorpay misconfigured: ${misconfigured}`);
+  }
   const mode = getRazorpayKeyMode();
   if (mode === "live") return;
   throw new Error(

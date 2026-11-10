@@ -35,6 +35,18 @@ export function evaluatePriceChangeGuard(
         reason: "Sale price must be a non-negative number.",
       };
     }
+    if (!Number.isFinite(mrp) || mrp < 0) {
+      return {
+        allowed: false,
+        reason: "MRP must be a non-negative number.",
+      };
+    }
+    if (nextPrice > mrp) {
+      return {
+        allowed: false,
+        reason: "Sale price cannot exceed MRP.",
+      };
+    }
     return { allowed: true };
   }
 

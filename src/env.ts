@@ -3,6 +3,22 @@ import { z } from "zod";
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_META_PIXEL_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_GTM_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_CDN_PUBLIC_BASE_URL: z.string().min(1).optional(),
+  NEXT_PUBLIC_ENABLE_PWA: z.enum(["true", "false"]).optional(),
+  NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH: z.enum(["true", "false"]).optional(),
+  NEXT_PUBLIC_ENABLE_SPLASH_CURSOR: z.enum(["true", "false"]).optional(),
+  NEXT_PUBLIC_CRISP_WEBSITE_ID: z.string().min(1).optional(),
+  NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: z.string().min(1).optional(),
+  NEXT_PUBLIC_META_DOMAIN_VERIFICATION: z.string().min(1).optional(),
+  NEXT_PUBLIC_STORE_PHONE: z.string().min(1).optional(),
+  NEXT_PUBLIC_GSTIN: z.string().min(1).optional(),
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_WEB_VITALS_ENDPOINT: z.string().min(1).optional(),
+  NEXT_PUBLIC_INVOICE_PDF_ENABLED: z.enum(["true", "false"]).optional(),
 });
 
 const serverEnvSchema = z.object({
@@ -40,6 +56,23 @@ const serverEnvSchema = z.object({
   GOOGLE_PLACES_API_KEY: z.string().min(1).optional(),
   DATABASE_URL: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
+  META_CAPI_ACCESS_TOKEN: z.string().min(1).optional(),
+  META_TEST_EVENT_CODE: z.string().min(1).optional(),
+  GA_MEASUREMENT_API_SECRET: z.string().min(1).optional(),
+  GA_MEASUREMENT_ID: z.string().min(1).optional(),
+  GTM_ID: z.string().min(1).optional(),
+  VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+  VAPID_SUBJECT: z.string().min(1).optional(),
+  STORE_GSTIN: z.string().min(1).optional(),
+  STORE_PHONE: z.string().min(1).optional(),
+  SMS_PROVIDER: z.string().min(1).optional(),
+  MSG91_AUTH_KEY: z.string().min(1).optional(),
+  MSG91_SENDER_ID: z.string().min(1).optional(),
+  WHATSAPP_TOKEN: z.string().min(1).optional(),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().min(1).optional(),
+  ALLOW_LARGE_PRICE_CHANGES: z.string().min(1).optional(),
+  ALLOW_JSON_CATALOG_FALLBACK: z.string().min(1).optional(),
+  E2E_TEST_MODE: z.enum(["true", "false"]).optional(),
 });
 
 const productionRequiredSchema = z.object({
@@ -90,6 +123,31 @@ export function validateEnv(): void {
   const publicResult = publicEnvSchema.safeParse({
     NEXT_PUBLIC_SITE_URL: envValue(process.env.NEXT_PUBLIC_SITE_URL),
     NEXT_PUBLIC_RAZORPAY_KEY_ID: envValue(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
+    NEXT_PUBLIC_META_PIXEL_ID: envValue(process.env.NEXT_PUBLIC_META_PIXEL_ID),
+    NEXT_PUBLIC_GA_MEASUREMENT_ID: envValue(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID),
+    NEXT_PUBLIC_GTM_ID: envValue(process.env.NEXT_PUBLIC_GTM_ID),
+    NEXT_PUBLIC_CDN_PUBLIC_BASE_URL: envValue(process.env.NEXT_PUBLIC_CDN_PUBLIC_BASE_URL),
+    NEXT_PUBLIC_ENABLE_PWA: envValue(process.env.NEXT_PUBLIC_ENABLE_PWA) as
+      "true" | "false" | undefined,
+    NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH: envValue(
+      process.env.NEXT_PUBLIC_ENABLE_PAGE_LOAD_SPLASH,
+    ) as "true" | "false" | undefined,
+    NEXT_PUBLIC_ENABLE_SPLASH_CURSOR: envValue(process.env.NEXT_PUBLIC_ENABLE_SPLASH_CURSOR) as
+      "true" | "false" | undefined,
+    NEXT_PUBLIC_CRISP_WEBSITE_ID: envValue(process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID),
+    NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: envValue(
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    ),
+    NEXT_PUBLIC_META_DOMAIN_VERIFICATION: envValue(
+      process.env.NEXT_PUBLIC_META_DOMAIN_VERIFICATION,
+    ),
+    NEXT_PUBLIC_STORE_PHONE: envValue(process.env.NEXT_PUBLIC_STORE_PHONE),
+    NEXT_PUBLIC_GSTIN: envValue(process.env.NEXT_PUBLIC_GSTIN),
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: envValue(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY),
+    NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY: envValue(process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY),
+    NEXT_PUBLIC_WEB_VITALS_ENDPOINT: envValue(process.env.NEXT_PUBLIC_WEB_VITALS_ENDPOINT),
+    NEXT_PUBLIC_INVOICE_PDF_ENABLED: envValue(process.env.NEXT_PUBLIC_INVOICE_PDF_ENABLED) as
+      "true" | "false" | undefined,
   });
 
   if (!publicResult.success) {
@@ -134,6 +192,23 @@ export function validateEnv(): void {
     GOOGLE_PLACES_API_KEY: envValue(process.env.GOOGLE_PLACES_API_KEY),
     DATABASE_URL: envValue(process.env.DATABASE_URL),
     RESEND_API_KEY: envValue(process.env.RESEND_API_KEY),
+    META_CAPI_ACCESS_TOKEN: envValue(process.env.META_CAPI_ACCESS_TOKEN),
+    META_TEST_EVENT_CODE: envValue(process.env.META_TEST_EVENT_CODE),
+    GA_MEASUREMENT_API_SECRET: envValue(process.env.GA_MEASUREMENT_API_SECRET),
+    GA_MEASUREMENT_ID: envValue(process.env.GA_MEASUREMENT_ID),
+    GTM_ID: envValue(process.env.GTM_ID),
+    VAPID_PRIVATE_KEY: envValue(process.env.VAPID_PRIVATE_KEY),
+    VAPID_SUBJECT: envValue(process.env.VAPID_SUBJECT),
+    STORE_GSTIN: envValue(process.env.STORE_GSTIN),
+    STORE_PHONE: envValue(process.env.STORE_PHONE),
+    SMS_PROVIDER: envValue(process.env.SMS_PROVIDER),
+    MSG91_AUTH_KEY: envValue(process.env.MSG91_AUTH_KEY),
+    MSG91_SENDER_ID: envValue(process.env.MSG91_SENDER_ID),
+    WHATSAPP_TOKEN: envValue(process.env.WHATSAPP_TOKEN),
+    WHATSAPP_PHONE_NUMBER_ID: envValue(process.env.WHATSAPP_PHONE_NUMBER_ID),
+    ALLOW_LARGE_PRICE_CHANGES: envValue(process.env.ALLOW_LARGE_PRICE_CHANGES),
+    ALLOW_JSON_CATALOG_FALLBACK: envValue(process.env.ALLOW_JSON_CATALOG_FALLBACK),
+    E2E_TEST_MODE: envValue(process.env.E2E_TEST_MODE) as "true" | "false" | undefined,
   });
 
   if (!serverResult.success) {
