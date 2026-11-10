@@ -415,11 +415,7 @@ export default function CheckoutPageContent() {
     onlineChannel,
     checkoutMode: isBuyNowMode ? "buyNow" : "cart",
     disabled: step !== "payment" || !resolvedAddress || !hasValidContact,
-    prefetchEnabled:
-      step === "payment" &&
-      effectivePaymentMethod === "razorpay" &&
-      Boolean(resolvedAddress) &&
-      hasValidContact,
+    prefetchEnabled: false,
   });
 
   useEffect(() => {

@@ -126,29 +126,11 @@ export function useCheckoutPayment({
   ]);
 
   useEffect(() => {
-    if (!prefetchEnabled || paymentMethod !== "razorpay" || disabled) {
-      prefetchRef.current = null;
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      const payload = buildPayload();
-      const key = orderPayloadKey(payload);
-
-      if (prefetchRef.current?.key === key) {
-        return;
-      }
-
+    prefetchRef.current = null;
+    if (paymentMethod === "razorpay" && !disabled) {
       void ensureRazorpayScriptLoaded().catch(() => undefined);
-
-      prefetchRef.current = {
-        key,
-        promise: createPaymentOrder(payload),
-      };
-    }, 350);
-
-    return () => window.clearTimeout(timer);
-  }, [prefetchEnabled, paymentMethod, disabled, buildPayload]);
+    }
+  }, [paymentMethod, disabled]);
 
   const goToOrderConfirmation = useCallback(
     (orderId: string, trackingToken?: string, orderEmail?: string) => {

@@ -5,6 +5,7 @@ import {
   getRazorpayPublicKey,
   assertLiveRazorpayKeys,
 } from "@/lib/server/env";
+import { createRazorpayOrder, fetchRazorpayOrder } from "@/lib/server/payments/razorpayClient";
 import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
 import {
   calculateGST,
@@ -182,28 +183,16 @@ async function createRazorpayPaymentOrder(
   payload: CreateOrderPayload,
   orderId: string,
 ): Promise<string> {
-  const razorpay = getRazorpayInstance();
-  try {
-    const razorpayOrder = (await withTimeout(
-      razorpay.orders.create({
-        amount: toPaise(order.total),
-        currency: "INR",
-        receipt: orderId,
-        notes: {
-          email: payload.email,
-          orderId,
-        },
-      }),
-      15000,
-      "Razorpay order.create",
-    )) as { id: string };
-    return razorpayOrder.id;
-  } catch (razorpayError) {
-    const description = extractRazorpayError(razorpayError);
-    throw new Error(
-      description ? `Razorpay: ${description}` : "Unable to create Razorpay payment order",
-    );
-  }
+  const result = await createRazorpayOrder({
+    amountPaise: toPaise(order.total),
+    currency: "INR",
+    receipt: orderId,
+    notes: {
+      email: payload.email,
+      orderId,
+    },
+  });
+  return result.id;
 }
 
 export async function createOrder(
@@ -338,12 +327,7 @@ export function verifyRazorpaySignature(
 }
 
 export async function fetchRazorpayOrderAmountPaise(razorpayOrderId: string): Promise<number> {
-  const razorpay = getRazorpayInstance();
-  const remote = (await withTimeout(
-    razorpay.orders.fetch(razorpayOrderId),
-    15000,
-    "Razorpay orders.fetch",
-  )) as { amount?: number };
+  const remote = await fetchRazorpayOrder(razorpayOrderId);
   if (typeof remote.amount !== "number" || remote.amount <= 0) {
     throw new Error("Unable to read Razorpay order amount");
   }

@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import Razorpay from "razorpay";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
+import { createRazorpayOrder } from "@/lib/server/payments/razorpayClient";
 import { toPaise } from "@/lib/gstCalculator";
 import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
 import { isProductAvailable } from "@/lib/rental/availabilityEngine";
@@ -255,9 +256,8 @@ export async function createRentalBooking(
       return { booking: confirmed, demoPaymentAllowed: true };
     }
 
-    const razorpay = getRazorpayInstance();
-    const order = await razorpay.orders.create({
-      amount: toPaise(totals.total),
+    const order = await createRazorpayOrder({
+      amountPaise: toPaise(totals.total),
       currency: "INR",
       receipt: bookingNumber,
       notes: { rentalBookingId: bookingId, type: "rental" },

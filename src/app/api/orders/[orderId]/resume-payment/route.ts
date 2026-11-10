@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import Razorpay from "razorpay";
 import { getSessionUser } from "@/lib/auth/server-session";
 import { getAdminSession } from "@/lib/server/adminService";
 import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
-import { withTimeout } from "@/lib/server/withTimeout";
 import {
   assertLiveRazorpayKeys,
   getRazorpayPublicKey,
   isRazorpayConfigured,
 } from "@/lib/server/env";
+import { createRazorpayOrder } from "@/lib/server/payments/razorpayClient";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
 import { toPaise } from "@/lib/gstCalculator";
@@ -86,27 +85,16 @@ export async function POST(request: Request, context: { params: Promise<{ orderI
       return NextResponse.json({ error: "Payment gateway unavailable." }, { status: 503 });
     }
 
-    assertLiveRazorpayKeys();
-
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID!,
-      key_secret: process.env.RAZORPAY_KEY_SECRET!,
+    const razorpayOrder = await createRazorpayOrder({
+      amountPaise: toPaise(order.total),
+      currency: "INR",
+      receipt: order.id,
+      notes: {
+        email: order.email,
+        orderId: order.id,
+        resumed: "true",
+      },
     });
-
-    const razorpayOrder = (await withTimeout(
-      razorpay.orders.create({
-        amount: toPaise(order.total),
-        currency: "INR",
-        receipt: order.id,
-        notes: {
-          email: order.email,
-          orderId: order.id,
-          resumed: "true",
-        },
-      }),
-      15000,
-      "Razorpay order.create (resume)",
-    )) as { id: string; amount: number; currency: string };
 
     await updateOrderFields(order.id, {
       razorpayOrderId: razorpayOrder.id,

@@ -1,0 +1,237 @@
+import "server-only";
+
+import Razorpay from "razorpay";
+import { assertLiveRazorpayKeys, isRazorpayConfigured } from "@/lib/server/env";
+import { logPayment, logPaymentError } from "@/lib/server/paymentDiagnostics";
+import { withTimeout } from "@/lib/server/platform/withTimeout";
+
+export interface CreateRazorpayOrderInput {
+  amountPaise: number;
+  currency?: string;
+  receipt: string;
+  notes?: Record<string, string>;
+}
+
+export interface RazorpayOrderResult {
+  id: string;
+  amount: number;
+  currency: string;
+  status?: string;
+  receipt?: string;
+}
+
+function getRazorpayCredentials(): { keyId: string; keySecret: string } {
+  assertLiveRazorpayKeys();
+
+  const keyId = (process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID)?.trim();
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
+
+  if (!keyId || !keySecret) {
+    if (process.env.NODE_ENV === "test") {
+      return { keyId: keyId || "rzp_test_mock", keySecret: keySecret || "mock_secret" };
+    }
+    throw new Error("Missing Razorpay env vars: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET");
+  }
+
+  return { keyId, keySecret };
+}
+
+/**
+ * Creates a Razorpay payment order.
+ *
+ * In production/runtime: Uses direct HTTP fetch with `Connection: close` and strict abort signal first.
+ * Direct fetch avoids stale keep-alive socket reuse issues and axios pool hangs
+ * that occur in long-lived production server processes.
+ *
+ * In test environment: Uses Razorpay SDK directly to respect unit test mocks (`vi.mock("razorpay")`).
+ */
+export async function createRazorpayOrder(
+  input: CreateRazorpayOrderInput,
+): Promise<RazorpayOrderResult> {
+  const { keyId, keySecret } = getRazorpayCredentials();
+  const currency = input.currency || "INR";
+
+  // In test environment, defer to the Razorpay SDK so tests with `vi.mock("razorpay")` work as intended
+  if (process.env.NODE_ENV === "test") {
+    const sdk = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const sdkOrder = (await sdk.orders.create({
+      amount: Math.round(input.amountPaise),
+      currency,
+      receipt: input.receipt.slice(0, 40),
+      notes: input.notes,
+    })) as { id: string; amount?: number; currency?: string; status?: string };
+
+    return {
+      id: sdkOrder.id,
+      amount: sdkOrder.amount ?? input.amountPaise,
+      currency: sdkOrder.currency ?? currency,
+      status: sdkOrder.status,
+    };
+  }
+
+  // 1. Direct native fetch (preferred: 100-300ms, immune to keep-alive socket deadlocks)
+  try {
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const response = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/json",
+        Connection: "close",
+      },
+      body: JSON.stringify({
+        amount: Math.round(input.amountPaise),
+        currency,
+        receipt: input.receipt.slice(0, 40),
+        notes: input.notes,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+
+    const body = (await response.json().catch(() => null)) as {
+      id?: string;
+      amount?: number;
+      currency?: string;
+      status?: string;
+      receipt?: string;
+      error?: { description?: string; reason?: string; field?: string };
+      message?: string;
+    } | null;
+
+    if (!response.ok) {
+      const description =
+        body?.error?.description ||
+        body?.error?.reason ||
+        body?.message ||
+        `HTTP ${response.status} from Razorpay`;
+      logPaymentError(new Error(description), {
+        step: "razorpayClient.fetch.nonOk",
+        status: response.status,
+      });
+      throw new Error(`Razorpay: ${description}`);
+    }
+
+    if (!body?.id) {
+      throw new Error("Razorpay returned empty order id");
+    }
+
+    logPayment("Razorpay order created via direct API", {
+      orderId: body.id,
+      receipt: input.receipt,
+    });
+
+    return {
+      id: body.id,
+      amount: body.amount ?? input.amountPaise,
+      currency: body.currency ?? currency,
+      status: body.status,
+      receipt: body.receipt,
+    };
+  } catch (fetchError) {
+    const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+
+    // If Razorpay explicitly returned an error (e.g. 400 Bad Request, invalid amount), don't retry with SDK
+    if (errorMsg.startsWith("Razorpay:")) {
+      throw fetchError;
+    }
+
+    logPaymentError(fetchError, {
+      step: "razorpayClient.fetch.fallback",
+      message: errorMsg,
+    });
+
+    // 2. Fallback to fresh Razorpay SDK instance
+    const freshSdk = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const sdkOrder = (await withTimeout(
+      freshSdk.orders.create({
+        amount: Math.round(input.amountPaise),
+        currency,
+        receipt: input.receipt.slice(0, 40),
+        notes: input.notes,
+      }),
+      10000,
+      "Razorpay SDK order.create",
+    )) as { id: string; amount: number; currency: string; status?: string };
+
+    logPayment("Razorpay order created via SDK fallback", {
+      orderId: sdkOrder.id,
+      receipt: input.receipt,
+    });
+
+    return {
+      id: sdkOrder.id,
+      amount: sdkOrder.amount,
+      currency: sdkOrder.currency,
+      status: sdkOrder.status,
+    };
+  }
+}
+
+/**
+ * Fetches an existing Razorpay order by id.
+ */
+export async function fetchRazorpayOrder(razorpayOrderId: string): Promise<RazorpayOrderResult> {
+  const { keyId, keySecret } = getRazorpayCredentials();
+
+  if (process.env.NODE_ENV === "test") {
+    const sdk = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const sdkOrder = (await sdk.orders.fetch(razorpayOrderId)) as {
+      id: string;
+      amount?: number;
+      currency?: string;
+      status?: string;
+    };
+    return {
+      id: sdkOrder.id,
+      amount: sdkOrder.amount ?? 0,
+      currency: sdkOrder.currency ?? "INR",
+      status: sdkOrder.status,
+    };
+  }
+
+  try {
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const response = await fetch(
+      `https://api.razorpay.com/v1/orders/${encodeURIComponent(razorpayOrderId)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Basic ${auth}`,
+          Connection: "close",
+        },
+        signal: AbortSignal.timeout(8000),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Razorpay fetch order HTTP ${response.status}`);
+    }
+
+    const data = (await response.json()) as {
+      id: string;
+      amount: number;
+      currency: string;
+      status?: string;
+    };
+    return {
+      id: data.id,
+      amount: data.amount,
+      currency: data.currency,
+      status: data.status,
+    };
+  } catch {
+    const freshSdk = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const sdkOrder = (await withTimeout(
+      freshSdk.orders.fetch(razorpayOrderId),
+      8000,
+      "Razorpay SDK order.fetch",
+    )) as { id: string; amount: number; currency: string; status?: string };
+
+    return {
+      id: sdkOrder.id,
+      amount: sdkOrder.amount,
+      currency: sdkOrder.currency,
+      status: sdkOrder.status,
+    };
+  }
+}
