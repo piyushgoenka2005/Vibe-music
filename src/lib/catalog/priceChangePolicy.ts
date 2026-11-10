@@ -29,10 +29,10 @@ export function evaluatePriceChangeGuard(
     options?.role === "admin";
 
   if (isPrivilegedAdmin) {
-    if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
+    if (!Number.isFinite(nextPrice) || nextPrice < 0) {
       return {
         allowed: false,
-        reason: "Sale price must be a positive number.",
+        reason: "Sale price must be a non-negative number.",
       };
     }
     return { allowed: true };

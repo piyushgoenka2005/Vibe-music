@@ -65,4 +65,59 @@ describe("evaluatePriceChangeGuard", () => {
       ).allowed,
     ).toBe(true);
   });
+
+  it("allows privileged admins to set price to 0 for Coming Soon products", () => {
+    expect(
+      evaluatePriceChangeGuard(
+        {
+          sku: "VM-1",
+          previousPrice: 10_000,
+          nextPrice: 0,
+          mrp: 12_000,
+        },
+        { role: "admin" },
+      ).allowed,
+    ).toBe(true);
+
+    expect(
+      evaluatePriceChangeGuard(
+        {
+          sku: "VM-1",
+          previousPrice: 10_000,
+          nextPrice: 0,
+          mrp: 12_000,
+        },
+        { role: "super_admin" },
+      ).allowed,
+    ).toBe(true);
+  });
+
+  it("rejects negative prices even for privileged admins", () => {
+    const result = evaluatePriceChangeGuard(
+      {
+        sku: "VM-1",
+        previousPrice: 10_000,
+        nextPrice: -500,
+        mrp: 12_000,
+      },
+      { role: "admin" },
+    );
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.reason).toContain("non-negative");
+    }
+  });
+
+  it("requires manager approval for 0 price when unprivileged", () => {
+    const result = evaluatePriceChangeGuard({
+      sku: "VM-1",
+      previousPrice: 10_000,
+      nextPrice: 0,
+      mrp: 12_000,
+    });
+    expect(result.allowed).toBe(false);
+    if (!result.allowed) {
+      expect(result.requiresApproval).toBe(true);
+    }
+  });
 });

@@ -8,6 +8,7 @@ const publicEnvSchema = z.object({
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   AUTH_SECRET: z.string().min(1).optional(),
+  NEXTAUTH_SECRET: z.string().min(1).optional(),
   AUTH_URL: z.string().url().optional(),
   AUTH_GOOGLE_ID: z.string().min(1).optional(),
   AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
@@ -32,7 +33,11 @@ const serverEnvSchema = z.object({
   SMTP_ADMIN_TO: z.string().email().optional(),
   ADMIN_NOTIFICATION_EMAIL: z.string().email().optional(),
   GUEST_ORDER_ACCESS_SECRET: z.string().min(1).optional(),
+  INVOICE_ACCESS_SECRET: z.string().min(1).optional(),
   ALLOW_DEMO_PAYMENTS: z.enum(["true", "false"]).optional(),
+  ALLOW_TEST_RAZORPAY: z.enum(["true", "false"]).optional(),
+  METRICS_SCRAPE_TOKEN: z.string().min(1).optional(),
+  GOOGLE_PLACES_API_KEY: z.string().min(1).optional(),
   DATABASE_URL: z.string().min(1).optional(),
   RESEND_API_KEY: z.string().min(1).optional(),
 });
@@ -93,7 +98,8 @@ export function validateEnv(): void {
 
   const serverResult = serverEnvSchema.safeParse({
     NODE_ENV: process.env.NODE_ENV,
-    AUTH_SECRET: envValue(process.env.AUTH_SECRET),
+    AUTH_SECRET: envValue(process.env.AUTH_SECRET) ?? envValue(process.env.NEXTAUTH_SECRET),
+    NEXTAUTH_SECRET: envValue(process.env.NEXTAUTH_SECRET),
     AUTH_URL: envValue(process.env.AUTH_URL),
     AUTH_GOOGLE_ID: envValue(process.env.AUTH_GOOGLE_ID),
     AUTH_GOOGLE_SECRET: envValue(process.env.AUTH_GOOGLE_SECRET),
@@ -118,8 +124,14 @@ export function validateEnv(): void {
       "true" | "false" | undefined,
     SMTP_ADMIN_TO: envValue(process.env.SMTP_ADMIN_TO),
     ADMIN_NOTIFICATION_EMAIL: envValue(process.env.ADMIN_NOTIFICATION_EMAIL),
-    GUEST_ORDER_ACCESS_SECRET: envValue(process.env.GUEST_ORDER_ACCESS_SECRET),
+    GUEST_ORDER_ACCESS_SECRET:
+      envValue(process.env.GUEST_ORDER_ACCESS_SECRET) ??
+      envValue(process.env.INVOICE_ACCESS_SECRET),
+    INVOICE_ACCESS_SECRET: envValue(process.env.INVOICE_ACCESS_SECRET),
     ALLOW_DEMO_PAYMENTS: envValue(process.env.ALLOW_DEMO_PAYMENTS) as "true" | "false" | undefined,
+    ALLOW_TEST_RAZORPAY: envValue(process.env.ALLOW_TEST_RAZORPAY) as "true" | "false" | undefined,
+    METRICS_SCRAPE_TOKEN: envValue(process.env.METRICS_SCRAPE_TOKEN),
+    GOOGLE_PLACES_API_KEY: envValue(process.env.GOOGLE_PLACES_API_KEY),
     DATABASE_URL: envValue(process.env.DATABASE_URL),
     RESEND_API_KEY: envValue(process.env.RESEND_API_KEY),
   });
@@ -131,13 +143,15 @@ export function validateEnv(): void {
   if (serverResult.data.NODE_ENV === "production" && !isProductionBuildPhase()) {
     const productionResult = productionRequiredSchema.safeParse({
       NEXT_PUBLIC_SITE_URL: envValue(process.env.NEXT_PUBLIC_SITE_URL),
-      AUTH_SECRET: envValue(process.env.AUTH_SECRET),
+      AUTH_SECRET: envValue(process.env.AUTH_SECRET) ?? envValue(process.env.NEXTAUTH_SECRET),
       DATABASE_URL: envValue(process.env.DATABASE_URL),
       NEXT_PUBLIC_RAZORPAY_KEY_ID: envValue(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID),
       RAZORPAY_KEY_ID: envValue(process.env.RAZORPAY_KEY_ID),
       RAZORPAY_KEY_SECRET: envValue(process.env.RAZORPAY_KEY_SECRET),
       RAZORPAY_WEBHOOK_SECRET: envValue(process.env.RAZORPAY_WEBHOOK_SECRET),
-      GUEST_ORDER_ACCESS_SECRET: envValue(process.env.GUEST_ORDER_ACCESS_SECRET),
+      GUEST_ORDER_ACCESS_SECRET:
+        envValue(process.env.GUEST_ORDER_ACCESS_SECRET) ??
+        envValue(process.env.INVOICE_ACCESS_SECRET),
       SMTP_HOST:
         envValue(process.env.SMTP_HOST) ??
         (envValue(process.env.RESEND_API_KEY) ? "smtp.resend.com" : undefined),

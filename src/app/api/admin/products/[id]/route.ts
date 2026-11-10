@@ -16,7 +16,11 @@ export async function GET(_request: Request, context: RouteContext) {
   try {
     await requireAdmin("products:read");
     const { id } = await context.params;
-    const product = await getAdminProduct(id);
+    const productId = id?.trim();
+    if (!productId) {
+      return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+    }
+    const product = await getAdminProduct(productId);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
@@ -30,16 +34,20 @@ export async function PUT(request: Request, context: RouteContext) {
   try {
     const admin = await requireAdmin("products:write", request);
     const { id } = await context.params;
+    const productId = id?.trim();
+    if (!productId) {
+      return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+    }
     const body = await request.json();
     const validated = adminProductSchema.partial().parse(body);
     const parsed = await mirrorProductImageFields(
       validated,
       productUploadFolder(
         validated.categorySlug ?? validated.category ?? "general",
-        validated.slug ?? id,
+        validated.slug ?? productId,
       ),
     );
-    const product = await updateAdminProduct(id, parsed, {
+    const product = await updateAdminProduct(productId, parsed, {
       actorId: admin.uid,
       actorEmail: admin.email,
       actorRole: admin.role,
@@ -56,7 +64,11 @@ export async function DELETE(_request: Request, context: RouteContext) {
   try {
     await requireAdmin("products:delete", _request);
     const { id } = await context.params;
-    await deleteAdminProduct(id);
+    const productId = id?.trim();
+    if (!productId) {
+      return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+    }
+    await deleteAdminProduct(productId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     if (error instanceof Error && error.message === "Product not found") {
@@ -81,9 +93,13 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     await requireAdmin("products:write", request);
     const { id } = await context.params;
+    const productId = id?.trim();
+    if (!productId) {
+      return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
+    }
     const body = await request.json();
     adminProductDuplicateActionSchema.parse(body);
-    const product = await duplicateAdminProduct(id);
+    const product = await duplicateAdminProduct(productId);
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {
     return adminErrorResponse(error);

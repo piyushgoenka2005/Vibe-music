@@ -1610,7 +1610,7 @@ export async function updateProduct(
 
   const stock = patch.stock ?? current.stock;
   const price = patch.price ?? current.price;
-  const originalPrice = patch.originalPrice ?? current.originalPrice;
+  const originalPrice = Math.max(patch.originalPrice ?? current.originalPrice, price);
 
   const nextSpecifications = applyGuitarSpecifications(
     patch.name ?? current.name,
@@ -1693,6 +1693,7 @@ export async function updateProduct(
       salePrice: originalPrice > withVariants.price ? withVariants.price : null,
     };
     updated.price = withVariants.price;
+    updated.discountPercentage = computeDiscount(withVariants.price, updated.originalPrice);
     updated.stock = withVariants.stock;
     updated.availability = withVariants.availability;
   } else if (
