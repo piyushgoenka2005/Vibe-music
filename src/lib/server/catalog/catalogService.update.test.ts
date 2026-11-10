@@ -29,7 +29,7 @@ import {
   resolveCatalogImageUrls,
   syncDefaultVariantPatch,
   updateProduct,
-} from "@/services/catalogService";
+} from "./catalogService";
 
 const baseProduct: CatalogProduct = {
   id: "prod-1",
@@ -157,5 +157,38 @@ describe("catalog product image updates", () => {
     expect(saved?.discountPercentage).toBe(0);
     expect(saved?.detail?.msrp).toBeNull();
     expect(saved?.detail?.salePrice).toBeNull();
+  });
+
+  it("lifts originalPrice to cover higher-priced non-default variants in multi-variant product", async () => {
+    await updateProduct("prod-1", {
+      variants: [
+        {
+          id: "var-std",
+          label: "Standard",
+          sku: "VM-BOSS-GX100-STD",
+          price: 10000,
+          stock: 5,
+          attributes: [],
+          isDefault: true,
+        },
+        {
+          id: "var-custom",
+          label: "Custom",
+          sku: "VM-BOSS-GX100-CUST",
+          price: 18000,
+          stock: 2,
+          attributes: [],
+          isDefault: false,
+        },
+      ],
+    });
+
+    expect(writeProduct).toHaveBeenCalledTimes(1);
+    const saved = vi.mocked(writeProduct).mock.calls[0]?.[0];
+    expect(saved?.price).toBe(10000);
+    expect(saved?.originalPrice).toBe(18000);
+    expect(saved?.discountPercentage).toBe(44);
+    expect(saved?.detail?.msrp).toBe(18000);
+    expect(saved?.detail?.salePrice).toBe(10000);
   });
 });
