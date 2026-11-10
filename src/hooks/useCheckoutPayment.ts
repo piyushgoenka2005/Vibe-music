@@ -75,7 +75,7 @@ export function useCheckoutPayment({
   paymentMethod,
   onlineChannel = "upi",
   disabled = false,
-  prefetchEnabled = false,
+  prefetchEnabled: _prefetchEnabled = false,
   checkoutMode = "cart",
 }: UseCheckoutPaymentOptions) {
   const router = useRouter();

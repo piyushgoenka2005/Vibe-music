@@ -1,10 +1,5 @@
-import Razorpay from "razorpay";
 import { cache } from "react";
-import {
-  isRazorpayConfigured,
-  getRazorpayPublicKey,
-  assertLiveRazorpayKeys,
-} from "@/lib/server/env";
+import { isRazorpayConfigured, getRazorpayPublicKey } from "@/lib/server/env";
 import { createRazorpayOrder, fetchRazorpayOrder } from "@/lib/server/payments/razorpayClient";
 import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
 import {
@@ -21,13 +16,8 @@ import { notifyAdminNewOrder } from "@/lib/server/orderNotificationService";
 import { resolveAuthoritativeShippingCharge } from "@/lib/server/shippingQuoteService";
 import { reserveStockForOrder, releaseReservedStockForOrder } from "@/lib/server/inventoryService";
 import { completeOrderPayment } from "@/lib/server/orderPaymentService";
-import { withTimeout } from "@/lib/server/withTimeout";
 import { allocateNextOrderId } from "@/lib/server/orderIdGenerator";
-import {
-  logPayment,
-  logPaymentError,
-  logRazorpayEnvPresence,
-} from "@/lib/server/paymentDiagnostics";
+import { logPayment, logPaymentError } from "@/lib/server/paymentDiagnostics";
 import {
   fetchOrderById,
   listOrdersForUser as listStoredOrdersForUser,
@@ -48,45 +38,6 @@ import type {
 } from "@/types/order";
 
 const PLATFORM_FEE = 0;
-
-let cachedRazorpayInstance: Razorpay | null = null;
-let cachedKeyId: string | undefined;
-
-function getRazorpayInstance(): Razorpay {
-  logRazorpayEnvPresence();
-  assertLiveRazorpayKeys();
-
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret) {
-    throw new Error("Missing Razorpay env vars: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET");
-  }
-
-  if (!cachedRazorpayInstance || cachedKeyId !== keyId) {
-    cachedRazorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-    cachedKeyId = keyId;
-    logPayment("Razorpay initialized");
-  }
-
-  return cachedRazorpayInstance;
-}
-
-function extractRazorpayError(error: unknown): string | null {
-  if (!error || typeof error !== "object") return null;
-  const record = error as {
-    error?: { description?: string; reason?: string };
-    description?: string;
-    message?: string;
-  };
-  return (
-    record.error?.description ??
-    record.error?.reason ??
-    record.description ??
-    record.message ??
-    null
-  );
-}
 
 function toInventoryLines(items: CreateOrderPayload["items"]): OrderInventoryLine[] {
   return items.map((item) => ({

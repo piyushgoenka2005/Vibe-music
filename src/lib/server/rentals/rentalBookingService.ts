@@ -1,7 +1,6 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import Razorpay from "razorpay";
 import { isDemoPaymentsAllowed, isRazorpayConfigured } from "@/lib/server/env";
 import { createRazorpayOrder } from "@/lib/server/payments/razorpayClient";
 import { toPaise } from "@/lib/gstCalculator";
@@ -39,15 +38,6 @@ import type {
 } from "@/types/rental";
 
 const LOCK_HOLD_MINUTES = 20;
-
-function getRazorpayInstance(): Razorpay {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keyId || !keySecret) {
-    throw new Error("Razorpay is not configured");
-  }
-  return new Razorpay({ key_id: keyId, key_secret: keySecret });
-}
 
 function canUseDemoPayments(): boolean {
   return isDemoPaymentsAllowed() && !isRazorpayConfigured();

@@ -1,7 +1,7 @@
 import "server-only";
 
 import Razorpay from "razorpay";
-import { assertLiveRazorpayKeys, isRazorpayConfigured } from "@/lib/server/env";
+import { assertLiveRazorpayKeys } from "@/lib/server/env";
 import { logPayment, logPaymentError } from "@/lib/server/paymentDiagnostics";
 import { withTimeout } from "@/lib/server/platform/withTimeout";
 

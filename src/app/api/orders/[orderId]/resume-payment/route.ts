@@ -4,11 +4,7 @@ import { getAdminSession } from "@/lib/server/adminService";
 import { enforceMutationSecurity, enforceRateLimit } from "@/lib/api/route-utils";
 import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { formatCheckoutError } from "@/lib/server/checkoutErrors";
-import {
-  assertLiveRazorpayKeys,
-  getRazorpayPublicKey,
-  isRazorpayConfigured,
-} from "@/lib/server/env";
+import { getRazorpayPublicKey, isRazorpayConfigured } from "@/lib/server/env";
 import { createRazorpayOrder } from "@/lib/server/payments/razorpayClient";
 import { canAccessOrder } from "@/lib/server/orderAccess";
 import { getOrderById } from "@/lib/server/orderService";
