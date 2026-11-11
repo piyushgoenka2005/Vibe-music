@@ -78,6 +78,9 @@ export const useCurrencyLocaleStore = create<CurrencyLocaleState>((set) => ({
   init: () => {
     const currency = getInitialCurrency();
     const locale = getInitialLocale();
+    if (typeof document !== "undefined" && document.documentElement) {
+      document.documentElement.lang = locale;
+    }
     set({ currency, locale, isInitialized: true });
   },
   setCurrency: (code: string) => {
@@ -99,6 +102,9 @@ export const useCurrencyLocaleStore = create<CurrencyLocaleState>((set) => ({
     try {
       localStorage.setItem(LOCALE_STORAGE_KEY, code);
       document.cookie = `vibe_locale=${code}; path=/; max-age=31536000; SameSite=Lax`;
+      if (typeof document !== "undefined" && document.documentElement) {
+        document.documentElement.lang = code;
+      }
       window.dispatchEvent(new CustomEvent("vibe:locale-change", { detail: { locale: code } }));
     } catch {
       // Ignore storage errors

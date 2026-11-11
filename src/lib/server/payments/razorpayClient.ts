@@ -36,12 +36,45 @@ function getRazorpayCredentials(): { keyId: string; keySecret: string } {
   return { keyId, keySecret };
 }
 
+let prewarmPromise: Promise<void> | null = null;
+
+/**
+ * Pre-warms the TCP connection and TLS session to Razorpay's API server.
+ * Calling this when a buyer enters the checkout funnel eliminates cold
+ * TLS handshake latency (~150-300ms) from the order creation path.
+ */
+export function prewarmRazorpayConnection(): void {
+  if (process.env.NODE_ENV === "test") return;
+  if (prewarmPromise) return;
+
+  prewarmPromise = (async () => {
+    try {
+      const res = await fetch("https://api.razorpay.com/v1/orders", {
+        method: "HEAD",
+        headers: {
+          Connection: "keep-alive",
+        },
+        signal: AbortSignal.timeout(3000),
+      }).catch(() => null);
+      if (res?.body) {
+        await res.body.cancel().catch(() => null);
+      }
+    } catch {
+      // Non-blocking prewarm
+    } finally {
+      // Re-warm periodically if checkout remains active
+      setTimeout(() => {
+        prewarmPromise = null;
+      }, 45_000);
+    }
+  })();
+}
+
 /**
  * Creates a Razorpay payment order.
  *
- * In production/runtime: Uses direct HTTP fetch with `Connection: close` and strict abort signal first.
- * Direct fetch avoids stale keep-alive socket reuse issues and axios pool hangs
- * that occur in long-lived production server processes.
+ * In production/runtime: Uses direct HTTP fetch with persistent keep-alive and strict abort signal first.
+ * Persistent keep-alive eliminates cold TCP/TLS handshakes to Razorpay edge servers (~150-300ms saving).
  *
  * In test environment: Uses Razorpay SDK directly to respect unit test mocks (`vi.mock("razorpay")`).
  */
@@ -92,7 +125,8 @@ export async function createRazorpayOrder(
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/json",
-        Connection: "close",
+        Connection: "keep-alive",
+        "Keep-Alive": "timeout=60, max=1000",
       },
       body: requestPayload,
       signal: AbortSignal.timeout(timeoutMs),
@@ -237,7 +271,8 @@ export async function fetchRazorpayOrder(
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
-          Connection: "close",
+          Connection: "keep-alive",
+          "Keep-Alive": "timeout=60, max=1000",
         },
         signal: AbortSignal.timeout(6000),
       },

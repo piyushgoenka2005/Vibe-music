@@ -23,7 +23,6 @@ import {
   listOrdersForUser as listStoredOrdersForUser,
   persistOrder,
   removeOrder,
-  updateOrderFields,
 } from "@/lib/server/orderRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import { isPlacedOrder } from "@/lib/server/orderAccess";
@@ -224,10 +223,6 @@ export async function createOrder(
     try {
       logPayment("Inventory reservation started (online)", { orderId });
       await reserveStockForOrder(orderId, inventoryLines);
-      await updateOrderFields(orderId, {
-        inventoryStatus: "reserved",
-        updatedAt: new Date().toISOString(),
-      });
       logPayment("Inventory reservation completed", { orderId });
     } catch (inventoryError) {
       logPaymentError(inventoryError, {

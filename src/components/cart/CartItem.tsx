@@ -6,7 +6,8 @@ import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { cartItemToProduct } from "@/lib/cart/cartItemToProduct";
 import { isPromoGiftLine } from "@/lib/cart/promoGift";
 import { productPath } from "@/lib/routes";
-import { formatCurrency, formatDisplayPrice } from "@/utils/currency";
+import { formatCurrency, formatDisplayPrice, useCurrency } from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import { useCartStore, type CartItem as CartItemType } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -22,6 +23,8 @@ function discountPercent(price: number, originalPrice?: number): number | null {
 }
 
 const CartItem = memo(function CartItem({ item, compact = false }: CartItemProps) {
+  const { format: formatPrice, formatDisplay } = useCurrency();
+  const { t } = useTranslation();
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const removeItem = useCartStore((s) => s.removeItem);
   const isUpdating = useCartStore((s) => s.isUpdating);
@@ -50,7 +53,7 @@ const CartItem = memo(function CartItem({ item, compact = false }: CartItemProps
     removeItem(item.lineId, { silent: true });
   }
 
-  const priceLabel = isGift ? "FREE" : formatDisplayPrice(item.price);
+  const priceLabel = isGift ? t("checkout.free", "FREE") : formatDisplay(item.price);
 
   return (
     <article
@@ -123,11 +126,11 @@ const CartItem = memo(function CartItem({ item, compact = false }: CartItemProps
           <div className="cart-item-card__price-col">
             <div className="cart-item-card__price">{priceLabel}</div>
             {showOriginal ? (
-              <div className="cart-item-card__mrp">{formatDisplayPrice(item.originalPrice!)}</div>
+              <div className="cart-item-card__mrp">{formatDisplay(item.originalPrice!)}</div>
             ) : null}
             {!compact && !isGift && item.price > 0 ? (
               <div className="cart-item-card__line-total">
-                {formatCurrency(item.price * item.quantity)}
+                {formatPrice(item.price * item.quantity)}
               </div>
             ) : null}
           </div>

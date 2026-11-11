@@ -18,6 +18,7 @@ import {
 } from "framer-motion";
 import { ArrowRight, Check, Loader2, ShieldCheck } from "lucide-react";
 import { GlassSurface } from "@/components/ui/liquid-glass";
+import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 
 interface SwipeToPayButtonProps {
   onConfirm: () => void | Promise<void>;
@@ -225,6 +226,8 @@ export default function SwipeToPayButton({
       <motion.div
         ref={trackRef}
         onClick={handleTrackClick}
+        onMouseEnter={preloadRazorpayCheckout}
+        onTouchStart={preloadRazorpayCheckout}
         className={[
           "checkout-swipe__track",
           disabled && !isProcessing && "checkout-swipe__track--disabled",

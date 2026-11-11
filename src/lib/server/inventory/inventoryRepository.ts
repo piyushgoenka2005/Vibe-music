@@ -370,9 +370,23 @@ export async function fetchProductStockSnapshots(
   const map = new Map<string, ProductStockSnapshot>();
   if (uniqueIds.length === 0) return map;
 
-  const rows = await prisma.product.findMany({ where: { id: { in: uniqueIds } } });
+  const rows = await prisma.product.findMany({
+    where: { id: { in: uniqueIds } },
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      stock: true,
+      stockQuantity: true,
+      reservedStock: true,
+      lowStockThreshold: true,
+      status: true,
+      availability: true,
+      detail: true,
+    },
+  });
   rows.forEach((row) => {
-    map.set(row.id, readSnapshot(row.id, row));
+    map.set(row.id, readSnapshot(row.id, row as unknown as ProductRow));
   });
   return map;
 }
@@ -394,8 +408,20 @@ export async function validateStockAvailability(items: OrderInventoryLine[]): Pr
     const variantProductIds = [...new Set(variantItems.map((item) => item.productId))];
     const rows = await prisma.product.findMany({
       where: { id: { in: variantProductIds } },
+      select: {
+        id: true,
+        sku: true,
+        name: true,
+        stock: true,
+        stockQuantity: true,
+        reservedStock: true,
+        lowStockThreshold: true,
+        status: true,
+        availability: true,
+        detail: true,
+      },
     });
-    const rowMap = new Map(rows.map((row) => [row.id, row]));
+    const rowMap = new Map(rows.map((row) => [row.id, row as unknown as ProductRow]));
 
     for (const item of variantItems) {
       const row = rowMap.get(item.productId);

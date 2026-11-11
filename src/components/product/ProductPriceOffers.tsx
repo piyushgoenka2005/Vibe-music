@@ -6,7 +6,8 @@ import { buildPdpOfferRowsFromCoupons } from "@/lib/product/pdpOffersFromCoupons
 import { useAppliedCouponSync } from "@/hooks/useAppliedCouponSync";
 import { useProductActiveCoupons } from "@/hooks/useProductActiveCoupons";
 import type { ProductDetail, ProductVariant } from "@/types/product";
-import { formatCurrencyPrecise, isPurchasablePrice } from "@/utils/currency";
+import { formatCurrencyPrecise, isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import { BadgePercent, ChevronRight } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
@@ -17,6 +18,8 @@ interface ProductPriceOffersProps {
 }
 
 export default function ProductPriceOffers({ product, selectedVariant }: ProductPriceOffersProps) {
+  const { formatPrecise, symbol } = useCurrency();
+  const { t } = useTranslation();
   const applyCoupon = useCartStore((s) => s.applyCoupon);
   const couponCode = useCartStore((s) => s.couponCode);
   const couponInvalidReason = useCartStore((s) => s.couponInvalidReason);
@@ -67,10 +70,10 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
           <div className="pdp-info-pricing__headline">
             <span className="pdp-info-pricing__price">
               <span className="pdp-info-pricing__rupee" aria-hidden="true">
-                ₹
+                {symbol}
               </span>
               <span className="pdp-info-pricing__price-amount">
-                {formatCurrencyPrecise(pricing.displayPrice).replace(/^[^\d]*/, "")}
+                {formatPrecise(pricing.displayPrice).replace(/^[^\d]*/, "")}
               </span>
             </span>
             {pricing.hasDiscount ? (
@@ -80,24 +83,24 @@ export default function ProductPriceOffers({ product, selectedVariant }: Product
 
           {pricing.hasDiscount && pricing.mrp != null ? (
             <p className="pdp-info-pricing__mrp">
-              <span className="pdp-info-pricing__mrp-label">M.R.P.:</span>{" "}
+              <span className="pdp-info-pricing__mrp-label">{t("pdp.mrp", "M.R.P.:")}</span>{" "}
               <span className="pdp-info-pricing__mrp-value">
                 <span className="pdp-info-pricing__rupee" aria-hidden="true">
-                  ₹
+                  {symbol}
                 </span>
                 <span className="pdp-info-pricing__mrp-amount">
-                  {formatCurrencyPrecise(pricing.mrp).replace(/^[^\d]*/, "")}
+                  {formatPrecise(pricing.mrp).replace(/^[^\d]*/, "")}
                 </span>
               </span>
             </p>
           ) : null}
 
-          <p className="pdp-info-pricing__tax">Inclusive of all taxes</p>
+          <p className="pdp-info-pricing__tax">{t("pdp.taxInclusive", "Inclusive of all taxes")}</p>
 
           {showOffersPanel ? (
             <p className="pdp-info-pricing__offers-label">
               <BadgePercent size={16} aria-hidden className="pdp-info-pricing__offers-icon" />
-              Offers
+              {t("pdp.offers", "Offers")}
             </p>
           ) : null}
         </div>

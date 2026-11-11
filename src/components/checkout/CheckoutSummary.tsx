@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { Lock, Package, Tag } from "lucide-react";
 import { CHECKOUT_TRUST_SUMMARY } from "@/data/trustSignals";
-import { formatCurrencyPrecise } from "@/utils/currency";
+import { formatCurrencyPrecise, useCurrency } from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 import { getShippingChargeForMethod } from "@/lib/shipping/shippingMethods";
 import {
@@ -127,6 +128,9 @@ export default function CheckoutSummary({
   className = "",
   paymentAction,
 }: CheckoutSummaryProps) {
+  const { isBase, formatPrecise, formatInrPrecise } = useCurrency();
+  const { t } = useTranslation();
+
   const invoice = computeCheckoutInvoice(
     items,
     couponDiscount,
@@ -188,10 +192,13 @@ export default function CheckoutSummary({
             <span className="checkout-summary__title-icon" aria-hidden>
               <Package size={17} strokeWidth={2.25} />
             </span>
-            <h3 className="checkout-summary__title">Order Summary</h3>
+            <h3 className="checkout-summary__title">
+              {t("checkout.orderSummary", "Order Summary")}
+            </h3>
           </div>
           <span className="checkout-summary__badge">
-            {itemCount} {itemCount === 1 ? "item" : "items"}
+            {itemCount}{" "}
+            {itemCount === 1 ? t("checkout.item", "item") : t("checkout.items", "items")}
           </span>
         </div>
       </div>
@@ -223,7 +230,7 @@ export default function CheckoutSummary({
                     <span>Qty {item.quantity}</span>
                   </div>
                   <span className="checkout-summary__product-price">
-                    {formatCurrencyPrecise(item.price * item.quantity)}
+                    {formatPrecise(item.price * item.quantity)}
                   </span>
                 </li>
               );
@@ -289,29 +296,61 @@ export default function CheckoutSummary({
         ) : null}
 
         <div className="checkout-summary__totals">
-          <p className="checkout-summary__totals-label">Price breakdown</p>
-          <SummaryRow label="Subtotal" value={formatCurrencyPrecise(invoice.subtotal)} />
+          <p className="checkout-summary__totals-label">
+            {t("checkout.priceBreakdown", "Price breakdown")}
+          </p>
+          <SummaryRow
+            label={t("checkout.subtotal", "Subtotal")}
+            value={formatPrecise(invoice.subtotal)}
+          />
 
           {invoice.couponDiscount > 0 ? (
             <SummaryRow
-              label="Discount"
-              value={`-${formatCurrencyPrecise(invoice.couponDiscount)}`}
+              label={t("checkout.discount", "Discount")}
+              value={`-${formatPrecise(invoice.couponDiscount)}`}
               negative
             />
           ) : null}
 
           <SummaryRow
-            label="Shipping"
+            label={t("checkout.shipping", "Shipping")}
             value={
-              invoice.shippingCharge > 0 ? formatCurrencyPrecise(invoice.shippingCharge) : "FREE"
+              invoice.shippingCharge > 0
+                ? formatPrecise(invoice.shippingCharge)
+                : t("checkout.free", "FREE")
             }
           />
           {invoice.platformFee > 0 ? (
-            <SummaryRow label="Platform Fee" value={formatCurrencyPrecise(invoice.platformFee)} />
+            <SummaryRow
+              label={t("checkout.platformFee", "Platform Fee")}
+              value={formatPrecise(invoice.platformFee)}
+            />
           ) : null}
 
-          <SummaryRow label="Total" value={formatCurrencyPrecise(invoice.grandTotal)} highlight />
+          <SummaryRow
+            label={t("checkout.total", "Total")}
+            value={formatPrecise(invoice.grandTotal)}
+            highlight
+          />
+
+          {!isBase ? (
+            <span className="checkout-summary__currency-inr-note">
+              (Approx. {formatInrPrecise(invoice.grandTotal)} INR)
+            </span>
+          ) : null}
         </div>
+
+        {!isBase ? (
+          <div className="checkout-summary__fx-notice" role="note">
+            <span>
+              {t("checkout.currencyNotice", "Prices converted according to active exchange rates.")}{" "}
+              {t(
+                "checkout.billingNotice",
+                "Payment will be processed in INR via Razorpay as required by Indian banking regulations.",
+              )}
+            </span>
+          </div>
+        ) : null}
 
         {paymentAction ? (
           <div className="checkout-summary__pay">

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ensureRazorpayScriptLoaded } from "./useRazorpay";
+import { ensureRazorpayScriptLoaded, preloadRazorpayCheckout } from "./useRazorpay";
 
 describe("ensureRazorpayScriptLoaded", () => {
   beforeEach(() => {
@@ -104,5 +104,39 @@ describe("ensureRazorpayScriptLoaded", () => {
 
     await expect(promise).resolves.toBeUndefined();
     expect(mockScript.dataset.razorpayLoaded).toBe("true");
+  });
+
+  describe("preloadRazorpayCheckout", () => {
+    it("injects preconnect and dns-prefetch links with anonymous crossOrigin", () => {
+      const appendedElements: HTMLElement[] = [];
+      vi.stubGlobal("document", {
+        querySelector: vi.fn(() => null),
+        head: {
+          appendChild: vi.fn((el: HTMLElement) => {
+            appendedElements.push(el);
+          }),
+        },
+        createElement: (tag: string) => ({
+          tagName: tag.toUpperCase(),
+          rel: "",
+          href: "",
+          crossOrigin: "",
+          dataset: {},
+        }),
+      });
+
+      preloadRazorpayCheckout();
+
+      const preconnectLinks = appendedElements.filter(
+        (el) => (el as unknown as HTMLLinkElement).rel === "preconnect",
+      );
+      const dnsLinks = appendedElements.filter(
+        (el) => (el as unknown as HTMLLinkElement).rel === "dns-prefetch",
+      );
+
+      expect(preconnectLinks.length).toBe(2);
+      expect(dnsLinks.length).toBe(2);
+      expect((preconnectLinks[0] as unknown as HTMLLinkElement).crossOrigin).toBe("anonymous");
+    });
   });
 });

@@ -11,9 +11,10 @@ import {
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import ApplicableCouponsPicker from "@/components/checkout/ApplicableCouponsPicker";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, useCurrency } from "@/utils/currency";
 
 export default function CartSavingsSummary() {
+  const { format: formatPrice } = useCurrency();
   const items = useCartStore((s) => s.items);
   const itemSavings = useCartStore((s) => s.itemSavings());
   const discount = useCartStore((s) => s.discount());
@@ -102,14 +103,14 @@ export default function CartSavingsSummary() {
         <>
           <div className="cart-savings__headline">
             <span className="cart-savings__title">You saved</span>
-            <strong className="cart-savings__total">{formatCurrency(totalSavings)}</strong>
+            <strong className="cart-savings__total">{formatPrice(totalSavings)}</strong>
           </div>
           {rows.length > 0 ? (
             <ul className="cart-savings__rows">
               {rows.map((row) => (
                 <li key={row.label} className="cart-savings__row">
                   <span>{row.label}</span>
-                  <span>−{formatCurrency(row.amount)}</span>
+                  <span>−{formatPrice(row.amount)}</span>
                 </li>
               ))}
             </ul>
@@ -135,7 +136,7 @@ export default function CartSavingsSummary() {
             </div>
             <div className="cart-savings__coupon-actions">
               {discount > 0 ? (
-                <span className="cart-savings__coupon-discount">-{formatCurrency(discount)}</span>
+                <span className="cart-savings__coupon-discount">-{formatPrice(discount)}</span>
               ) : null}
               <button type="button" className="cart-savings__coupon-remove" onClick={removeCoupon}>
                 Remove

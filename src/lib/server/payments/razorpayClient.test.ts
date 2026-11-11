@@ -71,7 +71,7 @@ describe("razorpayClient — Direct fetch and SDK fallback", () => {
       expect(url).toBe("https://api.razorpay.com/v1/orders");
       expect(init?.method).toBe("POST");
       const headers = init?.headers as Record<string, string>;
-      expect(headers["Connection"]).toBe("close");
+      expect(headers["Connection"]).toBe("keep-alive");
       expect(headers["Content-Type"]).toBe("application/json");
 
       const body = JSON.parse(init?.body as string);

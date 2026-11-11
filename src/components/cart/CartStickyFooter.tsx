@@ -7,7 +7,8 @@ import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 import { computeMrpTotal } from "@/lib/cart/promoGift";
 import { ROUTES } from "@/lib/routes";
 import { useCartStore } from "@/store/cartStore";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, useCurrency } from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface CartStickyFooterProps {
@@ -23,6 +24,8 @@ export default function CartStickyFooter({
   showViewCartLink = false,
   onContinueShopping,
 }: CartStickyFooterProps) {
+  const { format: formatPrice } = useCurrency();
+  const { t } = useTranslation();
   const items = useCartStore((s) => s.items);
   const total = useCartStore((s) => s.total());
   const totalSavings = useCartStore((s) => s.totalSavings());
@@ -49,7 +52,9 @@ export default function CartStickyFooter({
   return (
     <footer className="cart-sticky-footer">
       {totalSavings > 0 ? (
-        <p className="cart-sticky-footer__savings">Saving {formatCurrency(totalSavings)}</p>
+        <p className="cart-sticky-footer__savings">
+          {t("cart.saving", "Saving")} {formatPrice(totalSavings)}
+        </p>
       ) : null}
 
       <div className="cart-sticky-footer__panel">
@@ -63,45 +68,45 @@ export default function CartStickyFooter({
             aria-label={expanded ? "Hide price breakdown" : "Show price breakdown"}
           >
             <span className="cart-sticky-footer__total-label">
-              Order total
+              {t("cart.orderTotal", "Order total")}
               <span className="cart-sticky-footer__chevron" aria-hidden>
                 {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </span>
             </span>
             <span className="cart-sticky-footer__total-values">
               {showMrpStrike ? (
-                <span className="cart-sticky-footer__total-mrp">{formatCurrency(mrpTotal)}</span>
+                <span className="cart-sticky-footer__total-mrp">{formatPrice(mrpTotal)}</span>
               ) : null}
-              <span className="cart-sticky-footer__total-amount">{formatCurrency(total)}</span>
+              <span className="cart-sticky-footer__total-amount">{formatPrice(total)}</span>
             </span>
           </button>
 
           <p className="cart-sticky-footer__meta">
             {shipping.unlocked
               ? (promoConfig?.shippingCopy?.cartFooter ?? SHIPPING_POLICY.cartFooter)
-              : `${shipping.amountLabel} shipping · Taxes included`}
+              : `${shipping.amountLabel} ${t("cart.shipping", "shipping")} · ${t("cart.taxesIncluded", "Taxes included")}`}
           </p>
 
           {expanded ? (
             <div id="cart-sticky-footer-breakdown" className="cart-sticky-footer__breakdown">
               <div className="cart-sticky-footer__row">
-                <span>Subtotal</span>
-                <span>{formatCurrency(subtotal)}</span>
+                <span>{t("cart.subtotal", "Subtotal")}</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
               {itemSavings > 0 ? (
                 <div className="cart-sticky-footer__row cart-sticky-footer__row--discount">
-                  <span>Product savings</span>
-                  <span>−{formatCurrency(itemSavings)}</span>
+                  <span>{t("cart.productSavings", "Product savings")}</span>
+                  <span>−{formatPrice(itemSavings)}</span>
                 </div>
               ) : null}
               {discount > 0 ? (
                 <div className="cart-sticky-footer__row cart-sticky-footer__row--discount">
-                  <span>Coupon</span>
-                  <span>−{formatCurrency(discount)}</span>
+                  <span>{t("cart.coupon", "Coupon")}</span>
+                  <span>−{formatPrice(discount)}</span>
                 </div>
               ) : null}
               <div className="cart-sticky-footer__row">
-                <span>Shipping</span>
+                <span>{t("checkout.shipping", "Shipping")}</span>
                 <span>{shipping.amountLabel}</span>
               </div>
             </div>
@@ -115,7 +120,7 @@ export default function CartStickyFooter({
               className="cart-sticky-footer__checkout"
               onClick={handleCheckoutClick}
             >
-              Checkout
+              {t("cart.checkout", "Checkout")}
             </button>
           ) : (
             <Link
@@ -123,7 +128,7 @@ export default function CartStickyFooter({
               className="cart-sticky-footer__checkout"
               onClick={closeDrawer}
             >
-              Checkout
+              {t("cart.checkout", "Checkout")}
             </Link>
           )}
         </div>

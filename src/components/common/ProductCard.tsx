@@ -14,7 +14,13 @@ import ProductShareButton from "@/components/product/ProductShareButton";
 import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
-import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import {
+  formatCurrency,
+  formatDisplayPrice,
+  isPurchasablePrice,
+  useCurrency,
+} from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import { trackSelectItem, type ItemListContext } from "@/lib/analytics/events";
 import type { Product } from "@/types/product";
 import type { ViewMode } from "@/types/filters";
@@ -73,6 +79,8 @@ const ProductCard = memo(function ProductCard({
   eager,
 }: ProductCardProps) {
   const router = useRouter();
+  const { formatDisplay, format: formatPriceAmount } = useCurrency();
+  const { t } = useTranslation();
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
   const productHref = `/product/${product.slug}`;
@@ -118,10 +126,10 @@ const ProductCard = memo(function ProductCard({
   const isComingSoon = !isPurchasablePrice(product.price);
   const canQuickAdd = product.availability !== "out-of-stock" && isPurchasablePrice(product.price);
   const quickAddLabel = product.requiresVariantSelection
-    ? "Choose options"
+    ? t("product.chooseOptions", "Choose options")
     : canQuickAdd
-      ? "Add to cart"
-      : "Out of stock";
+      ? t("product.addToCart", "Add to cart")
+      : t("product.outOfStock", "Out of stock");
   const isGrid = view === "grid";
 
   return (
@@ -217,14 +225,16 @@ const ProductCard = memo(function ProductCard({
                 product.price <= 0 ? " cat-product-card__price--enquiry" : ""
               }`}
             >
-              {formatDisplayPrice(product.price)}
+              {formatDisplay(product.price)}
             </span>
             {hasDiscount ? (
               <>
                 <span className="cat-product-card__price cat-product-card__price--was">
-                  {formatCurrency(originalPrice)}
+                  {formatPriceAmount(originalPrice)}
                 </span>
-                <span className="cat-product-card__discount">{savingsPercent}% off</span>
+                <span className="cat-product-card__discount">
+                  {savingsPercent}% {t("product.off", "off")}
+                </span>
               </>
             ) : null}
           </div>
@@ -236,11 +246,11 @@ const ProductCard = memo(function ProductCard({
                   product.price <= 0 ? " cat-product-card__price--enquiry" : ""
                 }`}
               >
-                {formatDisplayPrice(product.price)}
+                {formatDisplay(product.price)}
               </span>
               {hasDiscount ? (
                 <span className="cat-product-card__price cat-product-card__price--was">
-                  {formatCurrency(originalPrice)}
+                  {formatPriceAmount(originalPrice)}
                 </span>
               ) : null}
             </div>
@@ -251,7 +261,9 @@ const ProductCard = memo(function ProductCard({
                   : availabilityClass(product.availability)
               }`}
             >
-              {isComingSoon ? "Coming Soon" : availabilityLabel(product.availability)}
+              {isComingSoon
+                ? t("product.comingSoon", "Coming Soon")
+                : availabilityLabel(product.availability)}
             </span>
           </div>
         )}

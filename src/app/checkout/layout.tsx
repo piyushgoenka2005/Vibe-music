@@ -7,6 +7,12 @@ export default function CheckoutLayout({ children }: { children: React.ReactNode
       <link rel="preconnect" href="https://api.razorpay.com" crossOrigin="anonymous" />
       <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
       <link rel="dns-prefetch" href="https://api.razorpay.com" />
+      <link
+        rel="preload"
+        href="https://checkout.razorpay.com/v1/checkout.js"
+        as="script"
+        crossOrigin="anonymous"
+      />
       <Script
         id="razorpay-checkout-js"
         src="https://checkout.razorpay.com/v1/checkout.js"

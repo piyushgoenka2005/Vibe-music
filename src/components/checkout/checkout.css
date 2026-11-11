@@ -1406,6 +1406,26 @@
   font-size: 1.2rem;
 }
 
+.checkout-summary__currency-inr-note {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #666);
+  font-weight: 400;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.checkout-summary__fx-notice {
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(18, 83, 237, 0.05);
+  border: 1px solid rgba(18, 83, 237, 0.15);
+  border-radius: 8px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--text-secondary, #555);
+}
+
 .checkout-summary__negative {
   color: #137333;
   font-weight: var(--font-weight-medium);

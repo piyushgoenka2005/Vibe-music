@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
 const SCRIPT_LOAD_TIMEOUT_MS = 15_000;
 const CHECKOUT_SESSION_TIMEOUT_MS = 15 * 60 * 1000;
-const RAZORPAY_POLL_INTERVAL_MS = 50;
+const RAZORPAY_POLL_INTERVAL_MS = 16;
 
 export interface RazorpaySuccessResponse {
   razorpay_order_id: string;
@@ -124,6 +124,12 @@ function isScriptAlreadyLoaded(script: HTMLScriptElement): boolean {
   );
 }
 
+function isScriptElementReady(script: HTMLScriptElement): boolean {
+  if (isScriptAlreadyLoaded(script)) return true;
+  const readyState = (script as HTMLScriptElement & { readyState?: string }).readyState;
+  return readyState === "complete" || readyState === "loaded";
+}
+
 function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("Razorpay can only load in the browser"));
@@ -138,7 +144,7 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
       ),
     );
   }
-  if (isScriptAlreadyLoaded(script)) {
+  if (isScriptElementReady(script)) {
     return pollForRazorpayGlobal(3000);
   }
 
@@ -276,14 +282,21 @@ export function preloadRazorpayCheckout(): void {
   void ensureRazorpayScriptLoaded().catch(() => undefined);
 
   for (const href of ["https://checkout.razorpay.com", "https://api.razorpay.com"]) {
-    if (document.querySelector(`link[data-razorpay-preconnect="${href}"]`)) {
-      continue;
+    if (!document.querySelector(`link[data-razorpay-preconnect="${href}"]`)) {
+      const preconnect = document.createElement("link");
+      preconnect.rel = "preconnect";
+      preconnect.href = href;
+      preconnect.crossOrigin = "anonymous";
+      preconnect.dataset.razorpayPreconnect = href;
+      document.head.appendChild(preconnect);
     }
-    const preconnect = document.createElement("link");
-    preconnect.rel = "preconnect";
-    preconnect.href = href;
-    preconnect.dataset.razorpayPreconnect = href;
-    document.head.appendChild(preconnect);
+    if (!document.querySelector(`link[data-razorpay-dns="${href}"]`)) {
+      const dnsPrefetch = document.createElement("link");
+      dnsPrefetch.rel = "dns-prefetch";
+      dnsPrefetch.href = href;
+      dnsPrefetch.dataset.razorpayDns = href;
+      document.head.appendChild(dnsPrefetch);
+    }
   }
 }
 

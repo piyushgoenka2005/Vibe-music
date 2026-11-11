@@ -11,6 +11,8 @@ type CheckoutGlassButtonProps = {
   children: React.ReactNode;
   disabled?: boolean;
   onClick?: () => void;
+  onMouseEnter?: () => void;
+  onTouchStart?: () => void;
   type?: "button" | "submit";
 };
 
@@ -21,6 +23,8 @@ export default function CheckoutGlassButton({
   children,
   disabled = false,
   onClick,
+  onMouseEnter,
+  onTouchStart,
   type = "button",
 }: CheckoutGlassButtonProps) {
   const isSolid = variant === "solid";
@@ -33,7 +37,7 @@ export default function CheckoutGlassButton({
       : isGhost
         ? "checkout-glass-btn--ghost"
         : "checkout-glass-btn--primary",
-    className
+    className,
   );
 
   const surface = isSolid ? (
@@ -53,7 +57,13 @@ export default function CheckoutGlassButton({
 
   if (href && !disabled) {
     return (
-      <Link className={shellClass} href={href} onClick={onClick}>
+      <Link
+        className={shellClass}
+        href={href}
+        onClick={onClick}
+        onMouseEnter={onMouseEnter}
+        onTouchStart={onTouchStart}
+      >
         {surface}
       </Link>
     );
@@ -64,6 +74,8 @@ export default function CheckoutGlassButton({
       className={shellClass}
       disabled={disabled}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onTouchStart={onTouchStart}
       type={type}
     >
       {surface}

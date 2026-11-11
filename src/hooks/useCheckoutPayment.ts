@@ -127,10 +127,10 @@ export function useCheckoutPayment({
 
   useEffect(() => {
     prefetchRef.current = null;
-    if (paymentMethod === "razorpay" && !disabled) {
+    if (paymentMethod === "razorpay") {
       void ensureRazorpayScriptLoaded().catch(() => undefined);
     }
-  }, [paymentMethod, disabled]);
+  }, [paymentMethod]);
 
   const goToOrderConfirmation = useCallback(
     (orderId: string, trackingToken?: string, orderEmail?: string) => {
@@ -162,13 +162,16 @@ export function useCheckoutPayment({
       const prefetched = prefetchRef.current?.key === key ? prefetchRef.current.promise : null;
       prefetchRef.current = null;
 
-      // Ensure Razorpay SDK is loaded and ready before creating server order / reservation
-      await ensureRazorpayScriptLoaded();
+      // Execute script preparation and order creation concurrently for minimum end-to-end latency
+      const scriptPromise = ensureRazorpayScriptLoaded();
+      const orderPromise = (prefetched ?? createPaymentOrder(payload)).then((res) => {
+        pendingOrderId = res.orderId;
+        pendingTrackingToken = res.trackingToken;
+        return res;
+      });
 
-      const orderResponse = await (prefetched ?? createPaymentOrder(payload));
+      const [, orderResponse] = await Promise.all([scriptPromise, orderPromise]);
 
-      pendingOrderId = orderResponse.orderId;
-      pendingTrackingToken = orderResponse.trackingToken;
       const trackingToken = pendingTrackingToken;
       setProcessingLabel("Opening Razorpay…");
 

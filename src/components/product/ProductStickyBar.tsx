@@ -2,8 +2,10 @@
 
 import { lazy, Suspense, useLayoutEffect, useMemo, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import { useIsClient } from "@/hooks/useIsClient";
+import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 
 const NotifyMeButton = lazy(() => import("./NotifyMeButton"));
 
@@ -77,11 +79,13 @@ export default function ProductStickyBar({
   sentinelRef,
 }: ProductStickyBarProps) {
   const isClient = useIsClient();
+  const { formatDisplay } = useCurrency();
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [footerInView, setFooterInView] = useState(false);
   const canPurchase = inStock && isPurchasablePrice(price);
   const isComingSoon = !isPurchasablePrice(price);
-  const priceLabel = useMemo(() => formatDisplayPrice(price), [price]);
+  const priceLabel = useMemo(() => formatDisplay(price), [formatDisplay, price]);
   const showNotify = isComingSoon || !inStock;
 
   useLayoutEffect(() => {
@@ -187,6 +191,9 @@ export default function ProductStickyBar({
               className="pdp-mobile-bar__cta pdp-mobile-bar__cta--buy"
               disabled={!canPurchase}
               onClick={onBuyNow}
+              onMouseEnter={preloadRazorpayCheckout}
+              onTouchStart={preloadRazorpayCheckout}
+              onFocus={preloadRazorpayCheckout}
               aria-label={`Buy ${productName} now`}
             >
               <BagIcon />

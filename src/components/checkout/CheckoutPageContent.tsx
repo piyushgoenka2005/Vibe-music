@@ -500,6 +500,7 @@ export default function CheckoutPageContent() {
   }
 
   function handleContinueToPayment() {
+    preloadRazorpayCheckout();
     trackAddPaymentInfo(cartItemsToAnalyticsLines(items), "razorpay");
     setStep("payment");
     window.scrollTo({ top: 0, behavior: "smooth" });

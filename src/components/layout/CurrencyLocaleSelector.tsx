@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, Globe, X } from "lucide-react";
 import { ACTIVE_CURRENCIES, ACTIVE_LOCALES, useCurrencyLocaleStore } from "./currencyLocaleStore";
+import { useTranslation } from "@/lib/i18n";
 import "./currencyLocale.css";
 
 export interface CurrencyLocaleSelectorProps {
@@ -18,6 +19,7 @@ export default function CurrencyLocaleSelector({
 }: CurrencyLocaleSelectorProps) {
   const { currency, locale, isInitialized, init, setCurrency, setLocale } =
     useCurrencyLocaleStore();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -170,7 +172,9 @@ export default function CurrencyLocaleSelector({
             aria-label="Select currency and language"
           >
             <div className="vibe-currency-selector__popover-header">
-              <h3 className="vibe-currency-selector__popover-title">Currency &amp; Language</h3>
+              <h3 className="vibe-currency-selector__popover-title">
+                {t("currencyLocale.title", "Currency & Language")}
+              </h3>
               <button
                 type="button"
                 className="vibe-currency-selector__popover-close"
@@ -183,7 +187,9 @@ export default function CurrencyLocaleSelector({
 
             {/* Currency section */}
             <div className="vibe-currency-selector__section">
-              <span className="vibe-currency-selector__section-label">Select Currency</span>
+              <span className="vibe-currency-selector__section-label">
+                {t("currencyLocale.selectCurrency", "Select Currency")}
+              </span>
               <div className="vibe-currency-selector__grid vibe-currency-selector__grid--currency">
                 {ACTIVE_CURRENCIES.map((c) => {
                   const isSelected = c.code === currency;
@@ -224,7 +230,9 @@ export default function CurrencyLocaleSelector({
 
             {/* Language / Locale section */}
             <div className="vibe-currency-selector__section">
-              <span className="vibe-currency-selector__section-label">Select Language</span>
+              <span className="vibe-currency-selector__section-label">
+                {t("currencyLocale.selectLanguage", "Select Language")}
+              </span>
               <div className="vibe-currency-selector__grid">
                 {ACTIVE_LOCALES.map((l) => {
                   const isSelected = l.code === locale;
@@ -262,7 +270,10 @@ export default function CurrencyLocaleSelector({
             </div>
 
             <p className="vibe-currency-selector__popover-footer">
-              Prices will be converted according to active exchange rates.
+              {t(
+                "currencyLocale.rateDisclaimer",
+                "Prices will be converted according to active exchange rates.",
+              )}
             </p>
           </div>
         </>
