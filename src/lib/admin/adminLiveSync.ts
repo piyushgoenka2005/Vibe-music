@@ -30,12 +30,12 @@ export function subscribeAdminDataChanged(onChange: () => void): () => void {
   const channel =
     typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(CHANNEL_NAME);
   if (channel) {
-    channel.onmessage = () => {
-      onChange();
-    };
+    channel.addEventListener("message", onChange);
+    channel.onmessage = onChange;
   }
   return () => {
     window.removeEventListener(LOCAL_EVENT, onChange);
+    channel?.removeEventListener("message", onChange);
     channel?.close();
   };
 }
