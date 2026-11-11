@@ -27,7 +27,10 @@ function resolveAuthSecret(): string | null {
 function shouldUseSecureCookies(request: Request): boolean {
   const url = new URL(request.url);
   if (url.protocol === "https:") return true;
-  return request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() === "https";
+  if (request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() === "https") return true;
+  const authUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL;
+  if (authUrl?.startsWith("https:")) return true;
+  return false;
 }
 
 /**
@@ -53,7 +56,7 @@ export async function authenticateAdminFastLogin(
   // Password verify (CPU) and admin gate (DB) in parallel.
   const [passwordOk, gate] = await Promise.all([
     verifyPassword(input.password, user.passwordHash),
-    loadAdminLoginGate(user.id),
+    loadAdminLoginGate(user.id, user.email),
   ]);
 
   if (!passwordOk) {

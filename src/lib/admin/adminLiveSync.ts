@@ -3,20 +3,37 @@
 const CHANNEL_NAME = "vibe-admin-sync";
 const LOCAL_EVENT = "vibe:admin-data-changed";
 
+let notifyChannel: BroadcastChannel | null = null;
+
+function getNotifyChannel(): BroadcastChannel | null {
+  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return null;
+  if (!notifyChannel) {
+    try {
+      notifyChannel = new BroadcastChannel(CHANNEL_NAME);
+    } catch {
+      notifyChannel = null;
+    }
+  }
+  return notifyChannel;
+}
+
 export function notifyAdminDataChanged(): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event(LOCAL_EVENT));
-  if (typeof BroadcastChannel === "undefined") return;
-  const channel = new BroadcastChannel(CHANNEL_NAME);
-  channel.postMessage("changed");
-  channel.close();
+  const channel = getNotifyChannel();
+  channel?.postMessage("changed");
 }
 
 export function subscribeAdminDataChanged(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
   window.addEventListener(LOCAL_EVENT, onChange);
   const channel =
     typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(CHANNEL_NAME);
-  if (channel) channel.onmessage = onChange;
+  if (channel) {
+    channel.onmessage = () => {
+      onChange();
+    };
+  }
   return () => {
     window.removeEventListener(LOCAL_EVENT, onChange);
     channel?.close();

@@ -70,7 +70,7 @@ const SECTIONS: NavSection[] = [
       { href: ROUTES.adminProducts, label: "Products", icon: Package, permission: "products:read" },
       {
         href: ROUTES.adminCategories,
-        label: "Category Management",
+        label: "Categories",
         icon: FolderTree,
         permission: "categories:read",
       },

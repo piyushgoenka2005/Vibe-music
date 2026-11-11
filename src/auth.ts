@@ -87,7 +87,7 @@ function buildProviders(): NextAuthConfig["providers"] {
         }
 
         // One admin row read covers 2FA + JWT isAdmin claims (no second session query).
-        const gate = await loadAdminLoginGate(user.id);
+        const gate = await loadAdminLoginGate(user.id, user.email);
         if (gate.totpEnabled) {
           if (!totpRaw) {
             throw new TotpRequiredError();

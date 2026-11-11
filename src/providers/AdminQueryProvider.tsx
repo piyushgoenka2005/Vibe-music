@@ -73,17 +73,21 @@ export default function AdminQueryProvider({ children }: { children: React.React
     const unsubscribe = subscribeAdminDataChanged(scheduleInvalidate);
 
     const originalFetch = window.fetch;
-    const trackedFetch: typeof fetch = async (input, init) => {
-      const response = await originalFetch.call(window, input, init);
-      if (response.ok && isAdminMutationRequest(input, init)) notifyAdminDataChanged();
-      return response;
-    };
-    window.fetch = trackedFetch;
+    let trackedFetch: typeof fetch | null = null;
+    if (!(originalFetch as { __vibeAdminTracked?: boolean }).__vibeAdminTracked) {
+      trackedFetch = async (input, init) => {
+        const response = await originalFetch.call(window, input, init);
+        if (response.ok && isAdminMutationRequest(input, init)) notifyAdminDataChanged();
+        return response;
+      };
+      (trackedFetch as { __vibeAdminTracked?: boolean }).__vibeAdminTracked = true;
+      window.fetch = trackedFetch;
+    }
 
     return () => {
       window.clearTimeout(timer);
       unsubscribe();
-      if (window.fetch === trackedFetch) window.fetch = originalFetch;
+      if (trackedFetch && window.fetch === trackedFetch) window.fetch = originalFetch;
     };
   }, [client]);
 

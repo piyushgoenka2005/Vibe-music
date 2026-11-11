@@ -48,6 +48,8 @@ const serverEnvSchema = z.object({
   SMTP_TLS_REJECT_UNAUTHORIZED: z.enum(["true", "false"]).optional(),
   SMTP_ADMIN_TO: z.string().email().optional(),
   ADMIN_NOTIFICATION_EMAIL: z.string().email().optional(),
+  ADMIN_EMAILS: z.string().optional(),
+  ADMIN_EMAIL: z.string().optional(),
   GUEST_ORDER_ACCESS_SECRET: z.string().min(1).optional(),
   INVOICE_ACCESS_SECRET: z.string().min(1).optional(),
   ALLOW_DEMO_PAYMENTS: z.enum(["true", "false"]).optional(),
@@ -182,6 +184,8 @@ export function validateEnv(): void {
       "true" | "false" | undefined,
     SMTP_ADMIN_TO: envValue(process.env.SMTP_ADMIN_TO),
     ADMIN_NOTIFICATION_EMAIL: envValue(process.env.ADMIN_NOTIFICATION_EMAIL),
+    ADMIN_EMAILS: envValue(process.env.ADMIN_EMAILS),
+    ADMIN_EMAIL: envValue(process.env.ADMIN_EMAIL),
     GUEST_ORDER_ACCESS_SECRET:
       envValue(process.env.GUEST_ORDER_ACCESS_SECRET) ??
       envValue(process.env.INVOICE_ACCESS_SECRET),
