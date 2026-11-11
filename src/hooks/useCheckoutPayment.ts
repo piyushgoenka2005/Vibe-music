@@ -162,10 +162,10 @@ export function useCheckoutPayment({
       const prefetched = prefetchRef.current?.key === key ? prefetchRef.current.promise : null;
       prefetchRef.current = null;
 
-      const [orderResponse] = await Promise.all([
-        prefetched ?? createPaymentOrder(payload),
-        ensureRazorpayScriptLoaded(),
-      ]);
+      // Ensure Razorpay SDK is loaded and ready before creating server order / reservation
+      await ensureRazorpayScriptLoaded();
+
+      const orderResponse = await (prefetched ?? createPaymentOrder(payload));
 
       pendingOrderId = orderResponse.orderId;
       pendingTrackingToken = orderResponse.trackingToken;

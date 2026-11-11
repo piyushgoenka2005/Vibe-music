@@ -23,9 +23,12 @@ describe("SECURITY_HEADERS", () => {
     expect(csp).toContain("https://*.facebook.com");
     expect(csp).toContain("https://fonts.gstatic.com");
     expect(csp).toContain("media-src 'self' data: blob:");
-    expect(csp).toContain("child-src 'self' blob: https://checkout.razorpay.com");
+    expect(csp).toContain(
+      "child-src 'self' blob: https://api.razorpay.com https://checkout.razorpay.com",
+    );
     expect(csp).toContain("form-action 'self' https://api.razorpay.com");
     expect(csp).toContain("upi:");
+    expect(csp).toContain("intent:");
     expect(headerValue("X-Frame-Options")).toBe("SAMEORIGIN");
     expect(headerValue("X-Content-Type-Options")).toBe("nosniff");
   });

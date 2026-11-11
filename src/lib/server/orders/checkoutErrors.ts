@@ -49,6 +49,20 @@ export function formatCheckoutError(error: unknown): string {
     return "Payment gateway authentication failed. Check Razorpay keys on the server.";
   }
 
+  // Handle structured Razorpay error objects from SDK
+  if (
+    error &&
+    typeof error === "object" &&
+    "error" in error &&
+    error.error &&
+    typeof error.error === "object" &&
+    "description" in error.error &&
+    typeof (error.error as { description?: unknown }).description === "string"
+  ) {
+    const desc = (error.error as { description: string }).description;
+    return `Payment gateway: ${desc}`;
+  }
+
   if (/UNAUTHENTICATED|invalid_grant|DECODER routines/i.test(message)) {
     return "Server database authentication failed. Please contact support.";
   }

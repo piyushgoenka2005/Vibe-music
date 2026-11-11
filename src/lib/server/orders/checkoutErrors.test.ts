@@ -85,6 +85,20 @@ describe("formatCheckoutError", () => {
     ).toBe("Payment gateway authentication failed. Check Razorpay keys on the server.");
   });
 
+  it("handles structured Razorpay error objects from SDK", () => {
+    expect(
+      formatCheckoutError({
+        statusCode: 400,
+        error: { code: "BAD_REQUEST_ERROR", description: "Order amount exceeds limit" },
+      }),
+    ).toBe("Payment gateway: Order amount exceeds limit");
+    expect(
+      formatCheckoutError({
+        error: { description: "Invalid currency passed" },
+      }),
+    ).toBe("Payment gateway: Invalid currency passed");
+  });
+
   it("handles Razorpay error objects with nested reason", () => {
     expect(
       formatCheckoutError({

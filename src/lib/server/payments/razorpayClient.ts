@@ -244,6 +244,9 @@ export async function fetchRazorpayOrder(
     );
 
     if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Razorpay order not found: ${razorpayOrderId}`);
+      }
       throw new Error(`Razorpay fetch order HTTP ${response.status}`);
     }
 
@@ -263,6 +266,9 @@ export async function fetchRazorpayOrder(
     };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
+    if (errorMsg.includes("Razorpay order not found")) {
+      throw error;
+    }
     logPaymentError(error, {
       step: "razorpayClient.fetchOrder.fallback",
       message: errorMsg,

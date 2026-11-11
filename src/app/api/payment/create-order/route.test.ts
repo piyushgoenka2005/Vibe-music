@@ -136,4 +136,45 @@ describe("POST /api/payment/create-order", () => {
     expect(res.status).toBe(400);
     expect(createOrder).not.toHaveBeenCalled();
   });
+
+  it("maps gateway timeout errors to actionable message", async () => {
+    vi.mocked(createOrder).mockRejectedValueOnce(
+      new Error("The operation was aborted due to timeout"),
+    );
+
+    const res = await POST(
+      makePostRequest({
+        items: [{ productId: "prod-l15-test", quantity: 1 }],
+        email: "buyer@example.com",
+        paymentMethod: "razorpay",
+        shippingAddress,
+      }),
+    );
+
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe(
+      "Payment gateway took too long to respond. Please try again in a moment.",
+    );
+  });
+
+  it("maps structured Razorpay business errors to actionable message", async () => {
+    vi.mocked(createOrder).mockRejectedValueOnce({
+      statusCode: 400,
+      error: { code: "BAD_REQUEST_ERROR", description: "Amount exceeds maximum limit" },
+    });
+
+    const res = await POST(
+      makePostRequest({
+        items: [{ productId: "prod-l15-test", quantity: 1 }],
+        email: "buyer@example.com",
+        paymentMethod: "razorpay",
+        shippingAddress,
+      }),
+    );
+
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body.error).toBe("Payment gateway: Amount exceeds maximum limit");
+  });
 });
