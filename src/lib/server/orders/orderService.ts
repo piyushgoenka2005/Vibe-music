@@ -158,38 +158,39 @@ export async function createOrder(
     itemCount: payload.items.length,
   });
 
-  logPayment("Allocating order ID");
-  const orderId = await allocateNextOrderId();
-  logPayment("Order ID allocated", { orderId });
-
   const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
-  let shippingCharge = await resolveAuthoritativeShippingCharge({
-    method: shippingMethod,
-    subtotal,
-    discount: payload.couponDiscount,
-    postalCode: payload.shippingAddress.postalCode,
-    state: payload.shippingAddress.state,
-  });
 
-  if (payload.couponCode) {
-    const coupon = await getCouponByCode(payload.couponCode);
-    if (coupon) {
-      shippingCharge = resolveShippingChargeWithCoupon(
-        shippingCharge,
-        {
-          type: coupon.type,
-          scope: coupon.scope,
-          productIds: coupon.productIds,
-        },
-        payload.items.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        subtotal,
-      );
-    }
+  logPayment("Allocating order ID and resolving shipping/coupon in parallel");
+  const [orderId, resolvedShippingCharge, coupon] = await Promise.all([
+    allocateNextOrderId(),
+    resolveAuthoritativeShippingCharge({
+      method: shippingMethod,
+      subtotal,
+      discount: payload.couponDiscount,
+      postalCode: payload.shippingAddress.postalCode,
+      state: payload.shippingAddress.state,
+    }),
+    payload.couponCode ? getCouponByCode(payload.couponCode) : Promise.resolve(null),
+  ]);
+  logPayment("Order ID allocated and charges resolved", { orderId });
+
+  let shippingCharge = resolvedShippingCharge;
+  if (coupon) {
+    shippingCharge = resolveShippingChargeWithCoupon(
+      shippingCharge,
+      {
+        type: coupon.type,
+        scope: coupon.scope,
+        productIds: coupon.productIds,
+      },
+      payload.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      subtotal,
+    );
   }
 
   const orderData = buildOrderRecord(orderId, payload, userId, shippingCharge);

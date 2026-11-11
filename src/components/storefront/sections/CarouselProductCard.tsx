@@ -19,7 +19,7 @@ import {
 import { BUY_NOW_CHECKOUT_HREF, useBuyNowStore } from "@/store/buyNowStore";
 import type { HomepageProductItem } from "@/types/homepage";
 import type { Product } from "@/types/product";
-import { formatDisplayPrice, isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
 
 interface CarouselProductCardProps {

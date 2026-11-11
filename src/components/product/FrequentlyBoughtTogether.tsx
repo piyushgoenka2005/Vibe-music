@@ -4,12 +4,7 @@ import { useState, useMemo, Fragment } from "react";
 import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { categoryPath, productPath } from "@/lib/routes";
-import {
-  formatCurrency,
-  formatDisplayPrice,
-  isPurchasablePrice,
-  useCurrency,
-} from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
 import type { Product, ProductDetail, ProductVariant } from "@/types/product";

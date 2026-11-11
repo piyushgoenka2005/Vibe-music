@@ -392,7 +392,9 @@ export async function fetchProductStockSnapshots(
 }
 
 export async function validateStockAvailability(items: OrderInventoryLine[]): Promise<void> {
-  const variantErrors: string[] = [];
+  const allProductIds = [...new Set(items.map((item) => item.productId).filter(Boolean))];
+  if (allProductIds.length === 0) return;
+
   const parentItems: OrderInventoryLine[] = [];
   const variantItems: OrderInventoryLine[] = [];
 
@@ -404,25 +406,26 @@ export async function validateStockAvailability(items: OrderInventoryLine[]): Pr
     variantItems.push(item);
   }
 
-  if (variantItems.length > 0) {
-    const variantProductIds = [...new Set(variantItems.map((item) => item.productId))];
-    const rows = await prisma.product.findMany({
-      where: { id: { in: variantProductIds } },
-      select: {
-        id: true,
-        sku: true,
-        name: true,
-        stock: true,
-        stockQuantity: true,
-        reservedStock: true,
-        lowStockThreshold: true,
-        status: true,
-        availability: true,
-        detail: true,
-      },
-    });
-    const rowMap = new Map(rows.map((row) => [row.id, row as unknown as ProductRow]));
+  // Single unified batched query for both parent and variant lines
+  const rows = await prisma.product.findMany({
+    where: { id: { in: allProductIds } },
+    select: {
+      id: true,
+      sku: true,
+      name: true,
+      stock: true,
+      stockQuantity: true,
+      reservedStock: true,
+      lowStockThreshold: true,
+      status: true,
+      availability: true,
+      detail: true,
+    },
+  });
+  const rowMap = new Map(rows.map((row) => [row.id, row as unknown as ProductRow]));
 
+  const variantErrors: string[] = [];
+  if (variantItems.length > 0) {
     for (const item of variantItems) {
       const row = rowMap.get(item.productId);
       if (!row) {
@@ -450,7 +453,13 @@ export async function validateStockAvailability(items: OrderInventoryLine[]): Pr
 
   if (parentItems.length === 0) return;
 
-  const snapshots = await fetchProductStockSnapshots(parentItems.map((item) => item.productId));
+  const snapshots = new Map<string, ProductStockSnapshot>();
+  parentItems.forEach((item) => {
+    const row = rowMap.get(item.productId);
+    if (row) {
+      snapshots.set(item.productId, readSnapshot(item.productId, row));
+    }
+  });
 
   const errors = validateAvailability(
     parentItems.map((item) => ({

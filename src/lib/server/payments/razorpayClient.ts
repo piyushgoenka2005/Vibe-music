@@ -50,22 +50,25 @@ export function prewarmRazorpayConnection(): void {
   prewarmPromise = (async () => {
     try {
       const res = await fetch("https://api.razorpay.com/v1/orders", {
-        method: "HEAD",
+        method: "GET",
         headers: {
-          Connection: "keep-alive",
+          Connection: "close",
+          Accept: "application/json",
         },
         signal: AbortSignal.timeout(3000),
       }).catch(() => null);
-      if (res?.body) {
-        await res.body.cancel().catch(() => null);
+      if (res) {
+        // Drain response body so undici / Node HTTP agent keeps the socket open in the keep-alive pool
+        await res.text().catch(() => null);
       }
     } catch {
       // Non-blocking prewarm
     } finally {
       // Re-warm periodically if checkout remains active
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         prewarmPromise = null;
       }, 45_000);
+      timer?.unref?.();
     }
   })();
 }
@@ -125,8 +128,9 @@ export async function createRazorpayOrder(
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/json",
-        Connection: "keep-alive",
-        "Keep-Alive": "timeout=60, max=1000",
+        // Use Connection: close to avoid stale keep-alive socket reuse in undici pool
+        // which causes intermittent "fetch failed" errors on VPS
+        Connection: "close",
       },
       body: requestPayload,
       signal: AbortSignal.timeout(timeoutMs),
@@ -271,8 +275,7 @@ export async function fetchRazorpayOrder(
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
-          Connection: "keep-alive",
-          "Keep-Alive": "timeout=60, max=1000",
+          Connection: "close",
         },
         signal: AbortSignal.timeout(6000),
       },

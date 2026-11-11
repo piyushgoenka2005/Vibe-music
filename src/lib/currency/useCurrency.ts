@@ -13,7 +13,6 @@ import {
   formatPricePrecise,
   formatDisplayPriceWithCurrency,
   getCurrencySymbol,
-  getExchangeRate,
 } from "./rates";
 import { formatCurrency, formatCurrencyPrecise } from "@/lib/shared/currency";
 

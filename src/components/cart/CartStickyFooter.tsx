@@ -7,7 +7,7 @@ import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 import { computeMrpTotal } from "@/lib/cart/promoGift";
 import { ROUTES } from "@/lib/routes";
 import { useCartStore } from "@/store/cartStore";
-import { formatCurrency, useCurrency } from "@/utils/currency";
+import { useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
 import { ChevronDown, ChevronUp } from "lucide-react";
 

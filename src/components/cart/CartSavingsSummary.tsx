@@ -11,7 +11,7 @@ import {
 import { formatCouponLabel } from "@/lib/coupons/formatCouponLabel";
 import { useCartStore } from "@/store/cartStore";
 import ApplicableCouponsPicker from "@/components/checkout/ApplicableCouponsPicker";
-import { formatCurrency, useCurrency } from "@/utils/currency";
+import { useCurrency } from "@/utils/currency";
 
 export default function CartSavingsSummary() {
   const { format: formatPrice } = useCurrency();

@@ -14,12 +14,7 @@ import ProductShareButton from "@/components/product/ProductShareButton";
 import CompareButton from "@/components/compare/CompareButton";
 import WishlistButton from "@/components/wishlist/WishlistButton";
 import NotifyMeButton from "@/components/product/NotifyMeButton";
-import {
-  formatCurrency,
-  formatDisplayPrice,
-  isPurchasablePrice,
-  useCurrency,
-} from "@/utils/currency";
+import { isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
 import { trackSelectItem, type ItemListContext } from "@/lib/analytics/events";
 import type { Product } from "@/types/product";

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Lock, Package, Tag } from "lucide-react";
 import { CHECKOUT_TRUST_SUMMARY } from "@/data/trustSignals";
-import { formatCurrencyPrecise, useCurrency } from "@/utils/currency";
+import { useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
 import type { ShippingMethod } from "@/lib/shipping/shippingMethods";
 import { getShippingChargeForMethod } from "@/lib/shipping/shippingMethods";

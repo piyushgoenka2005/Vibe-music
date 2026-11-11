@@ -55,6 +55,7 @@ export default function SwipeToPayButton({
   const [isSwiping, setIsSwiping] = useState(false);
   const [completed, setCompleted] = useState(false);
   const wasLoadingRef = useRef(false);
+  const confirmingRef = useRef(false);
   const dragMovedRef = useRef(false);
   const maxDragRef = useRef(0);
   const metricsRef = useRef({
@@ -131,6 +132,7 @@ export default function SwipeToPayButton({
 
     if (wasLoadingRef.current && completed) {
       wasLoadingRef.current = false;
+      confirmingRef.current = false;
       const timer = window.setTimeout(() => {
         setCompleted(false);
         setIsSwiping(false);
@@ -141,7 +143,8 @@ export default function SwipeToPayButton({
   }, [completed, dragX, loading]);
 
   const triggerSlideAndConfirm = useCallback(async () => {
-    if (completed || isLocked) return;
+    if (completed || isLocked || confirmingRef.current) return;
+    confirmingRef.current = true;
     setCompleted(true);
     setIsSwiping(true);
     const endX = measureMaxDrag();
@@ -150,6 +153,7 @@ export default function SwipeToPayButton({
     try {
       await onConfirm();
     } catch {
+      confirmingRef.current = false;
       setCompleted(false);
       setIsSwiping(false);
       void animate(dragX, 0, SPRING);

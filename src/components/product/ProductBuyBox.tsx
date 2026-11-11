@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type RefObject } from "react";
 import { MapPin, Truck } from "lucide-react";
-import { formatCurrencyPrecise, isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import Link from "next/link";

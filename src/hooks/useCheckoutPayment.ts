@@ -81,6 +81,7 @@ export function useCheckoutPayment({
   const router = useRouter();
   const { isReady, isLoading, error, openCheckout } = useRazorpay();
   const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
   const [processingLabel, setProcessingLabel] = useState<string | null>(null);
   const prefetchRef = useRef<{
     key: string;
@@ -148,8 +149,9 @@ export function useCheckoutPayment({
   );
 
   const pay = useCallback(async () => {
-    if (disabled || isProcessing) return;
+    if (disabled || isProcessingRef.current || isProcessing) return;
 
+    isProcessingRef.current = true;
     setIsProcessing(true);
     setProcessingLabel("Creating order…");
     let pendingOrderId: string | null = null;
@@ -170,7 +172,26 @@ export function useCheckoutPayment({
         return res;
       });
 
-      const [, orderResponse] = await Promise.all([scriptPromise, orderPromise]);
+      let orderResponse: CreateRazorpayOrderResponse;
+      try {
+        const results = await Promise.all([scriptPromise, orderPromise]);
+        orderResponse = results[1];
+      } catch (firstError) {
+        // If scriptPromise failed fast while orderPromise was still in flight on server,
+        // await orderPromise with timeout to release any created reservation cleanly.
+        try {
+          const res = await Promise.race([
+            orderPromise,
+            new Promise<null>((r) => setTimeout(() => r(null), 4000)),
+          ]);
+          if (res?.orderId && res?.trackingToken) {
+            await releaseOrderReservation(res.orderId, res.trackingToken).catch(() => undefined);
+          }
+        } catch {
+          // ignore
+        }
+        throw firstError;
+      }
 
       const trackingToken = pendingTrackingToken;
       setProcessingLabel("Opening Razorpay…");
@@ -277,6 +298,7 @@ export function useCheckoutPayment({
         "error",
       );
     } finally {
+      isProcessingRef.current = false;
       setProcessingLabel(null);
       setIsProcessing(false);
     }

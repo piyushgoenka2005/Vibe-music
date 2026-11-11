@@ -6,7 +6,7 @@ import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { cartItemToProduct } from "@/lib/cart/cartItemToProduct";
 import { isPromoGiftLine } from "@/lib/cart/promoGift";
 import { productPath } from "@/lib/routes";
-import { formatCurrency, formatDisplayPrice, useCurrency } from "@/utils/currency";
+import { useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
 import { useCartStore, type CartItem as CartItemType } from "@/store/cartStore";
 import { useToastStore } from "@/store/toastStore";

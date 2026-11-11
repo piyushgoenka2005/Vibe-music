@@ -181,6 +181,11 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
     };
 
     const onLoad = () => {
+      markScriptLoaded(script);
+      if (window.Razorpay) {
+        succeed();
+        return;
+      }
       void pollForRazorpayGlobal(3000).then(succeed).catch(fail);
     };
 
@@ -239,17 +244,24 @@ function injectRazorpayScript(): Promise<void> {
     script.dataset.razorpayCheckout = "true";
 
     const timeoutId = window.setTimeout(() => {
+      scriptLoadPromise = null;
       reject(new Error("Razorpay SDK load timed out"));
     }, SCRIPT_LOAD_TIMEOUT_MS);
 
     script.onload = () => {
       window.clearTimeout(timeoutId);
       markScriptLoaded(script);
+      if (window.Razorpay) {
+        resolve();
+        return;
+      }
       void pollForRazorpayGlobal().then(resolve).catch(reject);
     };
 
     script.onerror = () => {
       window.clearTimeout(timeoutId);
+      scriptLoadPromise = null;
+      script.remove();
       reject(new Error("Failed to load Razorpay SDK"));
     };
 
@@ -279,7 +291,6 @@ export function ensureRazorpayScriptLoaded(): Promise<void> {
 
 export function preloadRazorpayCheckout(): void {
   if (typeof window === "undefined") return;
-  void ensureRazorpayScriptLoaded().catch(() => undefined);
 
   for (const href of ["https://checkout.razorpay.com", "https://api.razorpay.com"]) {
     if (!document.querySelector(`link[data-razorpay-preconnect="${href}"]`)) {
@@ -298,6 +309,8 @@ export function preloadRazorpayCheckout(): void {
       document.head.appendChild(dnsPrefetch);
     }
   }
+
+  void ensureRazorpayScriptLoaded().catch(() => undefined);
 }
 
 export function useRazorpay() {

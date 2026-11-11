@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useLayoutEffect, useMemo, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { formatDisplayPrice, isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
 import { useIsClient } from "@/hooks/useIsClient";
 import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
@@ -180,10 +180,12 @@ export default function ProductStickyBar({
               {canPurchase ? (
                 <>
                   <CartIcon />
-                  <span className="pdp-mobile-bar__cta-label">Add to Cart</span>
+                  <span className="pdp-mobile-bar__cta-label">
+                    {t("pdp.addToCart", "Add to Cart")}
+                  </span>
                 </>
               ) : (
-                "Out of Stock"
+                t("product.outOfStock", "Out of stock")
               )}
             </button>
             <button
@@ -197,7 +199,7 @@ export default function ProductStickyBar({
               aria-label={`Buy ${productName} now`}
             >
               <BagIcon />
-              <span className="pdp-mobile-bar__cta-label">Buy Now</span>
+              <span className="pdp-mobile-bar__cta-label">{t("pdp.buyNow", "Buy Now")}</span>
             </button>
           </>
         )}

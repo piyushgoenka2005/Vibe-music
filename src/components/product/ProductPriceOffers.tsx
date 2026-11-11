@@ -6,7 +6,7 @@ import { buildPdpOfferRowsFromCoupons } from "@/lib/product/pdpOffersFromCoupons
 import { useAppliedCouponSync } from "@/hooks/useAppliedCouponSync";
 import { useProductActiveCoupons } from "@/hooks/useProductActiveCoupons";
 import type { ProductDetail, ProductVariant } from "@/types/product";
-import { formatCurrencyPrecise, isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
 import { BadgePercent, ChevronRight } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
