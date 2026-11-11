@@ -52,7 +52,7 @@ export function prewarmRazorpayConnection(): void {
       const res = await fetch("https://api.razorpay.com/v1/orders", {
         method: "GET",
         headers: {
-          Connection: "close",
+          Connection: "keep-alive",
           Accept: "application/json",
         },
         signal: AbortSignal.timeout(3000),
@@ -128,9 +128,7 @@ export async function createRazorpayOrder(
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/json",
-        // Use Connection: close to avoid stale keep-alive socket reuse in undici pool
-        // which causes intermittent "fetch failed" errors on VPS
-        Connection: "close",
+        Connection: "keep-alive",
       },
       body: requestPayload,
       signal: AbortSignal.timeout(timeoutMs),
@@ -275,7 +273,7 @@ export async function fetchRazorpayOrder(
         method: "GET",
         headers: {
           Authorization: `Basic ${auth}`,
-          Connection: "close",
+          Connection: "keep-alive",
         },
         signal: AbortSignal.timeout(6000),
       },

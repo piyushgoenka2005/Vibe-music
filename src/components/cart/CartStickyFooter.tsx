@@ -9,6 +9,7 @@ import { ROUTES } from "@/lib/routes";
 import { useCartStore } from "@/store/cartStore";
 import { useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
+import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface CartStickyFooterProps {
@@ -119,6 +120,9 @@ export default function CartStickyFooter({
               type="button"
               className="cart-sticky-footer__checkout"
               onClick={handleCheckoutClick}
+              onMouseEnter={preloadRazorpayCheckout}
+              onTouchStart={preloadRazorpayCheckout}
+              onFocus={preloadRazorpayCheckout}
             >
               {t("cart.checkout", "Checkout")}
             </button>
@@ -127,6 +131,9 @@ export default function CartStickyFooter({
               href={checkoutHref}
               className="cart-sticky-footer__checkout"
               onClick={closeDrawer}
+              onMouseEnter={preloadRazorpayCheckout}
+              onTouchStart={preloadRazorpayCheckout}
+              onFocus={preloadRazorpayCheckout}
             >
               {t("cart.checkout", "Checkout")}
             </Link>

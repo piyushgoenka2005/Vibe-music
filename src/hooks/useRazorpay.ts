@@ -229,9 +229,9 @@ function injectRazorpayScript(): Promise<void> {
     return Promise.resolve();
   }
 
-  const existing = document.querySelector<HTMLScriptElement>(
-    `script[src="${RAZORPAY_SCRIPT_URL}"]`,
-  );
+  const existing =
+    document.querySelector<HTMLScriptElement>(`script[src="${RAZORPAY_SCRIPT_URL}"]`) ||
+    document.querySelector<HTMLScriptElement>("#razorpay-checkout-js");
 
   if (existing) {
     return waitForScriptElement(existing);

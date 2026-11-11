@@ -116,10 +116,10 @@ export default async function RootLayout({
         {/* Resource hints for faster third-party connections */}
         <link rel="preconnect" href="https://cdn.vibemusic.in" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://cdn.vibemusic.in" />
-        <link rel="preconnect" href="https://checkout.razorpay.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://api.razorpay.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+        <link rel="preconnect" href="https://checkout.razorpay.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://api.razorpay.com" />
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {isMetaPixelConfigured() ? (
