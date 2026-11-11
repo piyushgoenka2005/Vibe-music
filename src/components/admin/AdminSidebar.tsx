@@ -49,6 +49,7 @@ import type { AdminSession } from "@/types/admin";
 import { useAuthStore } from "@/store/authStore";
 import { useAdminUiStore } from "@/store/adminUiStore";
 import { adminFetchJson } from "@/lib/admin/adminFetch";
+import { notifyAdminUnauthorized } from "@/lib/admin/adminLiveSync";
 import { setCachedAdminSession } from "@/components/admin/AdminGuard";
 
 interface NavItem {
@@ -106,12 +107,12 @@ const SECTIONS: NavSection[] = [
       },
       { href: ROUTES.adminBanners, label: "Banners", icon: ImageIcon, permission: "banners:read" },
       {
-        href: "/admin/footer",
+        href: ROUTES.adminFooter,
         label: "Footer Management",
         icon: PanelBottom,
         permission: "settings:read",
       },
-      { href: "/admin/seo", label: "SEO Management", icon: Search, permission: "settings:read" },
+      { href: ROUTES.adminSeo, label: "SEO Management", icon: Search, permission: "settings:read" },
     ],
   },
   {
@@ -243,6 +244,8 @@ export default function AdminSidebar({ admin, collapsed }: AdminSidebarProps) {
 
   async function handleLogout() {
     setCachedAdminSession(null);
+    notifyAdminUnauthorized();
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => undefined);
     await logout();
     router.replace(ROUTES.adminLogin);
   }

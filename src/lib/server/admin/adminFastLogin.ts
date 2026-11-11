@@ -150,8 +150,9 @@ export function applyAdminSessionCookie(
   });
 
   // Clear the alternate cookie name so stale twins don't confuse session reads.
+  // Note: __Secure- prefixed cookies cannot be set or cleared over insecure HTTP connections.
   const twin = getAuthSessionCookieName(!secure);
-  if (twin !== result.cookieName) {
+  if (twin !== result.cookieName && (secure || !twin.startsWith("__Secure-"))) {
     response.cookies.set(twin, "", {
       httpOnly: true,
       sameSite: "lax",

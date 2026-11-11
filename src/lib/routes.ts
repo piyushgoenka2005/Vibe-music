@@ -53,6 +53,8 @@ export const ROUTES = {
   adminSupport: "/admin/support",
   adminNotifications: "/admin/notifications",
   adminCms: "/admin/cms",
+  adminFooter: "/admin/footer",
+  adminSeo: "/admin/seo",
   adminShipping: "/admin/shipping",
   adminTax: "/admin/tax",
   adminLocalization: "/admin/localization",

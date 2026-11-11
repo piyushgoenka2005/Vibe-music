@@ -1,7 +1,9 @@
-/** Cross-tab "admin data changed" signal — every admin query refetches when it fires. */
+/** Cross-tab "admin data changed" and "admin unauthorized" signals. */
 
 const CHANNEL_NAME = "vibe-admin-sync";
 const LOCAL_EVENT = "vibe:admin-data-changed";
+export const LOCAL_UNAUTHORIZED_EVENT = "vibe:admin:unauthorized";
+export const STORAGE_UNAUTHORIZED_KEY = "vibe_admin_unauthorized_ts";
 
 let notifyChannel: BroadcastChannel | null = null;
 
@@ -24,18 +26,69 @@ export function notifyAdminDataChanged(): void {
   channel?.postMessage("changed");
 }
 
+export function notifyAdminUnauthorized(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem("vibe_admin_session");
+  } catch {
+    /* ignore */
+  }
+  window.dispatchEvent(new CustomEvent(LOCAL_UNAUTHORIZED_EVENT));
+
+  const channel = getNotifyChannel();
+  try {
+    channel?.postMessage("unauthorized");
+  } catch {
+    /* ignore */
+  }
+
+  try {
+    localStorage.setItem(STORAGE_UNAUTHORIZED_KEY, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function subscribeAdminDataChanged(onChange: () => void): () => void {
   if (typeof window === "undefined") return () => {};
   window.addEventListener(LOCAL_EVENT, onChange);
+
+  const handleMessage = (event: MessageEvent) => {
+    if (event.data === "unauthorized") {
+      try {
+        sessionStorage.removeItem("vibe_admin_session");
+      } catch {
+        /* ignore */
+      }
+      window.dispatchEvent(new CustomEvent(LOCAL_UNAUTHORIZED_EVENT));
+    } else {
+      onChange();
+    }
+  };
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === STORAGE_UNAUTHORIZED_KEY) {
+      try {
+        sessionStorage.removeItem("vibe_admin_session");
+      } catch {
+        /* ignore */
+      }
+      window.dispatchEvent(new CustomEvent(LOCAL_UNAUTHORIZED_EVENT));
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+
   const channel =
     typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(CHANNEL_NAME);
   if (channel) {
-    channel.addEventListener("message", onChange);
-    channel.onmessage = onChange;
+    channel.addEventListener("message", handleMessage);
+    channel.onmessage = handleMessage;
   }
   return () => {
     window.removeEventListener(LOCAL_EVENT, onChange);
-    channel?.removeEventListener("message", onChange);
+    window.removeEventListener("storage", handleStorage);
+    channel?.removeEventListener("message", handleMessage);
     channel?.close();
   };
 }

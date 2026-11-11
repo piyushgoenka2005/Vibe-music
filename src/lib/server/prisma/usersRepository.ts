@@ -78,9 +78,6 @@ function mapAdminRow(row: {
 
 /** Active admins only — used for login / session. */
 export async function getAdminProfile(uid: string): Promise<AdminProfile | null> {
-  const row = await prisma.admin.findUnique({ where: { uid } });
-  if (row && row.isActive) return mapAdminRow(row);
-
   const adminEmails = getAdminEmailsFromEnv();
   if (adminEmails.size > 0) {
     const user = await prisma.user.findUnique({
@@ -88,6 +85,10 @@ export async function getAdminProfile(uid: string): Promise<AdminProfile | null>
       select: { email: true, name: true },
     });
     if (user?.email && adminEmails.has(user.email.toLowerCase())) {
+      const row = await prisma.admin.findUnique({ where: { uid } });
+      if (row && row.isActive && row.role === "super_admin") {
+        return mapAdminRow(row);
+      }
       const now = new Date().toISOString();
       const provisioned = await prisma.admin.upsert({
         where: { uid },
@@ -110,6 +111,9 @@ export async function getAdminProfile(uid: string): Promise<AdminProfile | null>
       return mapAdminRow(provisioned);
     }
   }
+
+  const row = await prisma.admin.findUnique({ where: { uid } });
+  if (row && row.isActive) return mapAdminRow(row);
 
   return null;
 }

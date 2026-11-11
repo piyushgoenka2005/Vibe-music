@@ -26,6 +26,9 @@ export async function loadAdminLoginGate(
   totpEnabled: boolean;
   totpSecret: string | null;
 }> {
+  const adminEmails = getAdminEmailsFromEnv();
+  let email = emailHint?.trim().toLowerCase();
+
   const admin = await prisma.admin.findUnique({
     where: { uid },
     select: {
@@ -36,15 +39,13 @@ export async function loadAdminLoginGate(
     },
   });
 
-  if (!admin?.isActive) {
-    const adminEmails = getAdminEmailsFromEnv();
-    if (adminEmails.size > 0) {
-      let email = emailHint?.trim().toLowerCase();
-      if (!email) {
-        const u = await prisma.user.findUnique({ where: { id: uid }, select: { email: true } });
-        email = u?.email?.toLowerCase();
-      }
-      if (email && adminEmails.has(email)) {
+  if (adminEmails.size > 0) {
+    if (!email) {
+      const u = await prisma.user.findUnique({ where: { id: uid }, select: { email: true } });
+      email = u?.email?.toLowerCase();
+    }
+    if (email && adminEmails.has(email)) {
+      if (!admin?.isActive || admin.role !== "super_admin") {
         const now = new Date().toISOString();
         const provisioned = await prisma.admin.upsert({
           where: { uid },
@@ -71,7 +72,16 @@ export async function loadAdminLoginGate(
           totpSecret: provisioned.totpSecret,
         };
       }
+      return {
+        isAdmin: true,
+        role: "super_admin",
+        totpEnabled: Boolean(admin.totpEnabled && admin.totpSecret),
+        totpSecret: admin.totpSecret,
+      };
     }
+  }
+
+  if (!admin?.isActive) {
     return { isAdmin: false, totpEnabled: false, totpSecret: null };
   }
 
@@ -87,19 +97,20 @@ export async function loadAdminLoginGate(
 export async function getAdminJwtClaims(
   uid: string,
 ): Promise<{ isAdmin: boolean; role?: AdminRole }> {
-  const admin = await prisma.admin.findUnique({
-    where: { uid },
-    select: { isActive: true, role: true },
-  });
-  if (admin?.isActive) {
-    return { isAdmin: true, role: admin.role as AdminRole };
-  }
   const adminEmails = getAdminEmailsFromEnv();
   if (adminEmails.size > 0) {
     const user = await prisma.user.findUnique({ where: { id: uid }, select: { email: true } });
     if (user?.email && adminEmails.has(user.email.toLowerCase())) {
       return { isAdmin: true, role: "super_admin" };
     }
+  }
+
+  const admin = await prisma.admin.findUnique({
+    where: { uid },
+    select: { isActive: true, role: true },
+  });
+  if (admin?.isActive) {
+    return { isAdmin: true, role: admin.role as AdminRole };
   }
   return { isAdmin: false };
 }
