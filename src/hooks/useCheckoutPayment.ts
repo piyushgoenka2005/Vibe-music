@@ -242,12 +242,11 @@ export function useCheckoutPayment({
             () => undefined,
           );
         }
-        showToast(
-          result.status === "failed"
-            ? result.message
-            : "Payment cancelled or failed. Please try again.",
-          "error",
-        );
+        if (result.status === "failed") {
+          showToast(result.message || "Unable to complete checkout. Please try again.", "error");
+        } else {
+          showToast("Payment was cancelled. You can try again whenever you're ready.", "info");
+        }
         return;
       }
 
@@ -270,7 +269,10 @@ export function useCheckoutPayment({
       if (pendingOrderId && pendingTrackingToken) {
         await releaseOrderReservation(pendingOrderId, pendingTrackingToken).catch(() => undefined);
       }
-      showToast(err instanceof Error ? err.message : "Payment failed", "error");
+      showToast(
+        err instanceof Error ? err.message : "Unable to complete checkout. Please try again.",
+        "error",
+      );
     } finally {
       setProcessingLabel(null);
       setIsProcessing(false);

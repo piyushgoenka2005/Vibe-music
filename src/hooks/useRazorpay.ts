@@ -130,7 +130,7 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
     return Promise.resolve();
   }
   if (isScriptAlreadyLoaded(script)) {
-    return pollForRazorpayGlobal(3000);
+    return pollForRazorpayGlobal(SCRIPT_LOAD_TIMEOUT_MS);
   }
 
   return new Promise((resolve, reject) => {
@@ -161,7 +161,7 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
     };
 
     const onLoad = () => {
-      void pollForRazorpayGlobal(3000).then(succeed).catch(fail);
+      void pollForRazorpayGlobal(SCRIPT_LOAD_TIMEOUT_MS).then(succeed).catch(fail);
     };
 
     const onError = () => {

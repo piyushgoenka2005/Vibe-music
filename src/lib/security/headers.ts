@@ -27,10 +27,11 @@ function buildContentSecurityPolicy(): string {
     "connect-src 'self' blob: https://*.googleapis.com https://www.googleapis.com https://api.razorpay.com https://*.razorpay.com https://lumberjack.razorpay.com https://api.web3forms.com https://static.roland.com https://tonejs.github.io https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://*.facebook.com",
     "media-src 'self' data: blob: https://cdn.vibemusic.in https://*.vibemusic.in https://static.roland.com https://tonejs.github.io http://localhost:3000",
     "worker-src 'self' blob:",
+    "child-src 'self' blob: https://checkout.razorpay.com https://*.razorpay.com",
     "frame-src 'self' https://accounts.google.com https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://sketchfab.com https://www.youtube.com https://www.youtube-nocookie.com https://www.facebook.com https://*.facebook.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    "form-action 'self' https://api.razorpay.com https://*.razorpay.com https:",
+    "form-action 'self' https://api.razorpay.com https://*.razorpay.com https: upi:",
   ].join("; ");
 }
 

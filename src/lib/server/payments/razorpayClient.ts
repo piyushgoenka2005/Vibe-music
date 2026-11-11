@@ -78,8 +78,15 @@ export async function createRazorpayOrder(
   }
 
   // 1. Direct native fetch (preferred: 100-300ms, immune to keep-alive socket deadlocks)
-  try {
-    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+  const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+  const requestPayload = JSON.stringify({
+    amount: Math.round(input.amountPaise),
+    currency,
+    receipt: safeReceipt || undefined,
+    notes: input.notes,
+  });
+
+  const sendDirectFetch = async (timeoutMs: number): Promise<RazorpayOrderResult> => {
     const response = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
       headers: {
@@ -87,13 +94,8 @@ export async function createRazorpayOrder(
         "Content-Type": "application/json",
         Connection: "close",
       },
-      body: JSON.stringify({
-        amount: Math.round(input.amountPaise),
-        currency,
-        receipt: safeReceipt || undefined,
-        notes: input.notes,
-      }),
-      signal: AbortSignal.timeout(10000),
+      body: requestPayload,
+      signal: AbortSignal.timeout(timeoutMs),
     });
 
     const body = (await response.json().catch(() => null)) as {
@@ -123,11 +125,6 @@ export async function createRazorpayOrder(
       throw new Error("Razorpay returned empty order id");
     }
 
-    logPayment("Razorpay order created via direct API", {
-      orderId: body.id,
-      receipt: safeReceipt,
-    });
-
     return {
       id: body.id,
       amount: body.amount ?? input.amountPaise,
@@ -135,6 +132,31 @@ export async function createRazorpayOrder(
       status: body.status,
       receipt: body.receipt ?? safeReceipt,
     };
+  };
+
+  try {
+    let result: RazorpayOrderResult;
+    try {
+      result = await sendDirectFetch(6000);
+    } catch (firstAttemptError) {
+      const msg =
+        firstAttemptError instanceof Error ? firstAttemptError.message : String(firstAttemptError);
+      if (msg.startsWith("Razorpay:")) {
+        throw firstAttemptError;
+      }
+      logPaymentError(firstAttemptError, {
+        step: "razorpayClient.fetch.retry",
+        message: msg,
+      });
+      result = await sendDirectFetch(5000);
+    }
+
+    logPayment("Razorpay order created via direct API", {
+      orderId: result.id,
+      receipt: safeReceipt,
+    });
+
+    return result;
   } catch (fetchError) {
     const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
 
@@ -157,7 +179,7 @@ export async function createRazorpayOrder(
         receipt: safeReceipt || undefined,
         notes: input.notes,
       }),
-      10000,
+      6000,
       "Razorpay SDK order.create",
     )) as { id: string; amount: number; currency: string; status?: string; receipt?: string };
 
@@ -217,7 +239,7 @@ export async function fetchRazorpayOrder(
           Authorization: `Basic ${auth}`,
           Connection: "close",
         },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(6000),
       },
     );
 
@@ -250,7 +272,7 @@ export async function fetchRazorpayOrder(
     const freshSdk = new Razorpay({ key_id: keyId, key_secret: keySecret });
     const sdkOrder = (await withTimeout(
       freshSdk.orders.fetch(razorpayOrderId),
-      8000,
+      6000,
       "Razorpay SDK order.fetch",
     )) as { id: string; amount: number; currency: string; status?: string; receipt?: string };
 

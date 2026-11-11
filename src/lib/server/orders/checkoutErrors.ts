@@ -33,6 +33,14 @@ export function formatCheckoutError(error: unknown): string {
     return "Online payments are temporarily unavailable. Our team is updating the payment gateway — please try again shortly or contact support.";
   }
 
+  if (/timed out|timeout|AbortError/i.test(message)) {
+    return "Payment gateway took too long to respond. Please try again in a moment.";
+  }
+
+  if (/ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|fetch failed/i.test(message)) {
+    return "Unable to connect to payment gateway. Please check your connection and try again.";
+  }
+
   if (/Unable to create Razorpay payment order|Razorpay:/i.test(message)) {
     return message.replace(/^Razorpay:\s*/i, "Payment gateway: ");
   }

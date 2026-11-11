@@ -137,6 +137,36 @@ describe("razorpayClient — Direct fetch and SDK fallback", () => {
       expect(mockSdkCreate).toHaveBeenCalledTimes(1);
     });
 
+    it("succeeds on direct fetch retry after transient timeout without invoking SDK", async () => {
+      global.fetch = vi
+        .fn()
+        .mockRejectedValueOnce(new Error("The operation was aborted due to timeout"))
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            id: "order_retry_ok_123",
+            amount: 75000,
+            currency: "INR",
+            receipt: "ORD-RETRY",
+          }),
+        });
+
+      const result = await createRazorpayOrder(
+        {
+          amountPaise: 75000,
+          currency: "INR",
+          receipt: "ORD-RETRY",
+        },
+        { forceDirectFetch: true },
+      );
+
+      expect(result.id).toBe("order_retry_ok_123");
+      expect(result.amount).toBe(75000);
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+      expect(mockSdkCreate).not.toHaveBeenCalled();
+    });
+
     it("sanitizes long receipts to 40 characters maximum", async () => {
       const veryLongReceipt = "ORD-TEST-1234567890123456789012345678901234567890-EXTRA-LONG";
       expect(veryLongReceipt.length).toBeGreaterThan(40);
