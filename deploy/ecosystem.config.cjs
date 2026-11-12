@@ -19,8 +19,18 @@ const fileEnv = loadEnvRecord(projectRoot);
  * Background jobs (requires REDIS_URL — Upstash Redis protocol URL):
  *   pm2 start deploy/ecosystem.config.cjs --only vibe-worker
  */
-const clusterMode = process.env.PM2_CLUSTER === "1";
-const instanceCount = process.env.PM2_INSTANCES || "max";
+// Enable cluster mode by default in production (or if PM2_CLUSTER is "1" or not "0")
+// Can be explicitly disabled with PM2_CLUSTER=0
+const clusterMode =
+  process.env.PM2_CLUSTER !== undefined
+    ? process.env.PM2_CLUSTER === "1"
+    : fileEnv.PM2_CLUSTER !== undefined
+      ? fileEnv.PM2_CLUSTER === "1"
+      : true;
+
+// On 10-core VPS, default to 6 instances to leave room for OS/Postgres/Redis/Nginx
+const instanceCount =
+  process.env.PM2_INSTANCES || fileEnv.PM2_INSTANCES || 6;
 
 const baseEnv = {
   NODE_ENV: "production",
