@@ -176,8 +176,8 @@ function CategoryBentoHeroTile({
             <CategoryBentoImage
               alt={cat.imageAlt}
               className="category-bento__image category-bento__image--hero"
+              loading="lazy"
               objectPosition={cat.imagePosition}
-              priority
               sizes={cat.imageSizes}
               src={cat.image}
               srcSet={cat.imageSrcSet}

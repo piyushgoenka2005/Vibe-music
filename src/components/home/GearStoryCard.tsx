@@ -196,7 +196,7 @@ export default function GearStoryCard({
             aria-hidden="true"
             fill
             sizes="(max-width: 768px) 220px, 260px"
-            loading="eager"
+            loading="lazy"
             unoptimized
             onError={() => {
               if (!posterFailed) setPosterFailed(true);
@@ -215,7 +215,7 @@ export default function GearStoryCard({
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             controls={false}
             aria-hidden="true"

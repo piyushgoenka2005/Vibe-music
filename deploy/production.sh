@@ -140,9 +140,26 @@ sync_nginx() {
   if ! grep -rqsE '^\s*server_names_hash_bucket_size' /etc/nginx/nginx.conf /etc/nginx/conf.d/ 2>/dev/null; then
     echo 'server_names_hash_bucket_size 128;' > /etc/nginx/conf.d/00-hash.conf
   fi
-  mkdir -p /var/cache/nginx/vibe-pages /var/cache/nginx/vibe-images
-  chown -R www-data:www-data /var/cache/nginx/vibe-pages /var/cache/nginx/vibe-images 2>/dev/null || true
-  nginx -t
+    mkdir -p /var/cache/nginx/vibe-pages /var/cache/nginx/vibe-images
+    chown -R www-data:www-data /var/cache/nginx/vibe-pages /var/cache/nginx/vibe-images 2>/dev/null || true
+
+    # Allow www-data to traverse and read static build/public assets directly via sendfile
+    chmod o+x "$(dirname "$APP_DIR")" "$APP_DIR" 2>/dev/null || true
+    [[ -d "$APP_DIR/.next" ]] && chmod o+x "$APP_DIR/.next" 2>/dev/null || true
+    [[ -d "$APP_DIR/.next/static" ]] && chmod -R o+rX "$APP_DIR/.next/static" 2>/dev/null || true
+    [[ -d "$APP_DIR/public" ]] && chmod -R o+rX "$APP_DIR/public" 2>/dev/null || true
+
+    # Enable TCP BBR + fq qdisc if kernel supports it to eliminate cubic throughput stalls
+    if modprobe tcp_bbr 2>/dev/null || sysctl -n net.ipv4.tcp_available_congestion_control 2>/dev/null | grep -qw bbr; then
+      cat > /etc/sysctl.d/99-vibe-network.conf <<'EOF'
+net.core.default_qdisc = fq
+net.ipv4.tcp_congestion_control = bbr
+net.ipv4.tcp_slow_start_after_idle = 0
+EOF
+      sysctl -p /etc/sysctl.d/99-vibe-network.conf >/dev/null 2>&1 || true
+    fi
+
+    nginx -t
   if command -v systemctl >/dev/null 2>&1; then
     systemctl reload-or-restart nginx 2>/dev/null || true
   else
@@ -380,7 +397,7 @@ upstream vibe_nextjs {
 
     # Keepalive connections reduce latency from ~5ms (handshake) to ~0.5ms
     keepalive_timeout 60s;
-    keepalive_requests 1000;
+    keepalive_requests 10000;
 }
 
 # ─── HTTP → HTTPS redirect ────────────────────────────────────────────────
@@ -409,6 +426,8 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/vibemusic.in/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ssl_buffer_size 4k;
+    tcp_nodelay on;
 
     # ── Upload limits ────────────────────────────────────────────────────
     client_max_body_size 25m;
@@ -438,8 +457,9 @@ server {
     gzip_vary on;
     gzip_proxied any;
     gzip_comp_level 5;
-    gzip_types text/plain text/css application/json application/javascript
-               text/xml application/xml image/svg+xml;
+    gzip_min_length 256;
+    gzip_types text/plain text/css application/json application/javascript text/javascript
+               font/woff2 application/font-woff2 application/wasm text/xml application/xml image/svg+xml;
 
     # ── Global proxy defaults (inherited by all proxy_pass locations) ─────
     proxy_http_version 1.1;
@@ -459,19 +479,31 @@ server {
     proxy_busy_buffers_size 64k;
 
     # ════════════════════════════════════════════════════════════════════════
-    # STATIC ASSETS — fast paths, no rate limiting, long cache
+    # STATIC ASSETS — direct disk sendfile, zero Node.js worker hop
     # ════════════════════════════════════════════════════════════════════════
 
     location /_next/static/ {
-        proxy_pass http://vibe_nextjs;
+        alias /root/Vibe-music/.next/static/;
+        access_log off;
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        open_file_cache max=5000 inactive=60s;
+        open_file_cache_valid 120s;
+        open_file_cache_min_uses 1;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        error_page 404 = @vibe_upstream;
+    }
 
-        # Static assets are fingerprinted — 1 year immutable cache
-        add_header Cache-Control "public, max-age=31536000, immutable";
-
-        proxy_connect_timeout 5s;
-        proxy_read_timeout 5s;
-        proxy_send_timeout 5s;
-        proxy_next_upstream off;
+    location /brand/ {
+        root /root/Vibe-music/public;
+        try_files $uri @vibe_upstream;
+        access_log off;
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        open_file_cache max=1000 inactive=120s;
+        add_header Cache-Control "public, max-age=2592000" always;
     }
 
     # Next.js Image Optimizer — disk-cached, long lifetime, stale fallback
@@ -509,24 +541,31 @@ server {
     }
 
     location /images/ {
-        proxy_pass http://vibe_nextjs;
-        add_header Cache-Control "public, max-age=86400";
-
-        proxy_connect_timeout 5s;
-        proxy_read_timeout 10s;
-        proxy_send_timeout 10s;
-        proxy_next_upstream off;
+        root /root/Vibe-music/public;
+        try_files $uri @vibe_upstream;
+        access_log off;
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        open_file_cache max=5000 inactive=120s;
+        add_header Cache-Control "public, max-age=604800" always;
     }
 
     location /videos/ {
-        proxy_pass http://vibe_nextjs;
-        add_header Cache-Control "public, max-age=86400";
+        root /root/Vibe-music/public;
+        try_files $uri @vibe_upstream;
+        access_log off;
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        add_header Cache-Control "public, max-age=604800" always;
+    }
 
-        # Video range requests need generous read timeout
+    location @vibe_upstream {
+        proxy_pass http://vibe_nextjs;
         proxy_connect_timeout 5s;
-        proxy_read_timeout 120s;
-        proxy_send_timeout 30s;
-        proxy_next_upstream off;
+        proxy_read_timeout 30s;
+        proxy_send_timeout 15s;
     }
 
     # ════════════════════════════════════════════════════════════════════════
@@ -852,9 +891,20 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/cdn.vibemusic.in/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ssl_buffer_size 4k;
 
     root /var/www/cdn;
     autoindex off;
+    access_log off;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    open_file_cache max=10000 inactive=120s;
+    open_file_cache_valid 120s;
+    open_file_cache_min_uses 1;
+    gzip on;
+    gzip_vary on;
+    gzip_types image/svg+xml application/json text/plain;
 
     # Derivative fallback: if a specific width (e.g. -w320.webp, -w800.webp) is requested
     # but not present on disk, gracefully fall back to -w480.webp, -w960.webp, or master

@@ -17,18 +17,18 @@ interface CategoryBentoImageProps {
   variant?: "hero" | "card";
 }
 
-function isLocalAsset(src: string): boolean {
-  return src.startsWith("/images/");
+function isDirectAsset(src: string): boolean {
+  return src.startsWith("/images/") || src.includes("cdn.vibemusic.in");
 }
 
 function localImagePath(src: string): string {
-  return src.split("?")[0];
+  return src.startsWith("/images/") ? src.split("?")[0] : src;
 }
 
 export default function CategoryBentoImage({
   alt,
   className,
-  loading: _loading = "lazy",
+  loading = "lazy",
   objectPosition = "center center",
   priority = false,
   sizes,
@@ -38,7 +38,7 @@ export default function CategoryBentoImage({
 }: CategoryBentoImageProps) {
   const [loaded, setLoaded] = useState(priority);
   const [imageSrc, setImageSrc] = useState(src);
-  const useUnoptimized = isLocalAsset(imageSrc);
+  const useUnoptimized = isDirectAsset(imageSrc);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function CategoryBentoImage({
       alt={alt}
       className={`${className}${loadedClass}`}
       fill
-      loading={priority ? undefined : "eager"}
+      loading={priority ? undefined : loading}
       onError={handleError}
       onLoad={markLoaded}
       priority={priority}
@@ -90,7 +90,7 @@ export default function CategoryBentoImage({
         sizes ??
         (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "(min-width: 768px) 50vw, 86vw")
       }
-      src={isLocalAsset(imageSrc) ? localImagePath(imageSrc) : imageSrc}
+      src={isDirectAsset(imageSrc) ? localImagePath(imageSrc) : imageSrc}
       style={imageStyle}
       unoptimized={useUnoptimized}
     />

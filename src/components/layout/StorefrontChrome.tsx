@@ -83,6 +83,9 @@ export default function StorefrontChrome({
   // Viewport/media queries can differ between SSR and the first client paint.
   const hasMounted = useHasMounted();
 
+  const lowEndDevice = hasMounted && isLowEndDevice();
+  const mobileOrLowEnd = hasMounted && (isMobileViewport || lowEndDevice);
+
   const hideMobileFloatingUi = hasMounted && isMobileViewport && (isCheckoutOrCart || isAuthPage);
   const showHelpWidget = !hideChrome && !(hasMounted && isMobileViewport && isAuthPage);
   const showBackToTop = !hideMobileFloatingUi;
@@ -90,6 +93,7 @@ export default function StorefrontChrome({
   const splashEnabled =
     hasMounted &&
     SPLASH_CURSOR_ENABLED &&
+    !mobileOrLowEnd &&
     !prefersReducedMotion &&
     !hideChrome &&
     !isCheckoutOrCart &&
@@ -128,9 +132,6 @@ export default function StorefrontChrome({
     return <>{children}</>;
   }
 
-  const lowEndDevice = hasMounted && isLowEndDevice();
-  const mobileOrLowEnd = hasMounted && (isMobileViewport || lowEndDevice);
-
   const shellClassName = [
     "storefront-shell",
     isLandingPage ? "is-landing-page" : "",
@@ -143,7 +144,7 @@ export default function StorefrontChrome({
 
   return (
     <div className={shellClassName}>
-      <GlassFilter />
+      {isCheckoutOrCart ? <GlassFilter /> : null}
       <SkipToContent />
       <SiteHeader
         shippingAnnouncement={shippingAnnouncement}

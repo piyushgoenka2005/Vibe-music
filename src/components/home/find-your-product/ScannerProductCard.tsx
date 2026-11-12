@@ -27,7 +27,7 @@ export default function ScannerProductCard({
       <Link
         className="scanner-card"
         href={href}
-        prefetch
+        prefetch={false}
         aria-label={ariaHidden ? undefined : `View ${product.name}`}
         tabIndex={ariaHidden ? -1 : undefined}
       >

@@ -50,23 +50,17 @@ export default function Reveal({
         requestAnimationFrame(() => setAnimate(false));
       }
       observer?.disconnect();
-      window.removeEventListener("scroll", checkInView);
-      window.removeEventListener("resize", checkInView);
       if (fallbackTimer) {
         window.clearTimeout(fallbackTimer);
         fallbackTimer = 0;
       }
     };
 
-    const checkInView = () => {
-      const rect = node.getBoundingClientRect();
-      if (rect.top < window.innerHeight + 200 && rect.bottom > -120) {
-        revealNow(rect.top < window.innerHeight && rect.bottom > 0);
-      }
-    };
-
-    checkInView();
-    if (done) return;
+    const rect = node.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 250 && rect.bottom > -120) {
+      revealNow(rect.top < window.innerHeight && rect.bottom > 0);
+      return;
+    }
 
     requestAnimationFrame(() => {
       if (!done) setAnimate(true);
@@ -79,7 +73,7 @@ export default function Reveal({
             revealNow(false);
           }
         },
-        { threshold: 0, rootMargin: "200px 0px 200px 0px" },
+        { threshold: 0, rootMargin: "250px 0px 250px 0px" },
       );
       observer.observe(node);
     } else {
@@ -87,16 +81,12 @@ export default function Reveal({
       return;
     }
 
-    window.addEventListener("scroll", checkInView, { passive: true });
-    window.addEventListener("resize", checkInView, { passive: true });
     /* Safety net so tall sections on mobile never stay stuck at opacity: 0 */
-    fallbackTimer = window.setTimeout(() => revealNow(false), 900);
+    fallbackTimer = window.setTimeout(() => revealNow(false), 600);
 
     return () => {
       done = true;
       observer?.disconnect();
-      window.removeEventListener("scroll", checkInView);
-      window.removeEventListener("resize", checkInView);
       if (fallbackTimer) {
         window.clearTimeout(fallbackTimer);
       }

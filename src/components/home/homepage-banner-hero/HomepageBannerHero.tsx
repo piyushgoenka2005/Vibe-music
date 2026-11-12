@@ -55,24 +55,47 @@ export default function HomepageBannerHero({
     window.dispatchEvent(new Event("site-header:sync"));
   }, []);
 
-  // Preload upcoming slides so rotations and navigation are instant without black flash
+  // Preload adjacent slides only after the initial page load finishes so Slide 0 LCP isn't delayed
   useEffect(() => {
     if (typeof window === "undefined" || slideCount <= 1) return;
-    const isMobile = window.innerWidth <= 767;
-    const nextIndices = [
-      (activeIndex + 1) % slideCount,
-      (activeIndex + 2) % slideCount,
-      (activeIndex - 1 + slideCount) % slideCount,
-    ];
-    for (const idx of nextIndices) {
-      const s = slides[idx];
-      if (!s) continue;
-      const target = isMobile && s.mobileSrc ? s.mobileSrc : s.srcOptimized || s.src;
-      if (target && !target.startsWith("data:")) {
-        const img = new window.Image();
-        img.src = target;
+
+    let cancelled = false;
+    let timer = 0;
+
+    const preloadNeighbors = () => {
+      if (cancelled) return;
+      const isMobile = window.innerWidth <= 767;
+      const nextIndices = [
+        (activeIndex + 1) % slideCount,
+        (activeIndex - 1 + slideCount) % slideCount,
+      ];
+      for (const idx of nextIndices) {
+        const s = slides[idx];
+        if (!s) continue;
+        const target = isMobile && s.mobileSrc ? s.mobileSrc : s.srcOptimized || s.src;
+        if (target && !target.startsWith("data:")) {
+          const img = new window.Image();
+          img.decoding = "async";
+          img.src = target;
+        }
       }
+    };
+
+    const schedulePreload = () => {
+      timer = window.setTimeout(preloadNeighbors, 600);
+    };
+
+    if (document.readyState === "complete") {
+      schedulePreload();
+    } else {
+      window.addEventListener("load", schedulePreload, { once: true });
     }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("load", schedulePreload);
+      if (timer) window.clearTimeout(timer);
+    };
   }, [activeIndex, slides, slideCount]);
 
   // Always open on slide 0. Do not advance while the page-load
@@ -139,7 +162,7 @@ export default function HomepageBannerHero({
         {slides.map((slide, index) => {
           const isFirstSlide = index === 0;
           const isActive = index === activeIndex;
-          const shouldPreload = index <= 1 || isActive || index === (activeIndex + 1) % slideCount;
+          const shouldPreload = isFirstSlide || isActive;
           const isFailed = Boolean(failedSlideIds[slide.id]);
           const currentSrc = isFailed ? FALLBACK_BANNER_SRC : slide.src;
           const currentSrcOptimized = isFailed
@@ -175,7 +198,7 @@ export default function HomepageBannerHero({
                       src={currentSrc}
                       alt={slide.alt}
                       loading={shouldPreload ? "eager" : "lazy"}
-                      fetchPriority={isFirstSlide ? "high" : "auto"}
+                      fetchPriority={isFirstSlide ? "high" : "low"}
                       decoding="async"
                       className="homepage-banner-hero__image"
                       onError={() => handleImageError(slide.id)}

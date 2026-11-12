@@ -34,23 +34,17 @@ export default function RevealGroup({
       done = true;
       setVisible(true);
       observer?.disconnect();
-      window.removeEventListener("scroll", checkInView);
-      window.removeEventListener("resize", checkInView);
       if (fallbackTimer) {
         window.clearTimeout(fallbackTimer);
         fallbackTimer = 0;
       }
     };
 
-    const checkInView = () => {
-      const rect = node.getBoundingClientRect();
-      if (rect.top < window.innerHeight + 200 && rect.bottom > -120) {
-        markVisible();
-      }
-    };
-
-    checkInView();
-    if (done) return;
+    const rect = node.getBoundingClientRect();
+    if (rect.top < window.innerHeight + 250 && rect.bottom > -120) {
+      markVisible();
+      return;
+    }
 
     if (typeof IntersectionObserver !== "undefined") {
       observer = new IntersectionObserver(
@@ -59,7 +53,7 @@ export default function RevealGroup({
             markVisible();
           }
         },
-        { threshold: 0, rootMargin: "200px 0px 200px 0px" },
+        { threshold: 0, rootMargin: "250px 0px 250px 0px" },
       );
       observer.observe(node);
     } else {
@@ -67,15 +61,11 @@ export default function RevealGroup({
       return;
     }
 
-    window.addEventListener("scroll", checkInView, { passive: true });
-    window.addEventListener("resize", checkInView, { passive: true });
-    fallbackTimer = window.setTimeout(markVisible, 900);
+    fallbackTimer = window.setTimeout(markVisible, 600);
 
     return () => {
       done = true;
       observer?.disconnect();
-      window.removeEventListener("scroll", checkInView);
-      window.removeEventListener("resize", checkInView);
       if (fallbackTimer) {
         window.clearTimeout(fallbackTimer);
       }

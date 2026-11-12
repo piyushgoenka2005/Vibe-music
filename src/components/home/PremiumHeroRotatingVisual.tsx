@@ -65,7 +65,7 @@ function HeroMosaicCell({ slide, index }: { slide: MarketingHeroSlide; index: nu
           unoptimized
           className="premium-hero__mosaic-photo"
           sizes="(max-width: 767px) 48vw, (max-width: 1023px) 240px, 260px"
-          priority={index === 0}
+          loading={index === 0 ? "eager" : "lazy"}
           style={{
             objectFit: slide.fit === "cover" ? "cover" : "contain",
             ...(slide.objectPosition ? { objectPosition: slide.objectPosition } : null),
