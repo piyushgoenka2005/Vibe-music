@@ -35,7 +35,7 @@ const ENDPOINTS: Endpoint[] = [
   { path: "/", method: "GET", weight: 30 },
   { path: "/api/homepage", method: "GET", weight: 20 },
   { path: "/api/products", method: "GET", weight: 15 },
-  { path: "/api/products/yamaha-f310", method: "GET", weight: 10 },
+  { path: "/api/products/avus-lineage-7a-drumsticks-with-black-richlite-tip-natural", method: "GET", weight: 10 },
   { path: "/api/search?q=guitar", method: "GET", weight: 10 },
   { path: "/api/catalog/categories", method: "GET", weight: 5 },
   { path: "/api/products/footer-trending", method: "GET", weight: 5 },
