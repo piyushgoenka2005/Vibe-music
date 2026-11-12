@@ -24,12 +24,18 @@
   /* Route shells */
   .premium-home,
   .storefront-page,
+  .cat-page,
+  .cat-listing-shell,
+  .cat-listing-shell__main,
+  .cat-product-grid,
+  .deals-page,
   .blog-page,
   .rentals-page,
   .giveaway-page,
   .gp9-page,
   .program-landing,
   .acct,
+  .admin-page,
   .admin-main,
   .auth-shell {
     width: 100%;

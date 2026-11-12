@@ -83,6 +83,7 @@ async function run() {
         }
       });
 
+      let gotoOk = true;
       const start = Date.now();
       try {
         await page.goto(`${BASE_URL}${route}`, {
@@ -90,44 +91,55 @@ async function run() {
           timeout: 45000,
         });
         // Wait a brief moment for dynamic hydration/images to settle
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(1000);
       } catch (err: any) {
         console.warn(`Warning loading ${route}:`, err.message);
+        pageErrors.push(`Navigation failed: ${err.message}`);
+        gotoOk = false;
       }
       const loadTimeMs = Date.now() - start;
 
-      // Check horizontal overflow
-      const overflowInfo = await page.evaluate(() => {
-        const docElem = document.documentElement;
-        const body = document.body;
-        const scrollWidth = Math.max(docElem.scrollWidth, body ? body.scrollWidth : 0);
-        const innerWidth = window.innerWidth;
-        return {
-          scrollWidth,
-          innerWidth,
-          overflow: scrollWidth > innerWidth + 1, // 1px threshold for subpixel rounding
-        };
-      });
+      let overflowInfo = { scrollWidth: 0, innerWidth: 0, overflow: false };
+      let brokenImagesInfo = { count: 0, broken: [] as string[] };
 
-      // Check broken images
-      const brokenImagesInfo = await page.evaluate(() => {
-        const imgs = Array.from(document.querySelectorAll("img"));
-        const broken: string[] = [];
-        for (const img of imgs) {
-          // If loaded but zero natural dimensions and not hidden
-          if (img.complete && img.naturalWidth === 0 && img.getAttribute("src")) {
-            // Check if visible
-            const rect = img.getBoundingClientRect();
-            if (rect.width > 0 || rect.height > 0) {
-              broken.push(img.src);
+      if (gotoOk) {
+        try {
+          // Check horizontal overflow
+          overflowInfo = await page.evaluate(() => {
+            const docElem = document.documentElement;
+            const body = document.body;
+            const scrollWidth = Math.max(docElem.scrollWidth, body ? body.scrollWidth : 0);
+            const innerWidth = window.innerWidth;
+            return {
+              scrollWidth,
+              innerWidth,
+              overflow: scrollWidth > innerWidth + 1, // 1px threshold for subpixel rounding
+            };
+          });
+
+          // Check broken images
+          brokenImagesInfo = await page.evaluate(() => {
+            const imgs = Array.from(document.querySelectorAll("img"));
+            const broken: string[] = [];
+            for (const img of imgs) {
+              // If loaded but zero natural dimensions and not hidden
+              if (img.complete && img.naturalWidth === 0 && img.getAttribute("src")) {
+                // Check if visible
+                const rect = img.getBoundingClientRect();
+                if (rect.width > 0 || rect.height > 0) {
+                  broken.push(img.src);
+                }
+              }
             }
-          }
+            return {
+              count: broken.length,
+              broken,
+            };
+          });
+        } catch (evalErr: any) {
+          pageErrors.push(`Evaluation failed: ${evalErr.message}`);
         }
-        return {
-          count: broken.length,
-          broken,
-        };
-      });
+      }
 
       const audit: AuditResult = {
         route,
