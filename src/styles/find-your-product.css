@@ -140,8 +140,7 @@
   z-index: 2;
   flex: 0 0 var(--fyp-marquee-height);
   height: var(--fyp-marquee-height);
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: hidden;
 }
 
 .find-your-product__rows {
@@ -153,8 +152,7 @@
   gap: 6px;
   height: 100%;
   padding: 12px 0 10px;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: hidden;
   --scanner-row-curve: 4deg;
   --scanner-row-bleed: clamp(48px, 6vw, 96px);
 }
@@ -251,12 +249,25 @@
   pointer-events: none;
 }
 
+.scanner-row--static {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scanner-row--static::-webkit-scrollbar {
+  display: none;
+}
+
 .scanner-row--static .scanner-row__static-track {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
   gap: 12px;
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   padding: 0 1rem;
 }
 
@@ -801,7 +812,7 @@
 /* Mobile */
 @media (max-width: 767px) {
   .find-your-product {
-    --fyp-marquee-height: clamp(188px, 22vh, 228px);
+    --fyp-marquee-height: clamp(204px, 24vh, 236px);
     --fyp-beam-height: clamp(340px, 48vh, 420px);
     --fyp-beam-lift: 0px;
     --fyp-icon-size: 44px;
@@ -957,7 +968,7 @@
 /* Small phones */
 @media (max-width: 479px) {
   .find-your-product {
-    --fyp-marquee-height: clamp(172px, 20vh, 204px);
+    --fyp-marquee-height: clamp(196px, 23vh, 224px);
     --fyp-beam-height: clamp(300px, 52vh, 380px);
   }
 

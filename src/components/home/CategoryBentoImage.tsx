@@ -78,13 +78,17 @@ export default function CategoryBentoImage({
 
   return (
     <Image
+      ref={imgRef}
       alt={alt}
       className={`${className}${loadedClass}`}
       fill
       onError={handleError}
       onLoad={markLoaded}
       priority={priority}
-      sizes={sizes ?? (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "25vw")}
+      sizes={
+        sizes ??
+        (variant === "hero" ? "(min-width: 1024px) 50vw, 92vw" : "(min-width: 768px) 50vw, 86vw")
+      }
       src={isLocalAsset(imageSrc) ? localImagePath(imageSrc) : imageSrc}
       style={imageStyle}
       unoptimized={useUnoptimized}

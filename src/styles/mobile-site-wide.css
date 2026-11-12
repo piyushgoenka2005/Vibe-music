@@ -1,12 +1,12 @@
 /* ─── Mobile site-wide layer (≤767px) — loaded last for cross-route coverage ─── */
 
 @media (max-width: 767px) {
-  /* Global viewport & body safeguards */
+  /* Global viewport & body safeguards — use clip so position: sticky works */
   html,
   body {
     width: 100%;
     max-width: 100vw;
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
   }
@@ -36,7 +36,6 @@
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
-    overflow-x: hidden;
     overflow-x: clip;
   }
 

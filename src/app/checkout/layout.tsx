@@ -12,12 +12,6 @@ export default function CheckoutLayout({ children }: { children: React.ReactNode
         id="razorpay-checkout-js"
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
-        onLoad={() => {
-          if (typeof window !== "undefined") {
-            const el = document.getElementById("razorpay-checkout-js");
-            if (el) el.setAttribute("data-razorpay-loaded", "true");
-          }
-        }}
       />
       {children}
     </>

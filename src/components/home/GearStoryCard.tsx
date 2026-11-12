@@ -36,6 +36,7 @@ export default function GearStoryCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const userPausedRef = useRef(false);
   const [userPaused, setUserPaused] = useState(false);
+  const [posterFailed, setPosterFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [nearViewport, setNearViewport] = useState(false);
@@ -64,9 +65,10 @@ export default function GearStoryCard({
 
   useEffect(() => {
     setCandidateIndex(0);
+    setPosterFailed(false);
     setVideoFailed(false);
     setVideoReady(false);
-  }, [story.id, story.videoUrl]);
+  }, [story.id, story.posterUrl, story.videoUrl]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -156,6 +158,10 @@ export default function GearStoryCard({
     setVideoReady(true);
   }, []);
 
+  const resolvedPoster = !posterFailed
+    ? story.posterUrl || story.image || "/images/guitar-1.webp"
+    : story.image || "/images/guitar-1.webp";
+
   return (
     <article
       ref={containerRef}
@@ -173,16 +179,19 @@ export default function GearStoryCard({
       }
     >
       <div className="gear-story-card__media">
-        {story.posterUrl ? (
+        {resolvedPoster ? (
           <Image
             className="gear-story-card__poster"
-            src={story.posterUrl}
+            src={resolvedPoster}
             alt=""
             aria-hidden="true"
             fill
-            sizes="(max-width: 768px) 22vw, 260px"
-            loading="lazy"
+            sizes="(max-width: 768px) 220px, 260px"
+            loading="eager"
             unoptimized
+            onError={() => {
+              if (!posterFailed) setPosterFailed(true);
+            }}
           />
         ) : null}
         {shouldMountVideo ? (
@@ -192,7 +201,7 @@ export default function GearStoryCard({
               .filter(Boolean)
               .join(" ")}
             src={videoSrc}
-            poster={story.posterUrl}
+            poster={resolvedPoster}
             autoPlay
             muted
             loop

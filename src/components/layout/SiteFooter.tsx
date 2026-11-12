@@ -48,25 +48,31 @@ export default function SiteFooter({ legal }: { legal: PublicLegalInfo }) {
     const resizeObserver = new ResizeObserver(syncSpacer);
     resizeObserver.observe(panel);
 
-    const readyObserver = new IntersectionObserver(
-      ([entry]) => {
-        const isReady = Boolean(entry?.isIntersecting);
-        panel.classList.toggle("is-ready", isReady);
-        if (isReady) {
-          syncSpacer();
-        }
-      },
-      { threshold: 0.08, rootMargin: "0px 0px 0px 0px" },
-    );
-
-    readyObserver.observe(shell ?? footer);
-
-    const updateInteractive = () => {
+    const syncFooterState = () => {
+      const footerRect = footer.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+      const isReady = footerRect.top < viewportHeight + 180 && footerRect.bottom > 0;
+      panel.classList.toggle("is-ready", isReady);
+      if (isReady) {
+        syncSpacer();
+      }
       if (!shell) return;
       const shellRect = shell.getBoundingClientRect();
-      /* Trending becomes interactive only after Inside Vibe Music has scrolled mostly off */
-      const panelInteractive = shellRect.bottom <= window.innerHeight * 0.2;
+      const panelInteractive = isReady && shellRect.bottom < viewportHeight - 16;
       panel.classList.toggle("is-interactive", panelInteractive);
+    };
+
+    const readyObserver = new IntersectionObserver(
+      () => {
+        syncFooterState();
+      },
+      { threshold: 0, rootMargin: "180px 0px 180px 0px" },
+    );
+
+    readyObserver.observe(footer);
+
+    const updateInteractive = () => {
+      syncFooterState();
     };
 
     let scrollFrame = 0;
