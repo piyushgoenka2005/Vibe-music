@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type RefObject } from "react";
+import { useEffect, useMemo, useState, type RefObject } from "react";
 import { MapPin, Truck } from "lucide-react";
 import { isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
@@ -68,7 +68,18 @@ export default function ProductBuyBox({
   const isComingSoon = !isPurchasablePrice(displayPrice);
 
   const maxQuantity = Math.max(1, Math.min(99, selectedVariant.stock || 99));
-  const { dateLabel, orderWindow } = useMemo(() => getDeliveryEstimate(), []);
+  const { dateLabel } = useMemo(() => getDeliveryEstimate(), []);
+  const [orderWindow, setOrderWindow] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => {
+      const est = getDeliveryEstimate();
+      if (est.orderWindow && est.orderWindow !== "today") {
+        setOrderWindow(est.orderWindow);
+      }
+    });
+    return () => cancelAnimationFrame(handle);
+  }, []);
   const formattedLineTotal = formatPrecise(lineTotal);
   const priceParts = splitPriceParts(formattedLineTotal, symbol);
 
@@ -147,7 +158,7 @@ export default function ProductBuyBox({
             <p className="pdp-buybox__delivery-line" suppressHydrationWarning>
               <span className="pdp-buybox__delivery-free">FREE delivery</span>{" "}
               <strong suppressHydrationWarning>{dateLabel}</strong>
-              {orderWindow !== "today" ? (
+              {orderWindow ? (
                 <>
                   . Order within <span suppressHydrationWarning>{orderWindow}</span>.
                 </>

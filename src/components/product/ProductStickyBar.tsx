@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useLayoutEffect, useMemo, useState, type RefObject } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useTranslation } from "@/lib/i18n";
@@ -88,7 +88,7 @@ export default function ProductStickyBar({
   const priceLabel = useMemo(() => formatDisplay(price), [formatDisplay, price]);
   const showNotify = isComingSoon || !inStock;
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
@@ -130,7 +130,7 @@ export default function ProductStickyBar({
 
   const showBar = visible && !footerInView;
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!isClient) return;
     document.body.classList.toggle("pdp-mobile-bar-active", showBar);
     return () => document.body.classList.remove("pdp-mobile-bar-active");
