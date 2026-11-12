@@ -65,14 +65,7 @@ async function mirrorBanners(now: string): Promise<void> {
 }
 
 async function mirrorHomepageItems(now: string): Promise<void> {
-  const items = await prisma.homepageSectionItem.findMany({
-    where: {
-      OR: [
-        { customImage: { contains: "postimage", mode: "insensitive" } },
-        { customImage: { contains: "postimg", mode: "insensitive" } },
-      ],
-    },
-  });
+  const items = await prisma.homepageSectionItem.findMany();
   for (const item of items) {
     if (!item.customImage || !isMirrorableExternalImageUrl(item.customImage)) continue;
     const customImage = await mirror(item.customImage, bannerUploadFolder());
