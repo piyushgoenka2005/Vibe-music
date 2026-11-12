@@ -33,6 +33,7 @@ export default function GearStoryCard({
   onOpen,
 }: GearStoryCardProps) {
   const containerRef = useRef<HTMLElement>(null);
+  const posterImgRef = useRef<HTMLImageElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const userPausedRef = useRef(false);
   const [userPaused, setUserPaused] = useState(false);
@@ -69,6 +70,13 @@ export default function GearStoryCard({
     setVideoFailed(false);
     setVideoReady(false);
   }, [story.id, story.posterUrl, story.videoUrl]);
+
+  useEffect(() => {
+    const img = posterImgRef.current;
+    if (img && img.complete && img.naturalWidth === 0 && !posterFailed) {
+      setPosterFailed(true);
+    }
+  }, [posterFailed, story.posterUrl]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -181,6 +189,7 @@ export default function GearStoryCard({
       <div className="gear-story-card__media">
         {resolvedPoster ? (
           <Image
+            ref={posterImgRef}
             className="gear-story-card__poster"
             src={resolvedPoster}
             alt=""

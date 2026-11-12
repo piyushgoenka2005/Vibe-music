@@ -82,6 +82,7 @@ export default function CategoryBentoImage({
       alt={alt}
       className={`${className}${loadedClass}`}
       fill
+      loading={priority ? undefined : "eager"}
       onError={handleError}
       onLoad={markLoaded}
       priority={priority}
