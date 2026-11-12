@@ -100,7 +100,7 @@ export default function HomepageProductCarouselSection({
 
   const isPremium = PREMIUM_CAROUSEL_KEYS.has(section.key);
   const titleId = `${section.sectionId}-title`;
-  const eyebrow = CAROUSEL_EYEBROWS[section.key] ?? section.accentLabel;
+  const eyebrow = section.accentLabel || CAROUSEL_EYEBROWS[section.key];
   const defaults = SECTION_DEFAULTS[section.key];
   const subtitle = section.subtitle ?? defaults?.subtitle;
   const ctaText = section.ctaText ?? defaults?.ctaText;

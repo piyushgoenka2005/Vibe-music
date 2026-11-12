@@ -99,7 +99,7 @@ function toProductItem(
   return {
     id: product.id,
     slug: product.slug,
-    brand: product.brand,
+    brand: overrides?.brandId?.trim() ? overrides.brandId.trim() : product.brand,
     name: overrides?.customTitle?.trim() ? overrides.customTitle : product.name,
     price: hasDiscount ? product.originalPrice : product.price,
     salePrice,
@@ -129,7 +129,10 @@ function resolveManualProducts(
           return {
             id: item.id,
             slug: item.customHref?.replace(/^\/product\//, "") || item.id,
-            brand: item.brandId || item.badgeLabel || "Roland",
+            brand:
+              item.brandId?.trim() ||
+              item.badgeLabel ||
+              (item.sectionKey === "shop_the_highlights" ? "Roland" : "Vibe Music"),
             name: item.customTitle,
             price: 0,
             salePrice: null,
@@ -437,6 +440,7 @@ function sectionDomId(sectionKey: HomepageSectionKey): string {
     gear_stories: "gear-stories",
     shop_the_highlights: "shop-the-highlights",
     gear_advisors: "gear-advisors",
+    trending_buys: "trending-buys",
     store_network: "store-network",
     find_your_product: "find-your-product",
     social_rail: "social-rail",
@@ -676,6 +680,7 @@ async function resolveSection(
     effectiveSection.sectionKey === "category_bento" ||
     effectiveSection.sectionKey === "shop_the_highlights" ||
     effectiveSection.sectionKey === "gear_advisors" ||
+    effectiveSection.sectionKey === "trending_buys" ||
     effectiveSection.sectionKey === "social_rail"
   ) {
     return null;
@@ -1649,4 +1654,289 @@ export async function seedDefaultGearAdvisors() {
   await invalidatePublicHomepageCacheAsync();
 
   return listSectionItems("gear_advisors");
+}
+
+export interface PublicTrendingBuysData {
+  isActive: boolean;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaText: string;
+  ctaLink: string;
+  cardActionLabel: string;
+  products: HomepageProductItem[];
+}
+
+function productToHomepageItem(product: {
+  id: string;
+  slug: string;
+  brand: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  category: string;
+  image: string;
+  rating?: number;
+  reviewCount?: number;
+}): HomepageProductItem {
+  const resolved = resolveProductCardImage({
+    slug: product.slug,
+    category: product.category,
+    image: product.image,
+  });
+  const hasDiscount = (product.originalPrice ?? 0) > product.price && product.price > 0;
+  const { rating, reviewCount } = ensureProductReviewMetrics({
+    id: product.id,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+  });
+  return {
+    id: product.id,
+    slug: product.slug,
+    brand: product.brand,
+    name: product.name,
+    price: hasDiscount ? (product.originalPrice ?? product.price) : product.price,
+    salePrice: hasDiscount ? product.price : null,
+    image: resolved.src,
+    imageFallback: resolved.fallbackSrc,
+    imageAlt: product.name,
+    rating,
+    reviewCount,
+    href: productPath(product.slug),
+    requiresVariantSelection: false,
+  };
+}
+
+/**
+ * Fetch trending_buys ("Buy what's trending") section for storefront rendering.
+ * Supports admin-editable eyebrow, title, subtitle, CTA, card action label, item limit,
+ * and Auto (live catalog trending) vs Manual curated items.
+ */
+export async function getTrendingBuysPublicData(at = new Date()): Promise<PublicTrendingBuysData> {
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "trending_buys",
+  );
+
+  const fallbackMeta = {
+    eyebrow: defaults?.accentLabel ?? "Trending now",
+    title: defaults?.title ?? "Buy what's trending",
+    subtitle:
+      defaults?.subtitle ??
+      "In-stock gear other musicians are shopping right now — products only, ready to add to cart.",
+    ctaText: defaults?.ctaText ?? "Shop all trending",
+    ctaLink: defaults?.ctaLink ?? "/search/results?q=trending",
+    cardActionLabel: defaults?.secondaryCtaText ?? "View product",
+  };
+
+  try {
+    const [section, products, allItems] = await Promise.all([
+      getSectionByKey("trending_buys"),
+      getCachedHomepageProducts(),
+      listAllSectionItems(),
+    ]);
+
+    const config = section ?? {
+      id: "trending_buys",
+      sectionKey: "trending_buys" as const,
+      title: fallbackMeta.title,
+      subtitle: fallbackMeta.subtitle,
+      accentLabel: fallbackMeta.eyebrow,
+      ctaText: fallbackMeta.ctaText,
+      ctaLink: fallbackMeta.ctaLink,
+      secondaryCtaText: fallbackMeta.cardActionLabel,
+      isActive: defaults?.isActive ?? true,
+      sortOrder: defaults?.sortOrder ?? 16,
+      sourceMode: defaults?.sourceMode ?? ("auto" as const),
+      maxItems: defaults?.maxItems ?? 3,
+      layout: defaults?.layout ?? ("product_grid" as const),
+      createdAt: at.toISOString(),
+      updatedAt: at.toISOString(),
+    };
+
+    const resolvedMeta = section
+      ? {
+          eyebrow: config.accentLabel ?? "",
+          title: config.title || fallbackMeta.title,
+          subtitle: config.subtitle ?? "",
+          ctaText: config.ctaText ?? "",
+          ctaLink: config.ctaLink ?? "",
+          cardActionLabel: config.secondaryCtaText || fallbackMeta.cardActionLabel,
+        }
+      : fallbackMeta;
+
+    if (!config.isActive) {
+      return {
+        isActive: false,
+        ...resolvedMeta,
+        products: [],
+      };
+    }
+
+    const limit = Math.max(1, Math.min(config.maxItems || 3, 12));
+
+    if (config.sourceMode === "manual") {
+      const items = allItems
+        .filter(
+          (item) =>
+            item.sectionKey === "trending_buys" &&
+            item.isActive &&
+            (Boolean(item.productId) ||
+              Boolean(item.customTitle && (item.customHref || item.customImage))) &&
+            isHomepageItemScheduledActive(item, at),
+        )
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .slice(0, limit);
+
+      return {
+        isActive: true,
+        ...resolvedMeta,
+        products: resolveManualProducts(items, products),
+      };
+    }
+
+    // Auto mode: prefer live trending catalog products (non-blocking budget), then fallback to cached catalog.
+    let autoProducts: HomepageProductItem[] = [];
+    try {
+      const { getTrendingProducts } = await import("@/lib/server/productRepository");
+      const liveTrending = await Promise.race([
+        getTrendingProducts().then((list) => list.filter((p) => p.price > 0)),
+        new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), 450);
+        }),
+      ]);
+      if (liveTrending && liveTrending.length > 0) {
+        autoProducts = liveTrending.slice(0, limit).map(productToHomepageItem);
+      }
+    } catch {
+      // Fall back to cached homepage catalog below.
+    }
+
+    if (autoProducts.length === 0) {
+      autoProducts = resolveAutoProducts("trending", products, limit);
+    }
+
+    return {
+      isActive: true,
+      ...resolvedMeta,
+      products: autoProducts,
+    };
+  } catch {
+    return {
+      isActive: true,
+      ...fallbackMeta,
+      products: [],
+    };
+  }
+}
+
+/**
+ * Seeds `trending_buys`:
+ * - `"items"`: snapshots current live trending products into editable manual items and switches Source Mode to `"manual"`.
+ * - `"defaults"`: restores default heading, subtitle, CTA labels, limit (3), and Auto source mode.
+ */
+export async function seedDefaultTrendingBuys(mode: "items" | "defaults" = "items") {
+  const { prisma } = await import("@/lib/db/prisma");
+  const { invalidateHomepageCache, listSectionItems } =
+    await import("@/lib/server/homepage/homepageRepository");
+  const timestamp = new Date().toISOString();
+  const defaults = DEFAULT_HOMEPAGE_SECTIONS.find(
+    (section) => section.sectionKey === "trending_buys",
+  );
+
+  const existing = await prisma.homepageSection.findUnique({
+    where: { sectionKey: "trending_buys" },
+  });
+
+  if (mode === "defaults" || !existing) {
+    await prisma.homepageSection.upsert({
+      where: { sectionKey: "trending_buys" },
+      create: {
+        id: "trending_buys",
+        sectionKey: "trending_buys",
+        title: defaults?.title ?? "Buy what's trending",
+        subtitle:
+          defaults?.subtitle ??
+          "In-stock gear other musicians are shopping right now — products only, ready to add to cart.",
+        accentLabel: defaults?.accentLabel ?? "Trending now",
+        ctaText: defaults?.ctaText ?? "Shop all trending",
+        ctaLink: defaults?.ctaLink ?? "/search/results?q=trending",
+        secondaryCtaText: defaults?.secondaryCtaText ?? "View product",
+        isActive: true,
+        sortOrder: defaults?.sortOrder ?? 16,
+        sourceMode: mode === "items" ? "manual" : "auto",
+        maxItems: 3,
+        layout: "product_grid",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      },
+      update: {
+        isActive: true,
+        title: defaults?.title ?? "Buy what's trending",
+        subtitle:
+          defaults?.subtitle ??
+          "In-stock gear other musicians are shopping right now — products only, ready to add to cart.",
+        accentLabel: defaults?.accentLabel ?? "Trending now",
+        ctaText: defaults?.ctaText ?? "Shop all trending",
+        ctaLink: defaults?.ctaLink ?? "/search/results?q=trending",
+        secondaryCtaText: defaults?.secondaryCtaText ?? "View product",
+        sourceMode: mode === "items" ? "manual" : "auto",
+        maxItems: 3,
+        layout: "product_grid",
+        updatedAt: timestamp,
+      },
+    });
+  }
+
+  if (mode === "items") {
+    const limit = Math.max(1, Math.min(existing?.maxItems ?? 3, 12));
+    const { getTrendingProducts } = await import("@/lib/server/productRepository");
+    const live = await getTrendingProducts()
+      .then((list) => list.filter((p) => p.price > 0))
+      .catch(() => []);
+
+    const sourceList = live.slice(0, limit);
+    const catalogIds = sourceList.map((p) => p.id);
+    const existingCatalog =
+      catalogIds.length > 0
+        ? await prisma.product.findMany({
+            where: { id: { in: catalogIds } },
+            select: { id: true },
+          })
+        : [];
+    const validIds = new Set(existingCatalog.map((row) => row.id));
+
+    await prisma.homepageSection.update({
+      where: { sectionKey: "trending_buys" },
+      data: {
+        sourceMode: "manual",
+        isActive: true,
+        updatedAt: timestamp,
+      },
+    });
+
+    await prisma.homepageSectionItem.deleteMany({
+      where: { sectionKey: "trending_buys" },
+    });
+
+    const seedRows = sourceList
+      .filter((p) => validIds.has(p.id))
+      .map((product, index) => ({
+        id: `trending-buys-${Date.now()}-${index + 1}`,
+        sectionKey: "trending_buys",
+        sortOrder: index + 1,
+        isActive: true,
+        productId: product.id,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      }));
+
+    if (seedRows.length > 0) {
+      await prisma.homepageSectionItem.createMany({ data: seedRows });
+    }
+  }
+
+  invalidateHomepageCache();
+  await invalidatePublicHomepageCacheAsync();
+
+  return listSectionItems("trending_buys");
 }

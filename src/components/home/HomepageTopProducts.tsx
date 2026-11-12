@@ -9,7 +9,13 @@ import Reveal from "@/components/layout/Reveal";
 
 const HEADLINE_ID = "top-products-title";
 
-export function TopProductCard({ product }: { product: HomepageProductItem }) {
+export function TopProductCard({
+  product,
+  actionLabel = "View product",
+}: {
+  product: HomepageProductItem;
+  actionLabel?: string;
+}) {
   return (
     <article className="blog-teaser__card">
       <ProductShareButton overlay position="top-left" title={product.name} url={product.href} />
@@ -41,7 +47,7 @@ export function TopProductCard({ product }: { product: HomepageProductItem }) {
           <div className="blog-teaser__footer">
             <p className="blog-teaser__meta">{product.brand}</p>
             <span className="blog-teaser__read">
-              View product
+              {actionLabel}
               {SECTION_CTA_ARROW}
             </span>
           </div>
