@@ -5,7 +5,7 @@ import { logWarn } from "@/lib/server/logger";
 import { uploadBufferToCdn } from "@/lib/server/platform/cdnStorage";
 
 /** Free public image hosts admins paste links from; copies live on our CDN instead. */
-const MIRRORED_IMAGE_HOSTS = ["postimage.me", "postimg.cc"];
+const MIRRORED_IMAGE_HOSTS = ["postimage.me", "postimg.cc", "myimgs.org"];
 
 const MAX_MIRROR_BYTES = 15 * 1024 * 1024;
 const MIRROR_FETCH_TIMEOUT_MS = 15_000;
@@ -41,7 +41,7 @@ export async function mirrorExternalImageToCdn(url: string, folder: string): Pro
 
   try {
     const response = await fetch(trimmed, {
-      redirect: "error",
+      redirect: "follow",
       signal: AbortSignal.timeout(MIRROR_FETCH_TIMEOUT_MS),
       headers: { Accept: "image/*", "User-Agent": "VibeMusicCdnMirror/1.0" },
     });
