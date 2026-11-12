@@ -18,6 +18,7 @@ function formatReviewDate(value: string): string {
     year: "numeric",
     month: "short",
     day: "numeric",
+    timeZone: "Asia/Kolkata",
   });
 }
 
@@ -29,7 +30,9 @@ export default function ReviewCard({ review, productSlug }: ReviewCardProps) {
           <div className="pdp-review-card__meta">
             <StarRating value={review.rating} size="sm" />
             <span className="pdp-review-card__author">{review.author}</span>
-            <span className="pdp-review-card__date">{formatReviewDate(review.createdAt)}</span>
+            <span className="pdp-review-card__date" suppressHydrationWarning>
+              {formatReviewDate(review.createdAt)}
+            </span>
             {review.verifiedPurchase ? <VerifiedPurchaseBadge /> : null}
           </div>
           <h4 className="pdp-review-card__title">{review.title}</h4>

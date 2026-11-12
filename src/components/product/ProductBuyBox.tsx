@@ -122,11 +122,21 @@ export default function ProductBuyBox({
               <span className="pdp-buybox__coming-soon-label">Coming Soon</span>
             </div>
           ) : (
-            <div className="pdp-buybox__price pdp-buybox__price--tag" aria-label="Current price">
-              <span className="pdp-buybox__price-symbol">{priceParts.symbol}</span>
-              <span className="pdp-buybox__price-whole">{priceParts.whole}</span>
+            <div
+              className="pdp-buybox__price pdp-buybox__price--tag"
+              aria-label="Current price"
+              suppressHydrationWarning
+            >
+              <span className="pdp-buybox__price-symbol" suppressHydrationWarning>
+                {priceParts.symbol}
+              </span>
+              <span className="pdp-buybox__price-whole" suppressHydrationWarning>
+                {priceParts.whole}
+              </span>
               {priceParts.fraction ? (
-                <span className="pdp-buybox__price-fraction">.{priceParts.fraction}</span>
+                <span className="pdp-buybox__price-fraction" suppressHydrationWarning>
+                  .{priceParts.fraction}
+                </span>
               ) : null}
             </div>
           )}
@@ -134,12 +144,12 @@ export default function ProductBuyBox({
 
         {canPurchase ? (
           <div className="pdp-buybox__delivery">
-            <p className="pdp-buybox__delivery-line">
+            <p className="pdp-buybox__delivery-line" suppressHydrationWarning>
               <span className="pdp-buybox__delivery-free">FREE delivery</span>{" "}
-              <strong>{dateLabel}</strong>
+              <strong suppressHydrationWarning>{dateLabel}</strong>
               {orderWindow !== "today" ? (
                 <>
-                  . Order within <span>{orderWindow}</span>.
+                  . Order within <span suppressHydrationWarning>{orderWindow}</span>.
                 </>
               ) : null}{" "}
               <button
