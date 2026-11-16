@@ -141,4 +141,65 @@ describe("canonicalSubcategorySlug and canonicalSubcategoryLabel", () => {
     expect(filteredResult.total).toBe(3);
     expect(filteredResult.products).toHaveLength(3);
   });
+
+  it("correctly paginates products across pages 1 through 7 for 74 products (Hertz brand scenario)", () => {
+    const products: Product[] = Array.from({ length: 74 }, (_, i) => ({
+      id: `hertz-prod-${i + 1}`,
+      slug: `hertz-prod-${i + 1}`,
+      name: `Hertz Product ${i + 1}`,
+      brand: "Hertz",
+      brandSlug: "hertz",
+      category: "Guitars",
+      categorySlug: "guitars",
+      price: 1000 + i * 10,
+      originalPrice: 1200 + i * 10,
+      discountPercentage: 10,
+      rating: 4.5,
+      reviewCount: 5,
+      stock: 10,
+      status: "active",
+      featured: false,
+      image: `/img/prod-${i + 1}.png`,
+      imageColor: "#000",
+      availability: "in-stock",
+      condition: "new",
+      features: [],
+    }));
+
+    // Page 1
+    const p1 = buildCategoryProductsResult(products, { ...DEFAULT_FILTERS, page: 1 });
+    expect(p1.total).toBe(74);
+    expect(p1.totalPages).toBe(7);
+    expect(p1.page).toBe(1);
+    expect(p1.products).toHaveLength(12);
+    expect(p1.products[0].id).toBe("hertz-prod-1");
+    expect(p1.products[11].id).toBe("hertz-prod-12");
+
+    // Page 2
+    const p2 = buildCategoryProductsResult(products, { ...DEFAULT_FILTERS, page: 2 });
+    expect(p2.total).toBe(74);
+    expect(p2.totalPages).toBe(7);
+    expect(p2.page).toBe(2);
+    expect(p2.products).toHaveLength(12);
+    expect(p2.products[0].id).toBe("hertz-prod-13");
+    expect(p2.products[11].id).toBe("hertz-prod-24");
+
+    // Page 3
+    const p3 = buildCategoryProductsResult(products, { ...DEFAULT_FILTERS, page: 3 });
+    expect(p3.page).toBe(3);
+    expect(p3.products).toHaveLength(12);
+    expect(p3.products[0].id).toBe("hertz-prod-25");
+
+    // Page 7 (last page)
+    const p7 = buildCategoryProductsResult(products, { ...DEFAULT_FILTERS, page: 7 });
+    expect(p7.page).toBe(7);
+    expect(p7.products).toHaveLength(2);
+    expect(p7.products[0].id).toBe("hertz-prod-73");
+    expect(p7.products[1].id).toBe("hertz-prod-74");
+
+    // Page out of bounds (page 99 clamped to totalPages)
+    const pClamped = buildCategoryProductsResult(products, { ...DEFAULT_FILTERS, page: 99 });
+    expect(pClamped.page).toBe(7);
+    expect(pClamped.products).toHaveLength(2);
+  });
 });

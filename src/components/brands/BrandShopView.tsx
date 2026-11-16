@@ -44,11 +44,6 @@ function BrandShopViewContent({ brand }: BrandShopViewProps) {
   } = useCategoryFilters();
   const openMobileDrawer = useFilterStore((s) => s.openMobileDrawer);
 
-  useEffect(() => {
-    if (filters.brands.includes(brand.slug)) return;
-    updateFilters({ brands: [brand.slug] });
-  }, [brand.slug, filters.brands, updateFilters]);
-
   const data = useMemo(
     () => buildCategoryProductsResult(brand.products, filters),
     [brand.products, filters],
