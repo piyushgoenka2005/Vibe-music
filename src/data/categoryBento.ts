@@ -24,19 +24,17 @@ export interface CategoryBentoItem {
 }
 
 const BENTO_IMAGE_FILES: Record<string, string> = {
-  guitars: "https://myimgs.org/storage/images/75152/guitars_banner_800x600.webp",
-  "studio-recording":
-    "https://myimgs.org/storage/images/75156/studio_recording_banner_800x600.webp",
-  "drums-percussion":
-    "https://myimgs.org/storage/images/75157/drums_percussion_banner_800x600.webp",
+  guitars: "https://cdn.myimgs.org/images/75152/guitars_banner_800x600.webp",
+  "studio-recording": "https://cdn.myimgs.org/images/75156/studio_recording_banner_800x600.webp",
+  "drums-percussion": "https://cdn.myimgs.org/images/75157/drums_percussion_banner_800x600.webp",
   "keyboards-synthesizers":
-    "https://myimgs.org/storage/images/75155/roland_keyboards_synthesizers_800x600.webp",
+    "https://cdn.myimgs.org/images/75155/roland_keyboards_synthesizers_800x600.webp",
   "live-sound-lighting": "/images/browse-categories/live-sound.jpg",
   "microphones-wireless":
-    "https://myimgs.org/storage/images/75186/microphones_wireless_banner_800x600.webp",
-  "dj-equipment": "https://myimgs.org/storage/images/75022/amplifiers_effects_ds2_800x600.webp",
+    "https://cdn.myimgs.org/images/75186/microphones_wireless_banner_800x600.webp",
+  "dj-equipment": "https://cdn.myimgs.org/images/75022/amplifiers_effects_ds2_800x600.webp",
   "cables-cases-accessories":
-    "https://myimgs.org/storage/images/74368/AcousticGuitarsProductBanner.webp",
+    "https://cdn.myimgs.org/images/74368/AcousticGuitarsProductBanner.webp",
 };
 
 /** Build optimized image URL for bento tile sizes (edge-to-edge banners). */

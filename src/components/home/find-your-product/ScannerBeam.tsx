@@ -2,7 +2,21 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
 
-export default function ScannerBeam() {
+interface ScannerBeamProps {
+  title?: string;
+  ctaText?: string;
+  ctaLink?: string;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
+}
+
+export default function ScannerBeam({
+  title = "Gear built for every stage",
+  ctaText = "Shop deals",
+  ctaLink = ROUTES.deals,
+  secondaryCtaText = "Browse all",
+  secondaryCtaLink = ROUTES.search,
+}: ScannerBeamProps) {
   return (
     <div className="find-your-product__beam-zone">
       <div className="find-your-product__beam" aria-hidden>
@@ -34,22 +48,22 @@ export default function ScannerBeam() {
       </div>
 
       <div className="find-your-product__content">
-        <h3 className="find-your-product__content-title">Gear built for every stage</h3>
+        <h3 className="find-your-product__content-title">{title}</h3>
         <div className="find-your-product__content-actions">
-          <Link href={ROUTES.deals} className="find-your-product__cta">
-            Shop deals
+          <Link href={ctaLink} className="find-your-product__cta">
+            {ctaText}
           </Link>
           <Link
-            href={ROUTES.search}
+            href={secondaryCtaLink}
             className="find-your-product__cta find-your-product__cta--outline"
           >
-            Browse all
+            {secondaryCtaText}
           </Link>
         </div>
       </div>
 
       <p className="find-your-product__label">
-          <Link href={ROUTES.search} className="find-your-product__label-link">
+        <Link href={secondaryCtaLink} className="find-your-product__label-link">
           Find your gear
           <ArrowUpRight
             className="find-your-product__label-arrow"

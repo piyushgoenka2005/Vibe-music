@@ -812,11 +812,17 @@
 /* Mobile */
 @media (max-width: 767px) {
   .find-your-product {
-    --fyp-marquee-height: clamp(204px, 24vh, 236px);
-    --fyp-beam-height: clamp(340px, 48vh, 420px);
+    --fyp-marquee-height: auto;
+    --fyp-beam-height: auto;
     --fyp-beam-lift: 0px;
     --fyp-icon-size: 44px;
     --fyp-spine-width: 12px;
+  }
+
+  .find-your-product__spine,
+  .find-your-product__junction,
+  .find-your-product__beam {
+    display: none !important;
   }
 
   .find-your-product__header {
@@ -842,19 +848,35 @@
     padding-inline: 0.25rem;
   }
 
+  .find-your-product__stage {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow: visible;
+  }
+
+  .find-your-product__marquee {
+    position: relative;
+    z-index: 2;
+    flex: none;
+    height: auto;
+    overflow: hidden;
+  }
+
   .find-your-product__rows {
-    --scanner-row-curve: 2.5deg;
-    --scanner-row-bleed: clamp(28px, 8vw, 48px);
-    gap: 4px;
-    padding: 10px 0 8px;
+    --scanner-row-curve: 0deg;
+    --scanner-row-bleed: clamp(16px, 4vw, 28px);
+    gap: 8px;
+    padding: 8px 0;
   }
 
   .scanner-row {
-    max-height: 62px;
+    max-height: 72px;
   }
 
   .scanner-row__inner {
-    min-height: 56px;
+    min-height: 62px;
+    transform: none !important;
   }
 
   .scanner-row__track {
@@ -866,26 +888,36 @@
   }
 
   .scanner-card-wrap {
-    width: clamp(200px, 72vw, 228px);
+    width: clamp(210px, 66vw, 250px);
   }
 
   .scanner-card {
-    padding: 9px 34px 9px 10px;
-    gap: 9px;
-    border-radius: 12px;
+    padding: 10px 14px;
+    gap: 10px;
+    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid rgba(18, 83, 237, 0.12);
+    box-shadow: 0 2px 8px rgba(18, 83, 237, 0.06);
   }
 
   .scanner-card__img,
   .scanner-card__empty-thumb {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
   }
 
   .scanner-card__name {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
-  .scanner-card__price,
+  .scanner-card__price {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brand-primary, #1253ed);
+  }
+
   .scanner-card__tag {
     font-size: 10px;
   }
@@ -907,57 +939,68 @@
     );
   }
 
-  /* Stretch the funnel wider than the content so title sits on blue;
-     clip at the beam zone so negative inset cannot scroll the page */
+  /* Clean, non-overlapping CTA card below marquee on mobile */
   .find-your-product__beam-zone {
-    overflow-x: clip;
-    overflow-y: visible;
-  }
-
-  .find-your-product__beam {
-    inset: 0 -20%;
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: auto;
+    flex: none;
+    margin: 0.5rem max(1rem, env(safe-area-inset-left, 0px)) 1.5rem
+      max(1rem, env(safe-area-inset-right, 0px));
+    padding: clamp(1.5rem, 5vw, 2rem) clamp(1.25rem, 4vw, 1.75rem);
+    border-radius: 20px;
+    background: linear-gradient(145deg, #1d4ed8 0%, #1e40af 50%, #172554 100%);
+    box-shadow: 0 12px 32px rgba(29, 78, 216, 0.22);
+    overflow: hidden;
   }
 
   .find-your-product__content {
-    width: min(100%, 92vw);
-    padding: 0 max(1.25rem, env(safe-area-inset-right, 0px)) clamp(72px, 11vh, 96px);
-    padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
-    transform: translateY(-12px);
+    position: relative;
+    z-index: 2;
+    transform: none;
+    width: 100%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
   }
 
   .find-your-product__content-title {
-    font-size: clamp(1rem, 4.4vw, 1.25rem);
+    margin: 0;
+    font-size: clamp(1.2rem, 5vw, 1.45rem);
+    font-weight: 700;
+    color: #ffffff;
     white-space: normal;
-    margin-bottom: 12px;
   }
 
   .find-your-product__content-actions {
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 0.65rem;
     width: 100%;
-    max-width: none;
-    margin-inline: auto;
+    justify-content: center;
   }
 
   .find-your-product__cta {
-    flex: 0 1 auto;
-    width: auto;
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 120px;
     min-height: 44px;
-    padding: 10px 18px;
-    font-size: 0.8125rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 999px;
+    text-align: center;
+    justify-content: center;
   }
 
   .find-your-product__label {
-    padding-inline: max(1rem, env(safe-area-inset-left, 0px))
-      max(1rem, env(safe-area-inset-right, 0px));
-    padding-bottom: clamp(16px, 2.8vh, 28px);
-  }
-
-  .find-your-product__label-link {
-    font-size: clamp(1rem, 4.2vw, 1.15rem);
+    display: none;
   }
 
   .scanner-row--static .scanner-row__static-track {
@@ -968,12 +1011,12 @@
 /* Small phones */
 @media (max-width: 479px) {
   .find-your-product {
-    --fyp-marquee-height: clamp(196px, 23vh, 224px);
-    --fyp-beam-height: clamp(300px, 52vh, 380px);
+    --fyp-marquee-height: auto;
+    --fyp-beam-height: auto;
   }
 
   .find-your-product__rows {
-    --scanner-row-curve: 1.5deg;
+    --scanner-row-curve: 0deg;
   }
 
   .scanner-card-wrap {

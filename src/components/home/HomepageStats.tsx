@@ -1,10 +1,9 @@
 import { LANDING_STATS } from "@/data/landingStatus";
 import StatusChip from "@/components/home/StatusChip";
-import Reveal from "@/components/layout/Reveal";
 
 export default function HomepageStats() {
   return (
-    <Reveal as="section" className="homepage-stats" aria-label="Store highlights" immediate>
+    <section className="homepage-stats" aria-label="Store highlights">
       <div className="homepage-stats__inner">
         {LANDING_STATS.map((stat) => (
           <div key={stat.label} className="homepage-stats__item">
@@ -14,6 +13,6 @@ export default function HomepageStats() {
           </div>
         ))}
       </div>
-    </Reveal>
+    </section>
   );
 }

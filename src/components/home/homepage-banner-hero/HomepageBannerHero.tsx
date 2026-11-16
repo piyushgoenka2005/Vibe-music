@@ -105,8 +105,10 @@ export default function HomepageBannerHero({
 
     let timer = 0;
     let observer: MutationObserver | null = null;
+    let failsafeTimer = 0;
 
     const startRotation = () => {
+      if (timer) return;
       setActiveIndex(0);
       timer = window.setInterval(() => {
         setActiveIndex((current) => (current + 1) % slideCount);
@@ -127,10 +129,13 @@ export default function HomepageBannerHero({
         attributes: true,
         attributeFilter: ["class"],
       });
+      // Safety net: start rotation after 2.5s even if splash class was not cleared
+      failsafeTimer = window.setTimeout(startRotation, 2500);
     }
 
     return () => {
       if (timer) window.clearInterval(timer);
+      if (failsafeTimer) window.clearTimeout(failsafeTimer);
       observer?.disconnect();
     };
   }, [reduceMotion, slideCount]);

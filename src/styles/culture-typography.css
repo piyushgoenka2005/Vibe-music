@@ -391,46 +391,48 @@
 
 /* Mobile — CSS-first layout (no JS class required) */
 @media (max-width: 767px) {
+  .culture-typography,
   .culture-typography--scrollable,
   .culture-typography--mobile-scroll {
-    --culture-scroll-height: calc(100svh + 45vh);
+    --culture-scroll-height: auto;
+    height: auto !important;
+    min-height: 0 !important;
     touch-action: pan-y;
     overscroll-behavior-y: auto;
   }
 
   .culture-typography__sticky {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    min-height: 100svh;
+    position: relative !important;
+    top: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
     overflow: hidden;
   }
 
   .culture-typography__content {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    height: 100%;
-    min-height: 100svh;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: auto !important;
+    min-height: 0 !important;
     z-index: 4;
     opacity: 1 !important;
     transform: none !important;
-    padding: calc(var(--site-header-offset, 90px) + 1rem) clamp(1.1rem, 4.5vw, 1.5rem) 4rem;
+    padding: clamp(3rem, 8vw, 4.5rem) clamp(1.25rem, 5vw, 2rem) !important;
     background: radial-gradient(
-      ellipse 85% 65% at 68% 50%,
-      rgba(12, 62, 194, 0.72) 0%,
-      rgba(12, 62, 194, 0.36) 52%,
-      transparent 85%
+      ellipse 95% 75% at 50% 50%,
+      rgba(12, 62, 194, 0.88) 0%,
+      rgba(12, 62, 194, 0.5) 55%,
+      rgba(10, 52, 150, 0.95) 100%
     );
   }
 
   .culture-typography__content-inner {
-    width: auto;
-    max-width: min(18.5rem, 78vw);
-    margin-inline: 0;
-    margin-left: auto;
-    margin-right: 0;
-    text-align: left;
+    width: 100%;
+    max-width: min(24rem, 90vw);
+    margin: 0 auto !important;
+    text-align: center;
     position: relative;
     z-index: 3;
   }
@@ -438,57 +440,47 @@
   .culture-typography__meta {
     margin-bottom: 0.75rem;
     font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    text-align: left;
-    color: #ffffff;
+    letter-spacing: 0.12em;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
   }
 
   .culture-typography__title {
     max-width: none;
-    font-size: clamp(1.7rem, 7.4vw, 2.15rem);
-    line-height: 1.1;
+    font-size: clamp(1.85rem, 8vw, 2.5rem);
+    line-height: 1.12;
     letter-spacing: -0.035em;
     white-space: pre-line;
-    text-align: left;
+    text-align: center;
     color: #ffffff;
     text-shadow: 0 2px 18px rgba(10, 52, 150, 0.45);
   }
 
   .culture-typography__subtitle {
-    margin-inline: 0;
-    text-align: left;
-    color: rgba(255, 255, 255, 0.78);
+    margin-inline: auto;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
   }
 
   .culture-typography__cta-wrap {
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   .culture-typography__cta {
     display: inline-flex;
     background: #ffffff;
     color: #1253ed;
+    min-height: 44px;
+    padding: 0.75rem 1.75rem;
+    border-radius: 999px;
+    font-weight: 600;
   }
 
-  .culture-typography__scroll-fade--top {
-    height: clamp(56px, 10vh, 88px);
-  }
-
-  .culture-typography__scroll-fade--bottom {
-    height: clamp(48px, 9vh, 72px);
-    z-index: 1;
-  }
-
-  .culture-typography__progress {
-    display: block !important;
-    left: clamp(1rem, 4vw, 1.5rem);
-    right: clamp(1rem, 4vw, 1.5rem);
-    bottom: clamp(1rem, 2.5vh, 1.5rem);
-    z-index: 5;
-  }
-
+  .culture-typography__scroll-fade--top,
+  .culture-typography__scroll-fade--bottom,
+  .culture-typography__progress,
   .culture-typography__scroll-hint {
     display: none !important;
   }

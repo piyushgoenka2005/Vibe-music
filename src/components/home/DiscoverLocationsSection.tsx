@@ -4,7 +4,6 @@ import type { CSSProperties } from "react";
 import { MapPin } from "lucide-react";
 import Marquee from "@/components/common/Marquee";
 import { LANDING_LOCATIONS, type StatusTone } from "@/data/landingStatus";
-import Reveal from "@/components/layout/Reveal";
 import { ROUTES } from "@/lib/routes";
 
 function LocationStatusTag({ label, tone }: { label: string; tone: StatusTone }) {
@@ -55,7 +54,7 @@ function LocationCard({
 
 export default function DiscoverLocationsSection() {
   return (
-    <Reveal as="section" className="locations-strip">
+    <section className="locations-strip">
       <div className="locations-strip__inner">
         <header className="locations-strip__header">
           <p className="locations-strip__eyebrow premium-section-eyebrow">Store network</p>
@@ -87,6 +86,6 @@ export default function DiscoverLocationsSection() {
           Contact a store advisor
         </Link>
       </div>
-    </Reveal>
+    </section>
   );
 }

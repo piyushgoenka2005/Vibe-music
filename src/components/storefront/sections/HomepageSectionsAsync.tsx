@@ -15,6 +15,7 @@ function orderHomepageSections(sections: ResolvedHomepageSection[]): ResolvedHom
   const trending = sections.find((section) => section.key === "trending");
   const staffPicks = sections.find((section) => section.key === "staff_picks");
   const categories = sections.find((section) => section.key === "featured_categories");
+  const findYourProduct = sections.find((section) => section.key === "find_your_product");
   const deals = sections.find((section) => section.key === "deals_of_the_day");
   const brands = sections.find((section) => section.key === "brand_strip");
   const rest = sections.filter(
@@ -22,6 +23,7 @@ function orderHomepageSections(sections: ResolvedHomepageSection[]): ResolvedHom
       section.key !== "trending" &&
       section.key !== "staff_picks" &&
       section.key !== "featured_categories" &&
+      section.key !== "find_your_product" &&
       section.key !== "deals_of_the_day" &&
       section.key !== "brand_strip" &&
       section.key !== "new_arrivals" &&
@@ -36,6 +38,7 @@ function orderHomepageSections(sections: ResolvedHomepageSection[]): ResolvedHom
   if (staffPicks) ordered.push(staffPicks);
   ordered.push(...rest);
   if (categories) ordered.push(categories);
+  if (findYourProduct) ordered.push(findYourProduct);
   if (deals) ordered.push(deals);
   if (brands) ordered.push(brands);
   return ordered;
@@ -49,22 +52,13 @@ export default async function HomepageSectionsAsync() {
     return null;
   }
 
-  const hasCategories = sections.some((section) => section.key === "featured_categories");
-  const hasDeals = sections.some((section) => section.key === "deals_of_the_day");
   const hasBrands = sections.some((section) => section.key === "brand_strip");
 
   return (
     <HomepageSectionsShell>
       {sections.map((section) => (
         <div key={section.key}>
-          <HomepageSectionRenderer
-            attachFindYourProduct={
-              section.key === "featured_categories" ||
-              (!hasCategories && section.key === "deals_of_the_day") ||
-              (!hasCategories && !hasDeals && section.key === "brand_strip")
-            }
-            section={section}
-          />
+          <HomepageSectionRenderer section={section} />
           {section.key === "trending" ? <TourRibbonSection /> : null}
           {section.key === "brand_strip" ? <HomepageTopProducts /> : null}
         </div>

@@ -12,16 +12,16 @@ const HOMEPAGE_BANNERS_STALE_MS = 5 * 60_000;
 const HOMEPAGE_BANNERS_REFETCH_MS = 5 * 60_000;
 
 async function fetchActiveBannerSlides(): Promise<HomepageBannerSlide[]> {
-  // Default HTTP caching — lets the browser reuse the payload instead of
-  // hammering the origin from every open tab.
-  const response = await fetch("/api/banners", { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error("Unable to load homepage banners");
+  try {
+    const response = await fetch("/api/banners", { cache: "no-store" });
+    if (!response.ok) return [];
+    const body = (await response.json()) as { banners?: HomepageBanner[] };
+    const banners = body.banners ?? [];
+    if (banners.length === 0) return [];
+    return mapBannersToSlides(banners);
+  } catch {
+    return [];
   }
-  const body = (await response.json()) as { banners?: HomepageBanner[] };
-  const banners = body.banners ?? [];
-  if (banners.length === 0) return [];
-  return mapBannersToSlides(banners);
 }
 
 export function useHomepageBanners(initialSlides: HomepageBannerSlide[]) {

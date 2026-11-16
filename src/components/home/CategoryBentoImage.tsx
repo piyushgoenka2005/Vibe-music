@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties, type SyntheticEvent } from "react";
 
-const BENTO_IMAGE_FALLBACK = "/images/Electric Blue Guitar.png";
+const BENTO_IMAGE_FALLBACK = "/images/browse-categories/guitars.jpg";
 
 interface CategoryBentoImageProps {
   alt: string;
@@ -18,7 +18,7 @@ interface CategoryBentoImageProps {
 }
 
 function isDirectAsset(src: string): boolean {
-  return src.startsWith("/images/") || src.includes("cdn.vibemusic.in");
+  return src.startsWith("/images/") || src.includes("cdn.vibemusic.in") || src.startsWith("http");
 }
 
 function localImagePath(src: string): string {
@@ -36,27 +36,14 @@ export default function CategoryBentoImage({
   srcSet: _srcSet,
   variant = "card",
 }: CategoryBentoImageProps) {
-  const [loaded, setLoaded] = useState(priority);
+  const [loaded, setLoaded] = useState(true);
   const [imageSrc, setImageSrc] = useState(src);
-  const useUnoptimized = isDirectAsset(imageSrc);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     setImageSrc(src);
-    if (priority) {
-      setLoaded(true);
-      return;
-    }
-    setLoaded(false);
-  }, [src, priority]);
-
-  useEffect(() => {
-    const img = imgRef.current;
-    if (!img || loaded) return;
-    if (img.complete && img.naturalWidth > 0) {
-      setLoaded(true);
-    }
-  }, [imageSrc, loaded]);
+    setLoaded(true);
+  }, [src]);
 
   function markLoaded() {
     setLoaded(true);
@@ -66,11 +53,10 @@ export default function CategoryBentoImage({
     const img = event.currentTarget;
     if (img.dataset.fallbackApplied === "true") return;
     img.dataset.fallbackApplied = "true";
-    setLoaded(false);
     setImageSrc(BENTO_IMAGE_FALLBACK);
   }
 
-  const loadedClass = loaded || priority ? " category-bento__image--loaded" : "";
+  const loadedClass = loaded ? " category-bento__image--loaded" : "";
   const imageStyle: CSSProperties = {
     objectFit: "cover",
     objectPosition,
@@ -92,7 +78,7 @@ export default function CategoryBentoImage({
       }
       src={isDirectAsset(imageSrc) ? localImagePath(imageSrc) : imageSrc}
       style={imageStyle}
-      unoptimized={useUnoptimized}
+      unoptimized
     />
   );
 }
