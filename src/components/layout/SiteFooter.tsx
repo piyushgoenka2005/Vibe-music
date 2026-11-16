@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 import { ROUTES } from "@/lib/routes";
@@ -17,9 +17,6 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SiteFooter({ legal }: { legal: PublicLegalInfo }) {
   const showToast = useToastStore((state) => state.show);
-  const footerRef = useRef<HTMLElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const spacerRef = useRef<HTMLDivElement>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -27,81 +24,6 @@ export default function SiteFooter({ legal }: { legal: PublicLegalInfo }) {
   const [submitting, setSubmitting] = useState(false);
   const year = new Date().getFullYear();
   const footerSections = buildFooterSections(legal);
-
-  useEffect(() => {
-    const panel = panelRef.current;
-    const footer = footerRef.current;
-    const spacer = spacerRef.current;
-    if (!panel || !footer || !spacer) return;
-
-    const shell = footer.querySelector<HTMLElement>(".site-footer__shell");
-
-    const syncSpacer = () => {
-      const height = Math.max(panel.offsetHeight, panel.scrollHeight);
-      if (height > 0) {
-        spacer.style.height = `${height}px`;
-      }
-    };
-
-    syncSpacer();
-
-    const resizeObserver = new ResizeObserver(syncSpacer);
-    resizeObserver.observe(panel);
-
-    const syncFooterState = () => {
-      const footerRect = footer.getBoundingClientRect();
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
-      const isReady = footerRect.top < viewportHeight + 180 && footerRect.bottom > 0;
-      panel.classList.toggle("is-ready", isReady);
-      if (isReady) {
-        syncSpacer();
-      }
-      if (!shell) return;
-      const shellRect = shell.getBoundingClientRect();
-      const panelInteractive = isReady && shellRect.bottom < viewportHeight - 16;
-      panel.classList.toggle("is-interactive", panelInteractive);
-    };
-
-    const readyObserver = new IntersectionObserver(
-      () => {
-        syncFooterState();
-      },
-      { threshold: 0, rootMargin: "180px 0px 180px 0px" },
-    );
-
-    readyObserver.observe(footer);
-
-    const updateInteractive = () => {
-      syncFooterState();
-    };
-
-    let scrollFrame = 0;
-    const onScroll = () => {
-      if (scrollFrame) return;
-      scrollFrame = window.requestAnimationFrame(() => {
-        scrollFrame = 0;
-        updateInteractive();
-      });
-    };
-
-    updateInteractive();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", syncSpacer);
-    window.addEventListener("resize", updateInteractive);
-
-    return () => {
-      resizeObserver.disconnect();
-      readyObserver.disconnect();
-      if (scrollFrame) {
-        window.cancelAnimationFrame(scrollFrame);
-      }
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", syncSpacer);
-      window.removeEventListener("resize", updateInteractive);
-      panel.classList.remove("is-ready", "is-interactive");
-      spacer.style.height = "";
-    };
-  }, []);
 
   async function onNewsletterSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -170,127 +92,113 @@ export default function SiteFooter({ legal }: { legal: PublicLegalInfo }) {
   }
 
   return (
-    <>
-      {/*
-        Layered scroll-reveal (desktop + mobile):
-        1) Inside Vibe Music shell scrolls over the fixed Trending panel
-        2) Spacer creates room to reveal Trending underneath
-        Panel stays behind the shell until the shell scrolls away.
-      */}
-      <footer
-        ref={footerRef}
-        className="site-footer site-footer--layered"
-        data-vibe-section="footer"
-      >
-        <div className="site-footer__shell">
-          <div className="site-footer__shell-inner">
-            <section
-              id="newsletter"
-              className="site-footer-newsletter"
-              aria-labelledby="footer-newsletter-title"
-            >
-              <div className="site-footer-newsletter__header">
-                <h2 id="footer-newsletter-title" className="site-footer-newsletter__title">
-                  Inside Vibe Music
-                </h2>
-                <p className="site-footer-newsletter__body">
-                  Subscribe for the latest product drops, restock alerts, and exclusive deals from
-                  India&apos;s trusted gear destination.
-                </p>
-              </div>
+    <footer className="site-footer site-footer--layered" data-vibe-section="footer">
+      <div className="site-footer__shell">
+        <div className="site-footer__shell-inner">
+          <section
+            id="newsletter"
+            className="site-footer-newsletter"
+            aria-labelledby="footer-newsletter-title"
+          >
+            <div className="site-footer-newsletter__header">
+              <h2 id="footer-newsletter-title" className="site-footer-newsletter__title">
+                Inside Vibe Music
+              </h2>
+              <p className="site-footer-newsletter__body">
+                Subscribe for the latest product drops, restock alerts, and exclusive deals from
+                India&apos;s trusted gear destination.
+              </p>
+            </div>
 
-              <form className="site-footer-newsletter__form" onSubmit={onNewsletterSubmit}>
+            <form className="site-footer-newsletter__form" onSubmit={onNewsletterSubmit}>
+              <input
+                type="checkbox"
+                name="botcheck"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden
+                className="site-footer-newsletter__honeypot"
+              />
+              <div className="site-footer-newsletter__row">
+                <input
+                  type="text"
+                  name="firstName"
+                  autoComplete="given-name"
+                  placeholder="FIRST NAME"
+                  className="site-footer-newsletter__input"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  disabled={submitting}
+                />
+                <input
+                  type="text"
+                  name="lastName"
+                  autoComplete="family-name"
+                  placeholder="LAST NAME"
+                  className="site-footer-newsletter__input"
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+              <div className="site-footer-newsletter__row site-footer-newsletter__row--action">
+                <input
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  placeholder="EMAIL ADDRESS"
+                  className="site-footer-newsletter__input site-footer-newsletter__input--email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  disabled={submitting}
+                  suppressHydrationWarning
+                />
+                <button
+                  type="submit"
+                  className="site-footer-newsletter__submit"
+                  disabled={submitting}
+                >
+                  {submitting ? "Signing up…" : "Sign up"}
+                </button>
+              </div>
+              <label className="site-footer-newsletter__consent">
                 <input
                   type="checkbox"
-                  name="botcheck"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden
-                  className="site-footer-newsletter__honeypot"
+                  name="marketing"
+                  checked={marketingConsent}
+                  onChange={(event) => setMarketingConsent(event.target.checked)}
+                  disabled={submitting}
                 />
-                <div className="site-footer-newsletter__row">
-                  <input
-                    type="text"
-                    name="firstName"
-                    autoComplete="given-name"
-                    placeholder="FIRST NAME"
-                    className="site-footer-newsletter__input"
-                    value={firstName}
-                    onChange={(event) => setFirstName(event.target.value)}
-                    disabled={submitting}
-                  />
-                  <input
-                    type="text"
-                    name="lastName"
-                    autoComplete="family-name"
-                    placeholder="LAST NAME"
-                    className="site-footer-newsletter__input"
-                    value={lastName}
-                    onChange={(event) => setLastName(event.target.value)}
-                    disabled={submitting}
-                  />
-                </div>
-                <div className="site-footer-newsletter__row site-footer-newsletter__row--action">
-                  <input
-                    type="email"
-                    name="email"
-                    autoComplete="email"
-                    placeholder="EMAIL ADDRESS"
-                    className="site-footer-newsletter__input site-footer-newsletter__input--email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    required
-                    disabled={submitting}
-                    suppressHydrationWarning
-                  />
-                  <button
-                    type="submit"
-                    className="site-footer-newsletter__submit"
-                    disabled={submitting}
-                  >
-                    {submitting ? "Signing up…" : "Sign up"}
-                  </button>
-                </div>
-                <label className="site-footer-newsletter__consent">
-                  <input
-                    type="checkbox"
-                    name="marketing"
-                    checked={marketingConsent}
-                    onChange={(event) => setMarketingConsent(event.target.checked)}
-                    disabled={submitting}
-                  />
-                  <span>Email me about new gear, restocks, and Vibe Music updates.</span>
-                </label>
-              </form>
-            </section>
+                <span>Email me about new gear, restocks, and Vibe Music updates.</span>
+              </label>
+            </form>
+          </section>
 
-            <FooterSocialIcons />
+          <FooterSocialIcons />
 
-            <div className="site-footer__grid">
-              <FooterAccordion sections={footerSections} />
+          <div className="site-footer__grid">
+            <FooterAccordion sections={footerSections} />
 
-              <div className="site-footer-base">
-                <div className="site-footer-base__item">
-                  ©{year} /{" "}
-                  <Link href={ROUTES.home} title={BRAND.name}>
-                    {BRAND.name}
-                  </Link>
-                </div>
-                <div className="site-footer-base__item">
-                  <FooterClock />
-                </div>
-                <div className="site-footer-base__item site-footer-base__item--tagline">
-                  Pro Audio · Instruments · Studio Gear
-                </div>
+            <div className="site-footer-base">
+              <div className="site-footer-base__item">
+                ©{year} /{" "}
+                <Link href={ROUTES.home} title={BRAND.name}>
+                  {BRAND.name}
+                </Link>
+              </div>
+              <div className="site-footer-base__item">
+                <FooterClock />
+              </div>
+              <div className="site-footer-base__item site-footer-base__item--tagline">
+                Pro Audio · Instruments · Studio Gear
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div ref={spacerRef} className="site-footer__panel-spacer" aria-hidden />
-      </footer>
-
-      <FooterProductsPanel ref={panelRef} />
-    </>
+      <FooterProductsPanel />
+    </footer>
   );
 }
