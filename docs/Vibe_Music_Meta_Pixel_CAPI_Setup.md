@@ -37,7 +37,7 @@ typeof fbq; // "undefined"
 1. Copy the template:
 
    ```bash
-   cp .env.local.example .env.local
+   cp .env.example .env.local
    ```
 
 2. Fill in the three Meta values from Events Manager (Phase 1 below).
@@ -217,4 +217,4 @@ npm run verify:meta-ad-landing:prod
 - `src/lib/site.ts` — Domain verification meta tag
 - `scripts/ops/verify/verify-meta-integration.mts` — Local code + env + HTML check
 - `scripts/ops/verify/verify-meta-pixel.mts` — Production Pixel check
-- `.env.local.example` — Local Meta credential template
+- `.env.example` — Master environment variable template

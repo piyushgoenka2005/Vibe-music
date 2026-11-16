@@ -318,7 +318,7 @@ Implementation is **deployment-ready** on `main`. Pre-flight:
 npm run verify:meta-deploy-ready
 ```
 
-Local dev: copy `.env.local.example` → `.env.local`, add Meta credentials, restart `npm run dev`, then `npm run verify:meta-integration`.
+Local dev: copy `.env.example` → `.env.local`, add Meta credentials, restart `npm run dev`, then `npm run verify:meta-integration`.
 
 Deploy checklist: **[docs/META_PIXEL_DEPLOY_READY.md](docs/META_PIXEL_DEPLOY_READY.md)**  
 Full reference: **[docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md](docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md)**
