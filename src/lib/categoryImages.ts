@@ -65,23 +65,18 @@ function categoryThumbWebp(name: string): string {
   return `${THUMB_DIR}/${base}.webp`;
 }
 
-const GUITAR_MEGA_ELECTRIC_IMAGE =
-  "https://res.cloudinary.com/piyushgoenka/image/upload/c_fill,w_800,h_600,g_center,q_82,f_auto/v1782292639/products/guitars/hertz-hzr-4002e-hzr-4002e/03-hza-4001-e-na-amazonfnt.png";
-const GUITAR_MEGA_ACOUSTIC_IMAGE =
-  "https://res.cloudinary.com/piyushgoenka/image/upload/c_fill,w_800,h_600,g_center,q_82,f_auto/v1782292587/products/guitars/hertz-hza4503-hza4503/01-hza-4503-na-amazonfront.png";
+const GUITAR_MEGA_ELECTRIC_IMAGE = "/images/guitar-1.webp";
+const GUITAR_MEGA_ACOUSTIC_IMAGE = "/images/guitar-2.webp";
 
 /** Second-card (and variant) images for header mega menus — keyed by `slug:variant`. */
 const MEGA_MENU_VARIANT_OVERRIDES: Record<string, string> = {
   "guitars:acoustic": GUITAR_MEGA_ACOUSTIC_IMAGE,
   "guitars:electric": GUITAR_MEGA_ELECTRIC_IMAGE,
   "studio-recording:monitors":
-    "/images/m/promotions/2025/1202_CyberWeek/Homepage-Takeover/Adjacency4Up/1202-CyberWeek-Adjacency-Headphones-HPFeatured-1600x1600.jpg",
-  "drums-percussion:electronic":
-    "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
-  "keyboards-synthesizers:synthesizer":
-    "https://res.cloudinary.com/piyushgoenka/image/upload/c_fill,w_800,h_600,g_auto,q_82,f_auto/v1782291074/products/keyboards-synthesizers/adeon-adeon-ax-kb-41xl-adeon-ax-kb-41xl/01-adeon-41-kb-l.png",
-  "live-sound-lighting:lighting":
-    "https://res.cloudinary.com/piyushgoenka/image/upload/a_45,c_fit,w_800,h_600,g_center,q_82,f_auto/v1782289280/products/live-sound-lighting/adeon-acon-acon/01-artboard-3.png",
+    "/images/m/products/image/2cdf4bf761DZWztWMTXvRjefZynBO9RTcVrcDe0F.jpg",
+  "drums-percussion:electronic": "/images/drum-1.webp",
+  "keyboards-synthesizers:synthesizer": "/images/m/home/cats/Matriarch.png",
+  "live-sound-lighting:lighting": "/images/m/home/cats/k12_2.png",
   "software-plug-ins:plugin":
     "/images/m/products/image/ce349f6ddbpWnBa7UdRlNlAUJ0fhyGkXuQUKCv6V.png",
   "dj-equipment:turntable": "/images/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg",

@@ -1362,8 +1362,8 @@
     "brand": "ADEON",
     "category": "DJ Equipment",
     "subcategory": "Audio Mixer",
-    "price": 891,
-    "originalPrice": 1012,
+    "price": 8910,
+    "originalPrice": 10125,
     "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
@@ -1398,8 +1398,8 @@
     "image": "https://cdn.vibemusic.in/products/live-sound-lighting/adeon-adm01-adm-01/0128ddac-f204-4fd1-ab18-aab2433d5ea8.png",
     "gstRate": 18,
     "detail": {
-      "msrp": 1012,
-      "salePrice": 891,
+      "msrp": 10125,
+      "salePrice": 8910,
       "specs": [
         {
           "label": "Manufacturer",
@@ -1445,7 +1445,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-ADM01",
-          "price": 891,
+          "price": 8910,
           "availability": "in-stock",
           "stock": 361
         }
@@ -1454,7 +1454,8 @@
       "qa": [],
       "frequentlyBoughtTogether": [],
       "similarProductIds": [],
-      "relatedProductIds": []
+      "relatedProductIds": [],
+      "price": 8910
     }
   },
   {
@@ -3514,7 +3515,7 @@
     "stock": 267,
     "reservedStock": 0,
     "lowStockThreshold": 10,
-    "sku": "VM-HZA3900EQ",
+    "sku": "VM-HZA3900",
     "status": "active",
     "featured": true,
     "trending": false,
@@ -3677,7 +3678,7 @@
         {
           "id": "var-default",
           "label": "Standard",
-          "sku": "VM-HZA3900EQ",
+          "sku": "VM-HZA3900",
           "price": 7100,
           "availability": "in-stock",
           "stock": 267
@@ -4037,8 +4038,8 @@
     "brand": "HERTZ",
     "category": "Guitars",
     "subcategory": "Electro Acoustic Guitar",
-    "price": 7100.28,
-    "originalPrice": 8068.5,
+    "price": 7100,
+    "originalPrice": 8069,
     "discountPercentage": 12,
     "rating": 0,
     "reviewCount": 0,
@@ -4081,8 +4082,8 @@
     "image": "https://cdn.vibemusic.in/products/guitars/hertz-hza3900eq-hza3900eq/91215a27-4020-49b9-8ad1-ddecfaca7b1c.png",
     "gstRate": 18,
     "detail": {
-      "msrp": 8068.5,
-      "salePrice": 7100.28,
+      "msrp": 8069,
+      "salePrice": 7100,
       "specs": [
         {
           "label": "Manufacturer",
@@ -4174,7 +4175,7 @@
           "id": "var-default",
           "label": "Standard",
           "sku": "VM-HZA3900EQ",
-          "price": 7100.28,
+          "price": 7100,
           "availability": "in-stock",
           "stock": 10
         }
@@ -4183,7 +4184,8 @@
       "qa": [],
       "frequentlyBoughtTogether": [],
       "similarProductIds": [],
-      "relatedProductIds": []
+      "relatedProductIds": [],
+      "price": 7100
     }
   },
   {
