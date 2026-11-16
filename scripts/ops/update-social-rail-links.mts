@@ -9,7 +9,7 @@ import { PrismaClient } from "@prisma/client";
 
 const LINKS = {
   facebook: "https://www.facebook.com/vibemusicindiaofficial/",
-  instagram: "https://www.instagram.com/vibemusicindia?stkn=MXQ5MDJqbmhwb3R6eQ==",
+  instagram: "https://www.instagram.com/vibemusicindia/",
   linkedin: "https://x.com/",
   twitter: "https://x.com/",
 } as const;

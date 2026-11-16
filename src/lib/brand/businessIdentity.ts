@@ -17,7 +17,7 @@ export const DISPATCH_COPY =
 
 /** DPDP / Consumer Protection grievance contact (shown in footer and legal pages). */
 export const GRIEVANCE_OFFICER_NAME =
-  process.env.NEXT_PUBLIC_GRIEVANCE_OFFICER_NAME?.trim() || "Customer Grievance Officer";
+  process.env.NEXT_PUBLIC_GRIEVANCE_OFFICER_NAME?.trim() || "Piyush Goenka";
 
 export const GRIEVANCE_OFFICER_EMAIL =
-  process.env.NEXT_PUBLIC_GRIEVANCE_EMAIL?.trim() || "support@vibemusic.in";
+  process.env.NEXT_PUBLIC_GRIEVANCE_EMAIL?.trim() || "grievance@vibemusic.in";

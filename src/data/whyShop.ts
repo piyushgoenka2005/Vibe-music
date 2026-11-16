@@ -43,7 +43,7 @@ export const WHY_SHOP_ITEMS: WhyShopItem[] = [
     iconId: "payments",
     title: "Secure Payments",
     subtitle: WHY_SHOP_SECURE_PAYMENTS_SUBTITLE,
-    href: ROUTES.checkout,
+    href: ROUTES.financing,
   },
   {
     id: "deals-on-deals",

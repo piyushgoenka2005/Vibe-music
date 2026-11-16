@@ -14,7 +14,7 @@ function formatMumbaiClock(date: Date): string {
 }
 
 export default function FooterClock() {
-  const [time, setTime] = useState<string | null>(null);
+  const [time, setTime] = useState<string>(() => formatMumbaiClock(new Date()));
 
   useEffect(() => {
     const tick = () => setTime(formatMumbaiClock(new Date()));

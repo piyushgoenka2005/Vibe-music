@@ -20,6 +20,7 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 
 interface BrandRouteProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: BrandRouteProps): Promise<Metadata> {

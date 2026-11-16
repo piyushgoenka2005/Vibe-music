@@ -85,7 +85,7 @@ export default function CultureTypographySection({
   title = "Discover the\ngear, creators\nand stories\nbehind\nmodern\nmusic.",
   subtitle,
   buttonLabel = "Explore Gear",
-  buttonHref = ROUTES.gearExchange,
+  buttonHref = ROUTES.brands,
   backgroundWords = WORD_CYCLE,
   className = "",
 }: CultureTypographySectionProps) {
