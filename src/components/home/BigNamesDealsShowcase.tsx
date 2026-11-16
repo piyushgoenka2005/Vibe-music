@@ -69,7 +69,7 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
         <div className="big-names-deals__logo-wrap">
           {!logoFailed && item.logo ? (
             <Image
-              alt=""
+              alt={`${item.brand} logo`}
               className="big-names-deals__logo"
               height={28}
               loading="lazy"
@@ -92,6 +92,7 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
                 className={`big-names-deals__product-wrap${blendMultiply ? " big-names-deals__product-wrap--blend" : ""}`}
               >
                 <StorefrontThumbImage
+                  alt={item.productAlt || `${item.brand} guitar showcase`}
                   className="big-names-deals__product"
                   fallbackSrc={item.productFallback}
                   fetchPriority="auto"
