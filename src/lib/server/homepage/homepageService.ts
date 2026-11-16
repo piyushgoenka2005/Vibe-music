@@ -407,7 +407,14 @@ async function resolveBrands(
       if (curated.length > 0) return curated.slice(0, section.maxItems);
     }
     // Auto mode, or manual with no curated rows yet — keep storefront filled.
-    return buildTopBrandStripItems(brands).slice(0, section.maxItems);
+    // Compute per-brand product counts so brands with no products are hidden (C-13).
+    const catalogProducts = await getCachedHomepageProducts();
+    const productCounts = new Map<string, number>();
+    for (const p of catalogProducts) {
+      if (!p.brandSlug) continue;
+      productCounts.set(p.brandSlug, (productCounts.get(p.brandSlug) ?? 0) + 1);
+    }
+    return buildTopBrandStripItems(brands, productCounts).slice(0, section.maxItems);
   }
 
   if (section.sourceMode === "manual") {

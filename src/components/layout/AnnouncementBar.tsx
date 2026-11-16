@@ -44,7 +44,7 @@ export default function AnnouncementBar({
   const activeItems = items && items.length > 0 ? items.filter((i) => i.isActive) : null;
 
   if (activeItems && activeItems.length > 0) {
-    const utilitySequence = Array.from({ length: 6 }, (_, sequenceIndex) =>
+    const utilitySequence = Array.from({ length: 3 }, (_, sequenceIndex) =>
       activeItems.map((item) => {
         const IconComponent = item.icon ? ICON_MAP[item.icon] : null;
         const content = (
@@ -61,11 +61,18 @@ export default function AnnouncementBar({
             className="announcement-bar__utility-link"
             target={item.openInNewTab ? "_blank" : undefined}
             rel={item.openInNewTab ? "noopener noreferrer" : undefined}
+            aria-hidden={sequenceIndex > 0 ? true : undefined}
+            tabIndex={sequenceIndex > 0 ? -1 : undefined}
           >
             {content}
           </Link>
         ) : (
-          <span key={`${item.id}-${sequenceIndex}`}>{content}</span>
+          <span
+            key={`${item.id}-${sequenceIndex}`}
+            aria-hidden={sequenceIndex > 0 ? true : undefined}
+          >
+            {content}
+          </span>
         );
       }),
     ).flat();
@@ -92,8 +99,8 @@ export default function AnnouncementBar({
 
   // Fallback default marquee
   const announcementMessage = `${announcement} · Authorized brands · Secure checkout`;
-  const sequence = Array.from({ length: 6 }, (_, index) => (
-    <span key={index} className="announcement-bar__item">
+  const sequence = Array.from({ length: 3 }, (_, index) => (
+    <span key={index} className="announcement-bar__item" aria-hidden={index > 0 ? true : undefined}>
       {announcementMessage}
     </span>
   ));

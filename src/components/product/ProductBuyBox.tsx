@@ -215,8 +215,14 @@ export default function ProductBuyBox({
           </div>
         ) : null}
 
-        <p className={`pdp-buybox__stock pdp-buybox__stock--${selectedVariant.availability}`}>
-          {availabilityLabel(selectedVariant.availability)}
+        <p
+          className={`pdp-buybox__stock ${
+            isComingSoon
+              ? "pdp-buybox__stock--coming-soon"
+              : `pdp-buybox__stock--${selectedVariant.availability}`
+          }`}
+        >
+          {isComingSoon ? "Coming Soon" : availabilityLabel(selectedVariant.availability)}
         </p>
 
         {!isComingSoon ? (

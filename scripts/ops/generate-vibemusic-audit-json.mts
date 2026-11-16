@@ -51,7 +51,7 @@ const L_REGISTER: Array<{
     category: "ux",
     title: "Optional live chat (Crisp)",
     repoStatus: "fixed",
-    verifyCommand: "grep NEXT_PUBLIC_CRISP_WEBSITE_ID .env.production.example",
+    verifyCommand: "grep NEXT_PUBLIC_CRISP_WEBSITE_ID .env.example",
     testRefs: ["SupportChatLoader.tsx"],
   },
   {

@@ -165,6 +165,27 @@ const nextConfig: NextConfig = {
         destination: "/",
         statusCode: 301,
       },
+      // Canonical category aliases for common short slugs (C-16)
+      {
+        source: "/category/recording",
+        destination: "/category/studio-recording",
+        permanent: true,
+      },
+      {
+        source: "/category/keyboards",
+        destination: "/category/keyboards-synthesizers",
+        permanent: true,
+      },
+      {
+        source: "/category/synths",
+        destination: "/category/keyboards-synthesizers",
+        permanent: true,
+      },
+      {
+        source: "/category/drums",
+        destination: "/category/drums-percussion",
+        permanent: true,
+      },
       // Category slug vanity redirects (e.g. /guitars -> /category/guitars)
       ...[
         "guitars",

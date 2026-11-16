@@ -14,27 +14,27 @@ const OUT_DIR = path.join(ROOT, "public", "images", "style-story");
 const REELS = [
   {
     id: "1",
-    reelUrl: "https://www.instagram.com/hertzmusicindia/reel/DY1irHzlrml/",
+    reelUrl: "https://www.instagram.com/vibemusicindia/reel/DY1irHzlrml/",
   },
   {
     id: "2",
-    reelUrl: "https://www.instagram.com/hertzmusicindia/reel/DX6yk91gCun/",
+    reelUrl: "https://www.instagram.com/vibemusicindia/reel/DX6yk91gCun/",
   },
   {
     id: "3",
-    reelUrl: "https://www.instagram.com/hertzmusicindia/reel/DXyefWnTR1u/",
+    reelUrl: "https://www.instagram.com/vibemusicindia/reel/DXyefWnTR1u/",
   },
   {
     id: "4",
-    reelUrl: "https://www.instagram.com/hertzmusicindia/reel/DZDKCzlIvux/",
+    reelUrl: "https://www.instagram.com/vibemusicindia/reel/DZDKCzlIvux/",
   },
   {
     id: "5",
-    reelUrl: "https://www.instagram.com/hertzmusicindia/reel/DXeh-R9D-s-/",
+    reelUrl: "https://www.instagram.com/vibemusicindia/reel/DXeh-R9D-s-/",
   },
   {
     id: "6",
-    reelUrl: "https://www.instagram.com/hertzmusicindia/reel/DXMnMBDyvdP/",
+    reelUrl: "https://www.instagram.com/vibemusicindia/reel/DXMnMBDyvdP/",
   },
 ];
 

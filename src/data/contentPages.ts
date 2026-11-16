@@ -1,5 +1,10 @@
 import { BRAND } from "@/lib/brand";
-import { DISPATCH_COPY, SUPPORT_HOURS_DETAIL } from "@/lib/brand/businessIdentity";
+import {
+  DISPATCH_COPY,
+  GRIEVANCE_OFFICER_EMAIL,
+  GRIEVANCE_OFFICER_NAME,
+  SUPPORT_HOURS_DETAIL,
+} from "@/lib/brand/businessIdentity";
 import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
 
 export interface ContentPage {
@@ -47,25 +52,46 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
     sections: [
       {
         paragraphs: [
-          "We want you to love your gear. If something is not right, contact us within 7 days of delivery and we will help with a return or exchange where applicable.",
+          `At Vibe Music, we stand behind every instrument, cable, mixer, and audio processor we deliver. We want you to feel completely confident in your purchase. If you receive gear that is defective, damaged during transit, or significantly different from its product description, our dedicated team will assist you with a hassle-free return or replacement.`,
+          `All return and exchange requests must be submitted within 7 calendar days from the date of confirmed delivery by our courier partners.`,
         ],
       },
       {
-        heading: "Eligible items",
+        heading: "Eligible conditions for returns",
         paragraphs: [
-          "Items must be unused, in original packaging, and include all accessories and documentation. Custom or special-order products may not be returnable.",
+          "To qualify for a standard return or replacement, the item must be in its original, unplayed/unused condition with zero signs of wear, scratches, or cosmetic damage.",
+          "The product must be packed in all original manufacturer packaging, including internal foam cushions, plastic wraps, power cords, adapters, printed manuals, warranty cards, and any complimentary accessories or bundled items.",
+          "Products with protective films (such as guitar pickguards, mixer display screens, or microphone grilles) must have those films intact and unpeeled.",
         ],
       },
       {
-        heading: "How to start a return",
+        heading: "Non-returnable and excluded items",
         paragraphs: [
-          `Email ${BRAND.email} with your order ID, product name, and reason for return. Our team will share pickup or drop-off instructions and a return authorization.`,
+          "Due to strict hygiene, copyright, and safety standards, certain categories cannot be returned once opened: in-ear monitors (IEMs), earbuds, open packages of instrument strings, drumheads, harmonicas, and reeds.",
+          "Software licenses, digital activation keys, and products registered with third-party manufacturer platforms cannot be returned or refunded.",
+          "B-Stock, clearance, or custom-configured orders are final sale and non-returnable unless they arrive damaged or non-functional contrary to their graded condition.",
         ],
       },
       {
-        heading: "Refunds",
+        heading: "Damaged in transit or Dead on Arrival (DOA)",
         paragraphs: [
-          "Approved refunds are processed to the original payment method within 5–10 business days after we receive and inspect the returned item.",
+          "If your package arrives with visible carton damage or tampering, please make a note on the courier delivery receipt and photograph/video the exterior before opening.",
+          `If an item is found non-functional upon unboxing (Dead on Arrival), notify us at ${BRAND.email} within 48 hours of delivery with photos or video demonstrating the issue. We will arrange an expedited courier pickup and issue an immediate replacement or full refund upon inspection.`,
+        ],
+      },
+      {
+        heading: "How to initiate a return",
+        paragraphs: [
+          `Email our support team at ${BRAND.email} with your order number, clear photographs/video of the issue, and the reason for the request.`,
+          "Our gear advisors will review your request within 24–48 business hours and issue an authorized Return Merchandise Authorization (RMA) along with reverse shipping instructions.",
+          "Please do not send items back without an approved RMA number, as unauthorized parcels cannot be tracked or accepted at our logistics warehouse.",
+        ],
+      },
+      {
+        heading: "Inspection and refund timelines",
+        paragraphs: [
+          "Once your returned instrument arrives at our Kolkata facility, our certified technicians inspect the unit within 48 business hours to verify serial numbers, functionality, and packaging completeness.",
+          "Upon approval, refunds are initiated immediately to the original method of payment (UPI, credit/debit card, or net banking) via our payment gateway (Razorpay). Depending on your bank's processing cycle, funds typically reflect in your account within 5–7 business days.",
         ],
       },
     ],
@@ -77,34 +103,61 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
     sections: [
       {
         paragraphs: [
-          "By using vibemusic.in you agree to these terms. Please read them carefully before placing an order.",
+          `Welcome to vibemusic.in. These Terms & Conditions govern your access to and use of our storefront, digital services, and the purchase of any musical gear and audio products from Vibe Music.`,
+          `By browsing, registering an account, or placing an order on vibemusic.in, you agree to be bound by these terms, our Privacy Policy, and our Returns & Shipping Policies. If you do not agree with any part of these terms, please refrain from using our services.`,
         ],
       },
       {
         heading: "Registered business",
         paragraphs: [
-          `${BRAND.legalName} operates vibemusic.in from ${BRAND.address}.`,
+          `${BRAND.legalName} is the legal owner and operator of the digital storefront vibemusic.in, having its registered office at ${BRAND.address}.`,
           BRAND.gstin
-            ? `GSTIN: ${BRAND.gstin}`
-            : "GSTIN is published in the site footer when configured.",
+            ? `GSTIN: ${BRAND.gstin}.`
+            : "Tax identification and GST credentials are registered under West Bengal jurisdiction and reflected on all commercial tax invoices.",
+          `All communication regarding governance, dispute resolution, or consumer protection should be directed to ${BRAND.email}.`,
         ],
       },
       {
-        heading: "Orders & pricing",
+        heading: "Orders, pricing and typographical error clause",
         paragraphs: [
-          "All prices are listed in Indian Rupees (INR) and include applicable GST unless stated otherwise. We reserve the right to correct pricing errors and cancel orders affected by such errors.",
+          "All prices are quoted in Indian National Rupees (INR) and are inclusive of Goods and Services Tax (GST) applicable under Indian law, unless expressly indicated otherwise.",
+          "Mis-pricing and cancellation clause: While we take meticulous care to ensure all product specifications, availability, and prices displayed on the store are accurate, errors may occasionally occur. In the event an item is mistakenly listed at an incorrect price or with erroneous specifications due to typographical, system, database, or supplier error, Vibe Music explicitly reserves the right to decline, hold, or cancel any orders placed for that item, whether or not the order has been confirmed and payment has been captured.",
+          "If your payment has already been captured for an order subsequently cancelled due to a pricing discrepancy, Vibe Music will promptly issue a full 100% refund to the original payment source.",
         ],
       },
       {
-        heading: "Payments",
+        heading: "Payment processing and security",
         paragraphs: [
-          "Online payments are processed securely through Razorpay (UPI, cards, and net banking). Cash on delivery is not offered.",
+          "Payment processing on vibemusic.in is conducted through Razorpay Software Private Limited, a PCI-DSS Level 1 compliant payment aggregator.",
+          "We support UPI (Google Pay, PhonePe, Paytm, BHIM), major Credit and Debit Cards (Visa, MasterCard, RuPay), Net Banking across all scheduled Indian commercial banks, and eligible digital wallets. Cash on Delivery (COD) is not accepted.",
+          "Vibe Music never stores your credit card numbers, CVVs, or net banking passwords on our servers. All transaction traffic is encrypted using 256-bit TLS/SSL certificates.",
         ],
       },
       {
-        heading: "Limitation of liability",
+        heading: "Shipping, delivery and transit risk",
         paragraphs: [
-          "Vibe Music is not liable for indirect or consequential damages arising from use of the site or products beyond the value of the order, to the extent permitted by law.",
+          "Instruments and audio equipment are securely packed with shock-resistant multi-layer cushioning and dispatched through reputed courier partners within 1–2 business days of order confirmation.",
+          "Title and risk of loss pass to the customer upon delivery by the carrier to the destination address specified in the order. In the rare event of transit loss or catastrophic package damage, Vibe Music will assist in lodging courier claims and expediting replacement gear.",
+        ],
+      },
+      {
+        heading: "Manufacturer warranties and genuine gear guarantee",
+        paragraphs: [
+          "Every product sold as 'New' on vibemusic.in is 100% authentic, brand-new, and sourced through official distribution channels.",
+          "New products carry the official standard manufacturer warranty valid across authorized service centers in India. Vibe Music provides purchase invoices required for all warranty registrations.",
+        ],
+      },
+      {
+        heading: "Promotions, giveaways, and program rules",
+        paragraphs: [
+          "Participation in promotional campaigns, giveaways, contests, or gear-exchange programs is governed by individual campaign rules published alongside the respective service. Vibe Music reserves the right to disqualify fraudulent, automated, or abusive entries.",
+        ],
+      },
+      {
+        heading: "Limitation of liability and governing law",
+        paragraphs: [
+          "In no event shall Vibe Music, its directors, officers, or affiliates be liable for indirect, incidental, punitive, or consequential damages resulting from the use or inability to use the products sold, beyond the purchase amount actually paid for the specific product in dispute.",
+          "These Terms are governed by and construed in accordance with the laws of the Republic of India. Any legal action, dispute, or proceeding arising under or in connection with these Terms shall be subject to the exclusive jurisdiction of the competent courts in Kolkata, West Bengal, India.",
         ],
       },
     ],
@@ -116,26 +169,72 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
     sections: [
       {
         paragraphs: [
-          "We respect your privacy and handle personal data in line with applicable Indian law and industry best practices.",
-          `${BRAND.legalName} operates vibemusic.in from ${BRAND.address}.`,
+          `At Vibe Music, operated by ${BRAND.legalName} (${BRAND.address}), we are committed to respecting your privacy, safeguarding your personal data, and maintaining the highest standards of data governance.`,
+          `This Privacy Policy explains how we collect, process, store, and protect your information when you visit vibemusic.in, purchase gear, or interact with our support teams, in full compliance with the Digital Personal Data Protection Act (DPDPA), 2023, Information Technology Act, 2000, and related Indian data protection regulations.`,
         ],
       },
       {
-        heading: "Data we collect",
+        heading: "Data fiduciary and personal data collected",
         paragraphs: [
-          "We collect information you provide when creating an account, placing an order, subscribing to our newsletter, or contacting support — including name, email, phone, and delivery address.",
+          `${BRAND.legalName} serves as the Data Fiduciary regarding the personal information collected on this website.`,
+          "We collect personal information that you voluntarily provide when creating an account, browsing products, completing a checkout, subscribing to notifications, or requesting customer support. This includes:",
+          "1. Identity and contact details: Full name, phone number, email address, billing address, and shipping address.",
+          "2. Transactional and order records: Details of products purchased, order values, invoices, order tokens, delivery instructions, and return/warranty history.",
+          "3. Technical and usage identifiers: IP address, device fingerprints, browser characteristics, operating system, and interaction telemetry necessary for fraud prevention and performance optimization.",
         ],
       },
       {
-        heading: "How we use data",
+        heading: "Lawful grounds and purpose of data processing",
         paragraphs: [
-          "Your data is used to fulfil orders, provide customer support, send transactional messages, improve our store, and — with your consent — share offers and product updates.",
+          "We process your personal data solely for legitimate, lawful purposes including:",
+          "• Order fulfillment, logistics handover, door delivery, and delivery status communications (SMS and email).",
+          "• Secure payment authorization and fraud prevention through our compliant payment aggregator (Razorpay).",
+          "• Customer support, gear advisory, technical inquiries, warranty support, and return processing.",
+          "• Compliance with mandatory statutory requirements, including Goods and Services Tax (GST) invoicing and corporate audit record-keeping under Indian law.",
+          "• With your explicit consent, sending promotional newsletters, gear announcements, and product drop alerts. You may withdraw marketing consent at any time via the unsubscribe link in our emails.",
         ],
       },
       {
-        heading: "Your choices",
+        heading: "Third-party disclosures and data processors",
         paragraphs: [
-          "You may update account details in your profile, unsubscribe from marketing emails via the link in any message, or contact us to request deletion of account data subject to legal retention requirements.",
+          "We do not sell, rent, or trade your personal information to third parties or data brokers. Data is shared strictly on a need-to-know basis with trusted service providers bound by contractual non-disclosure and security covenants:",
+          "• Payment Gateway: Razorpay Software Private Limited processes transaction details over encrypted channels for payment authorization.",
+          "• Logistics Partners: Reputed couriers (e.g. Shiprocket, Delhivery, Blue Dart) receive destination addresses and contact phone numbers for parcel delivery.",
+          "• Transactional Messaging: Cloud infrastructure providers for sending order confirmation emails and authentication tokens.",
+        ],
+      },
+      {
+        heading: "Data retention and security measures",
+        paragraphs: [
+          "We enforce comprehensive physical, electronic, and managerial safeguards to protect your personal data from unauthorized access, disclosure, alteration, or destruction. All data transmission is secured using industry-standard TLS/SSL encryption.",
+          "Personal data is retained only as long as necessary to fulfill the purposes for which it was gathered, or as mandated by applicable statutory retention periods (such as mandatory 7-year accounting and tax record retention under Indian Companies and GST laws).",
+        ],
+      },
+      {
+        heading: "Your rights under Indian data protection law",
+        paragraphs: [
+          "Under the Digital Personal Data Protection Act, 2023, you have rights to:",
+          "1. Request confirmation and summaries of personal data processed by Vibe Music.",
+          "2. Request correction, completion, or updating of inaccurate or outdated information.",
+          "3. Request erasure of personal data that is no longer required for its original purpose or statutory obligation.",
+          "4. Withdraw consent for non-essential processing (such as marketing emails) at any time.",
+          `To exercise any of these rights, please contact our Data Grievance Team at ${BRAND.email}.`,
+        ],
+      },
+      {
+        heading: "Protection of minors",
+        paragraphs: [
+          "vibemusic.in is intended for adult musicians, sound engineers, and enthusiasts. We do not knowingly collect personal data from individuals under the age of 18 without verifiable parental or guardian consent.",
+        ],
+      },
+      {
+        heading: "Grievance redressal mechanism and officer",
+        paragraphs: [
+          "In compliance with the Consumer Protection (E-Commerce) Rules, 2020 and the Digital Personal Data Protection Act, 2023, our designated Grievance Officer is responsible for addressing consumer queries, data concerns, and complaints.",
+          `Grievance Officer: ${GRIEVANCE_OFFICER_NAME}`,
+          `Registered Address: ${BRAND.address}`,
+          `Email: ${GRIEVANCE_OFFICER_EMAIL}`,
+          "Statutory Resolution Timeline: Every grievance will be acknowledged within 48 hours of receipt and resolved within 30 days.",
         ],
       },
     ],

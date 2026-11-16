@@ -119,7 +119,7 @@ Update SPF TXT when IP changes: use `a:mail.vibemusic.in` or `ip4:109.122.56.126
 
 ## Environment variables
 
-Copy [`.env.production.example`](.env.production.example) to the VPS `.env`. Merge secrets from `deploy/ops-secrets.env`:
+Copy [`.env.example`](.env.example) to the VPS `.env`. Merge secrets from `deploy/ops-secrets.env`:
 
 ```bash
 node scripts/ops/merge-ops-secrets.mjs

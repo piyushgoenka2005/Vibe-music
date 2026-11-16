@@ -10,7 +10,7 @@
   background: transparent;
   border-top: none;
   border-bottom: none;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .site-footer.site-footer--layered::before,
@@ -518,17 +518,14 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
 }
 
 .site-footer__panel-spacer {
-  position: relative;
-  z-index: 0;
-  pointer-events: none;
-  background: transparent;
+  display: none !important;
+  height: 0 !important;
 }
 
-/* Fixed products panel — pinned under the Inside Vibe Music shell (scroll-reveal) */
+/* Products panel — docked directly under the Inside Vibe Music shell */
 .footer-products-panel {
-  position: fixed;
-  inset: auto 0 0;
-  z-index: 0;
+  position: relative;
+  z-index: 1;
   width: 100%;
   padding: clamp(1.75rem, 3.5vw, 2rem) max(1.25rem, env(safe-area-inset-right, 0px))
     calc(1.25rem + env(safe-area-inset-bottom, 0px)) max(1.25rem, env(safe-area-inset-left, 0px));
@@ -539,28 +536,11 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
     linear-gradient(180deg, #103080 0%, #0a2160 100%);
   background-size: 101% 101%;
   background-position: center;
-}
-
-/* Scroll-reveal works on all pages — panel is fixed, shell scrolls over it */
-
-.footer-products-panel:not(.is-ready) {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.footer-products-panel.is-ready {
   visibility: visible;
-  /* Pass-through while Inside Vibe Music shell scrolls over the reveal */
-  pointer-events: none;
-}
-
-.footer-products-panel.is-ready.is-interactive {
-  z-index: 1;
   pointer-events: auto;
 }
 
-/* Quick-add only — clickable while scroll reveal keeps panel pass-through */
-.footer-products-panel.is-ready .footer-product-snippet__add {
+.footer-products-panel .footer-product-snippet__add {
   position: relative;
   z-index: 2;
   pointer-events: auto;
@@ -928,9 +908,9 @@ body.is-landing-page .storefront-main + .site-footer.site-footer--layered .site-
   }
 
   .footer-products-panel {
-    max-height: calc(100dvh - var(--site-header-offset, 64px));
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    max-height: none;
+    overflow-y: visible;
+    overscroll-behavior: auto;
     padding-block: 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px));
   }
 
