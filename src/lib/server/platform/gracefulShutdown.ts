@@ -1,7 +1,7 @@
 import "server-only";
 
 import { disconnectPrisma } from "@/lib/db/prisma";
-import { closeJobQueue } from "@/lib/server/jobQueue";
+import { closeJobQueue } from "@/lib/server/platform/jobQueue";
 import { logInfo, logWarn } from "@/lib/server/logger";
 
 const SHUTDOWN_TIMEOUT_MS = 30_000;

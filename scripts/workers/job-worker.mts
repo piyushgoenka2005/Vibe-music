@@ -5,7 +5,7 @@
  *   npx tsx --tsconfig scripts/workers/tsconfig.json scripts/workers/job-worker.mts
  *   pm2 start deploy/ecosystem.config.cjs --only vibe-worker
  */
-import { closeJobQueue, isJobQueueEnabled, startJobWorker } from "@/lib/server/jobQueue";
+import { closeJobQueue, isJobQueueEnabled, startJobWorker } from "@/lib/server/platform/jobQueue";
 import { disconnectPrisma } from "@/lib/db/prisma";
 
 async function main(): Promise<void> {
