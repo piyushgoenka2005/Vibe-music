@@ -52,6 +52,7 @@ export default function FindYourProductSection({ section }: FindYourProductSecti
         </div>
 
         <ScannerBeam
+          title={section?.accentLabel || "Gear built for every stage"}
           ctaText={ctaText}
           ctaLink={ctaLink}
           secondaryCtaText="Browse all"
