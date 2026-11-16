@@ -438,9 +438,9 @@ server {
     send_timeout 30s;
 
     # ── Connection limit per IP ──────────────────────────────────────────
-    # Real browsers use 6 concurrent connections per domain.
-    # 50 per IP gives headroom for mobile + desktop simultaneously.
-    limit_conn conn_limit 50;
+    # Raised from 50 → 200: browsers burst 20-30 parallel asset requests
+    # on initial page load; 50 caused HTTP 503s during that burst window.
+    limit_conn conn_limit 200;
 
     # ── Security headers ─────────────────────────────────────────────────
     add_header X-Frame-Options "SAMEORIGIN" always;
