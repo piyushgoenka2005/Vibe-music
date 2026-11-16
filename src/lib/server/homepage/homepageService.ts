@@ -734,7 +734,6 @@ async function resolveSection(
     effectiveSection.layout === "find_your_product"
   ) {
     const findYourProductItems = await resolveFindYourProduct(effectiveSection, items);
-    if (findYourProductItems.length === 0) return null;
 
     return {
       ...base,
