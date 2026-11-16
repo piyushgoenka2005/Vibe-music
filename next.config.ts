@@ -9,10 +9,6 @@ const nextConfig: NextConfig = {
     // Type checking is enforced in CI / pre-commit via `npm run type-check`.
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // Linting is enforced in CI / pre-commit via `npm run lint`.
-    ignoreDuringBuilds: true,
-  },
   // Server-only packages that pull Node builtins (`node:child_process`) or
   // optional native deps must stay external to the server bundle; bundling
   // them under --webpack raises UnhandledSchemeError / unresolved-optional-dep.
