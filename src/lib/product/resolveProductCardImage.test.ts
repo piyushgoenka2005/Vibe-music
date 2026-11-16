@@ -38,8 +38,7 @@ describe("resolveProductCardImage", () => {
       ],
     });
 
-    expect(resolved.src).toContain("/promotions/");
-    expect(resolved.src).toContain("DrumMonth-Superhero-Images-2");
+    expect(resolved.src).toContain("drum-2");
     expect(resolved.fallbackSrc).toContain("8dbab992-6ab1-4b7b-ae61-4ad72ec93351.png");
   });
 
@@ -54,7 +53,7 @@ describe("resolveProductCardImage", () => {
       ],
     });
 
-    expect(resolved.src).toContain("DrumMonth-Superhero-Images-2");
+    expect(resolved.src).toContain("drum-2");
     expect(resolved.fallbackSrc).toContain("c2c0dad6-9522-4d44-b686-4ab6076b2d7d.png");
   });
 
@@ -69,8 +68,7 @@ describe("resolveProductCardImage", () => {
       ],
     });
 
-    expect(resolved.src).toContain("/images/");
-    expect(resolved.src).toContain("DrumMonth-Superhero-Images-2");
+    expect(resolved.src).toContain("/images/drum-2");
     expect(resolved.fallbackSrc).toContain("c2c0dad6");
   });
 
@@ -106,8 +104,8 @@ describe("resolveProductCardImage", () => {
       image: promo,
     });
 
-    expect(sevenA.src).toContain("Superhero-Images-4");
-    expect(fiveA.src).toContain("Superhero-Images-1");
+    expect(sevenA.src).toContain("drum-2");
+    expect(fiveA.src).toContain("drum-1");
     expect(sevenA.src).not.toBe(fiveA.src);
   });
 

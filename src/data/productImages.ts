@@ -23,7 +23,17 @@ const IMAGES = {
   mixer: "/images/m/products/image/052250cf73nOL3KRtEQEEmF9AByd84tPzCw64Ycd.jpg",
 } as const;
 
-const GENERIC_PLACEHOLDER_PATHS = new Set<string>(Object.values(IMAGES));
+const PROMOTIONAL_BANNER_PATHS = [
+  "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-1.jpg",
+  "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-2.jpg",
+  "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-3.jpg",
+  "/images/m/promotions/2026/0603-Drum-Month/homepage/superhero/0603-DrumMonth-Superhero-Images-4.jpg",
+];
+
+const GENERIC_PLACEHOLDER_PATHS = new Set<string>([
+  ...Object.values(IMAGES),
+  ...PROMOTIONAL_BANNER_PATHS,
+]);
 
 export function isGenericProductPlaceholder(src: string): boolean {
   return GENERIC_PLACEHOLDER_PATHS.has(src);
