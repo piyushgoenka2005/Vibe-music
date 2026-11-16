@@ -391,7 +391,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## 5. Monitoring Thresholds & Alerts
 
-Use GitHub Actions **Maintenance** workflow (`.github/workflows/maintenance.yml`) plus manual probes:
+Manual and automated health probes:
 
 ```bash
 VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
