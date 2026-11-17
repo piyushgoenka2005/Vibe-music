@@ -77,3 +77,23 @@ export function buildProductJsonLd(
     },
   };
 }
+
+/** Google BreadcrumbList JSON-LD for PDP SEO. */
+export function buildBreadcrumbListJsonLd(
+  items: Array<{ label: string; href?: string }>,
+): Record<string, unknown> {
+  const elements = items
+    .filter((item) => item.href)
+    .map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.label,
+      item: item.href?.startsWith("http") ? item.href : `${BRAND.siteUrl}${item.href}`,
+    }));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: elements,
+  };
+}

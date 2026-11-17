@@ -79,7 +79,7 @@ export const POPULAR_CATEGORY_ITEMS: PopularCategoryItem[] = [
   },
   {
     slot: 7,
-    href: categoryPath("cables-cases-accessories"),
+    href: categoryPath("accessories"),
     title: "Cables, Cases, Stands & More",
     imageSrc: thumb("M4WP006"),
     imageSrcSet: thumbSrcSet("M4WP006"),

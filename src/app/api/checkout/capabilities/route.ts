@@ -14,6 +14,7 @@ import { isAddressAutocompleteConfigured } from "@/lib/server/nominatimAddress";
 import { formatIndianPhone } from "@/lib/brand";
 import { getStoreSettings } from "@/lib/server/settingsService";
 import { logInfo, logError } from "@/lib/server/logger";
+import { prewarmRazorpayConnection } from "@/lib/server/payments/razorpayClient";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,9 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request) {
   try {
     const razorpayConfigured = isRazorpayConfigured();
+    if (razorpayConfigured) {
+      prewarmRazorpayConnection();
+    }
     const demoPaymentsAllowed = isDemoPaymentsAllowed();
     const razorpayMode = getRazorpayKeyMode();
     const placesAutocomplete = isAddressAutocompleteConfigured();

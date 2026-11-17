@@ -17,7 +17,7 @@ const GENERIC_BULK_CATEGORY_VALUES = new Set([
 const TITLE_CATEGORY_RULES: Array<{ pattern: RegExp; slug: string }> = [
   {
     pattern: /\b(accessory pack|accessories pack|accessory kit)\b/i,
-    slug: "cables-cases-accessories",
+    slug: "accessories",
   },
   { pattern: /\bmicrophone\b|\bmic\b|\bshotgun\b/i, slug: "microphones-wireless" },
   { pattern: /\bwireless\b.*\b(system|receiver|transmitter)\b/i, slug: "microphones-wireless" },
@@ -33,7 +33,7 @@ const TITLE_CATEGORY_RULES: Array<{ pattern: RegExp; slug: string }> = [
   { pattern: /\b(keyboard|synthesizer|piano)\b/i, slug: "keyboards-synthesizers" },
   { pattern: /\b(drum|percussion|cymbal)\b/i, slug: "drums-percussion" },
   { pattern: /\b(dj|turntable|controller)\b/i, slug: "dj-equipment" },
-  { pattern: /\b(case|cable|adapter|stand|bag)\b/i, slug: "cables-cases-accessories" },
+  { pattern: /\b(case|cable|adapter|stand|bag)\b/i, slug: "accessories" },
   { pattern: /\b(live sound|speaker|pa system|lighting)\b/i, slug: "live-sound-lighting" },
   { pattern: /\b(software|plug-?in|vst|daw)\b/i, slug: "software-plug-ins" },
 ];

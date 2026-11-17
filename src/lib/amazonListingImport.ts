@@ -100,6 +100,7 @@ export type VibemusicBulkHeader = (typeof VIBEMUSIC_BULK_HEADERS)[number];
 
 export const VIBEMUSIC_BULK_COLUMN_COUNT = VIBEMUSIC_BULK_HEADERS.length;
 export const VIBEMUSIC_BULK_CORE_COLUMN_COUNT = VIBEMUSIC_BULK_CORE_HEADERS.length;
+export const VIBEMUSIC_BULK_MAX_COLUMN_COUNT = 100;
 
 export const VIBEMUSIC_BULK_SIGNATURE_HEADERS = [
   "ITEM TITLE",
@@ -627,17 +628,18 @@ export function parseProductImportBuffer(
 
 /**
  * Validate uploaded headers match the vibemusic bulk template:
- * - 69 core columns in canonical order, or
- * - 81 columns when the optional image1–image12 block is included.
+ * - 69 core columns in canonical order, and
+ * - Accepts up to 100 columns total (including image1–image12 and custom specification columns).
  */
 export function validateVibemusicBulkHeaders(headers: string[]): string | null {
   const trimmed = headers.map((header) => header.trim()).filter(Boolean);
 
-  if (
-    trimmed.length !== VIBEMUSIC_BULK_CORE_COLUMN_COUNT &&
-    trimmed.length !== VIBEMUSIC_BULK_COLUMN_COUNT
-  ) {
-    return `Vibe Music bulk template requires exactly ${VIBEMUSIC_BULK_CORE_COLUMN_COUNT} core columns, or ${VIBEMUSIC_BULK_COLUMN_COUNT} with image1–image12 appended (found ${trimmed.length}). Download the template from the Import dialog (Excel or CSV).`;
+  if (trimmed.length > VIBEMUSIC_BULK_MAX_COLUMN_COUNT) {
+    return `Vibe Music bulk template accepts up to ${VIBEMUSIC_BULK_MAX_COLUMN_COUNT} columns (found ${trimmed.length}). Download the template from the Import dialog (Excel or CSV).`;
+  }
+
+  if (trimmed.length < VIBEMUSIC_BULK_CORE_COLUMN_COUNT) {
+    return `Vibe Music bulk template requires exactly ${VIBEMUSIC_BULK_CORE_COLUMN_COUNT} core columns (found ${trimmed.length}, up to ${VIBEMUSIC_BULK_MAX_COLUMN_COUNT} columns supported). Download the template from the Import dialog (Excel or CSV).`;
   }
 
   const mismatches: string[] = [];
@@ -649,12 +651,23 @@ export function validateVibemusicBulkHeaders(headers: string[]): string | null {
     }
   }
 
-  if (trimmed.length === VIBEMUSIC_BULK_COLUMN_COUNT) {
-    for (let index = 0; index < VIBEMUSIC_BULK_IMAGE_HEADERS.length; index += 1) {
-      const expected = VIBEMUSIC_BULK_IMAGE_HEADERS[index]!;
-      const actual = trimmed[VIBEMUSIC_BULK_CORE_COLUMN_COUNT + index]!;
-      if (normalizeHeaderKey(actual) !== normalizeHeaderKey(expected)) {
-        mismatches.push(`image column ${index + 1}: expected "${expected}", got "${actual ?? ""}"`);
+  if (trimmed.length >= VIBEMUSIC_BULK_COLUMN_COUNT) {
+    const hasImageHeaders = trimmed
+      .slice(VIBEMUSIC_BULK_CORE_COLUMN_COUNT, VIBEMUSIC_BULK_COLUMN_COUNT)
+      .some((header) => normalizeHeaderKey(header).startsWith("image"));
+
+    if (hasImageHeaders) {
+      for (let index = 0; index < VIBEMUSIC_BULK_IMAGE_HEADERS.length; index += 1) {
+        const expected = VIBEMUSIC_BULK_IMAGE_HEADERS[index]!;
+        const actual = trimmed[VIBEMUSIC_BULK_CORE_COLUMN_COUNT + index]!;
+        if (
+          normalizeHeaderKey(actual).startsWith("image") &&
+          normalizeHeaderKey(actual) !== normalizeHeaderKey(expected)
+        ) {
+          mismatches.push(
+            `image column ${index + 1}: expected "${expected}", got "${actual ?? ""}"`,
+          );
+        }
       }
     }
   }

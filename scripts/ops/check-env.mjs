@@ -213,24 +213,34 @@ if (razorpayKeyId && razorpayPublicKey && razorpayKeyId !== razorpayPublicKey) {
   console.log("RAZORPAY_KEY_ID and NEXT_PUBLIC_RAZORPAY_KEY_ID must match.");
 }
 let productionMisconfig = false;
+const allowTestRazorpay =
+  env.ALLOW_TEST_RAZORPAY === "true" || process.env.ALLOW_TEST_RAZORPAY === "true";
 if (
   /vibemusic\.in/i.test(siteUrl) &&
   razorpayKeyId.startsWith("rzp_test_")
 ) {
-  console.log(
-    "BLOCKING: Razorpay test keys with vibemusic.in — production VPS must use rzp_live_… keys."
-  );
-  productionMisconfig = true;
+  if (allowTestRazorpay) {
+    console.log(
+      "NOTE: Razorpay test keys active with ALLOW_TEST_RAZORPAY=true (permitted for staging/testing)."
+    );
+  } else {
+    console.log(
+      "BLOCKING: Razorpay test keys with vibemusic.in — production VPS must use rzp_live_… keys."
+    );
+    productionMisconfig = true;
+  }
 }
 if (
   /vibemusic\.in/i.test(siteUrl) &&
   razorpayKeyId &&
   !razorpayKeyId.startsWith("rzp_live_")
 ) {
-  console.log(
-    "BLOCKING: RAZORPAY_KEY_ID must start with rzp_live_ when NEXT_PUBLIC_SITE_URL is vibemusic.in."
-  );
-  productionMisconfig = true;
+  if (!allowTestRazorpay) {
+    console.log(
+      "BLOCKING: RAZORPAY_KEY_ID must start with rzp_live_ when NEXT_PUBLIC_SITE_URL is vibemusic.in."
+    );
+    productionMisconfig = true;
+  }
 }
 if (env.ALLOW_DEMO_PAYMENTS === "true" && /vibemusic\.in/i.test(siteUrl)) {
   console.log("BLOCKING: ALLOW_DEMO_PAYMENTS must be false on the production storefront.");

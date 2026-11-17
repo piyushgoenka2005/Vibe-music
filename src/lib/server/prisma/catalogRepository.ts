@@ -222,26 +222,30 @@ export async function countActiveProducts(): Promise<number> {
 }
 
 export async function fetchProductById(id: string): Promise<CatalogProduct | null> {
+  const cleanId = id?.trim();
+  if (!cleanId) return null;
   return withProductFallback(
     async () => {
-      const row = await prisma.product.findUnique({ where: { id } });
+      const row = await prisma.product.findUnique({ where: { id: cleanId } });
       return row ? prismaToProduct(row) : null;
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
-      return loadProducts().find((product) => product.id === id) ?? null;
+      return loadProducts().find((product) => product.id === cleanId) ?? null;
     },
   );
 }
 
 export async function fetchProductBySlug(slug: string): Promise<CatalogProduct | null> {
+  const cleanSlug = slug?.trim();
+  if (!cleanSlug) return null;
   const fromLocal = async () => {
     const { loadProducts } = await import("@/lib/server/catalogRepository");
-    return loadProducts().find((product) => product.slug === slug) ?? null;
+    return loadProducts().find((product) => product.slug === cleanSlug) ?? null;
   };
 
   return withProductFallback(async () => {
-    const row = await prisma.product.findUnique({ where: { slug } });
+    const row = await prisma.product.findUnique({ where: { slug: cleanSlug } });
     if (row) return prismaToProduct(row);
     // Dev/seed only: resolve curated JSON SKUs that lag DB sync.
     if (isJsonCatalogFallbackAllowed()) return fromLocal();
@@ -275,16 +279,67 @@ export async function fetchProductsByIds(
   );
 }
 
+const CATEGORY_SLUG_EXPANSIONS: Record<string, string[]> = {
+  "keyboards-pianos": [
+    "keyboards-synthesizers",
+    "keyboards-pianos",
+    "grand-piano",
+    "studio-recording",
+  ],
+  "keyboards-synthesizers": [
+    "keyboards-synthesizers",
+    "keyboards-pianos",
+    "grand-piano",
+    "studio-recording",
+  ],
+  "studio-recording": [
+    "studio-recording",
+    "software-plugins",
+    "software-plug-ins",
+    "keyboards-synthesizers",
+    "live-sound-lighting",
+    "microphones-wireless",
+    "dj-equipment",
+  ],
+  "grand-piano": ["grand-piano", "keyboards-pianos", "keyboards-synthesizers"],
+  cables: ["cables", "cables-cases-accessories", "accessories"],
+  "cables-cases-accessories": [
+    "cables-cases-accessories",
+    "cables",
+    "accessories",
+    "cases-bags",
+    "essentials",
+  ],
+  accessories: ["accessories", "cables-cases-accessories", "cables", "cases-bags", "essentials"],
+  "cases-bags": ["cables-cases-accessories", "cases-bags"],
+  essentials: ["cables-cases-accessories", "essentials"],
+  "live-sound": ["live-sound-lighting", "live-sound", "studio-recording", "dj-equipment"],
+  "live-sound-lighting": ["live-sound-lighting", "live-sound", "studio-recording", "dj-equipment"],
+  "dj-equipment": ["dj-equipment", "live-sound-lighting", "studio-recording"],
+  "software-plugins": ["software-plug-ins", "software-plugins"],
+  "software-plug-ins": ["software-plug-ins", "software-plugins"],
+  amplifiers: ["amplifiers-effects", "amplifiers", "guitars"],
+  "amplifiers-effects": ["amplifiers-effects", "amplifiers", "guitars"],
+  guitars: ["guitars", "amplifiers-effects", "amplifiers", "bass", "band-orchestra"],
+};
+
 export async function fetchProductsByCategory(
   categorySlug: string,
   includeInactive = false,
 ): Promise<CatalogProduct[]> {
   const resolved = normalizeCategorySlug(categorySlug);
+  const targetSlugs = CATEGORY_SLUG_EXPANSIONS[resolved] ?? [resolved];
 
   return withProductFallback(
     async () => {
       const rows = await prisma.product.findMany({
-        where: { categorySlug: resolved },
+        where: {
+          OR: [
+            { categorySlug: { in: targetSlugs } },
+            { productCategories: { some: { category: { slug: { in: targetSlugs } } } } },
+            { productCategories: { some: { categoryId: { in: targetSlugs } } } },
+          ],
+        },
         orderBy: { name: "asc" },
         select: LEAN_PRODUCT_SELECT,
       });
@@ -295,10 +350,11 @@ export async function fetchProductsByCategory(
     },
     async () => {
       const { loadProducts } = await import("@/lib/server/catalogRepository");
-      const products = loadProducts().filter(
-        (product) =>
-          product.categorySlug === resolved || normalizeCategorySlug(product.category) === resolved,
-      );
+      const targetSet = new Set(targetSlugs);
+      const products = loadProducts().filter((product) => {
+        const prodSlug = product.categorySlug || normalizeCategorySlug(product.category);
+        return targetSet.has(prodSlug);
+      });
       return filterActive(products, includeInactive);
     },
   );
@@ -449,7 +505,10 @@ export async function fetchBrands(): Promise<Brand[]> {
 export async function fetchCategories(): Promise<Category[]> {
   return withProductFallback(
     async () => {
-      const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+      const rows = await prisma.category.findMany({
+        where: { isArchived: false },
+        orderBy: { sortOrder: "asc" },
+      });
       return rows.map(prismaToCategory);
     },
     async () => {

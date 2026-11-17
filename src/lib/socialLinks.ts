@@ -4,8 +4,7 @@ export const SOCIAL_LINKS = {
     process.env.NEXT_PUBLIC_SOCIAL_FACEBOOK ?? "https://www.facebook.com/vibemusicindiaofficial/",
   twitter: process.env.NEXT_PUBLIC_SOCIAL_TWITTER ?? "https://x.com/vibemusicindia",
   instagram:
-    process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM ??
-    "https://www.instagram.com/vibemusicindia?stkn=MXQ5MDJqbmhwb3R6eQ==",
+    process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM ?? "https://www.instagram.com/vibemusicindia/",
   linkedin:
     process.env.NEXT_PUBLIC_SOCIAL_LINKEDIN ?? "https://www.linkedin.com/company/vibemusic-india",
   youtube: process.env.NEXT_PUBLIC_SOCIAL_YOUTUBE ?? "https://www.youtube.com/@vibemusic",

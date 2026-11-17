@@ -105,7 +105,6 @@ const filesToPatch = [
   "deploy/ecosystem.config.cjs",
   "README.md",
   "docs/INCIDENT_RESPONSE.md",
-  ".github/workflows/deploy-production.yml",
 ];
 
 for (const rel of filesToPatch) {

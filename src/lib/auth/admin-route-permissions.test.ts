@@ -9,6 +9,9 @@ describe("admin-route-permissions", () => {
     expect(getRequiredPermissionForAdminPath("/admin/products/new")).toBe("products:read");
     expect(getRequiredPermissionForAdminPath("/admin/cms")).toBe("settings:read");
     expect(getRequiredPermissionForAdminPath("/admin/shipping")).toBe("settings:read");
+    expect(getRequiredPermissionForAdminPath("/admin/navigation")).toBe("settings:read");
+    expect(getRequiredPermissionForAdminPath("/admin/footer")).toBe("settings:read");
+    expect(getRequiredPermissionForAdminPath("/admin/seo")).toBe("settings:read");
   });
 
   it("treats admin login as public", () => {

@@ -15,8 +15,10 @@ export function hasAuthSessionCookie(
 ): boolean {
   const primary = secure ? AUTHJS_SESSION_COOKIE_SECURE : AUTHJS_SESSION_COOKIE;
   const fallback = secure ? AUTHJS_SESSION_COOKIE : AUTHJS_SESSION_COOKIE_SECURE;
-  const value = cookies.get(primary)?.value ?? cookies.get(fallback)?.value;
-  return isSessionCookiePlausible(value);
+  const primaryVal = cookies.get(primary)?.value;
+  if (isSessionCookiePlausible(primaryVal)) return true;
+  const fallbackVal = cookies.get(fallback)?.value;
+  return isSessionCookiePlausible(fallbackVal);
 }
 
 /** Check for admin session cookie (uses same cookie but we verify admin role in route handlers) */

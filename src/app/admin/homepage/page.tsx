@@ -389,6 +389,35 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     onError: (error: Error) => setFormError(error.message),
   });
 
+  const seedTrendingBuysMutation = useMutation({
+    mutationFn: async (mode: "items" | "defaults") => {
+      return adminMutateJson<{ ok: boolean; mode: string; count: number }>(
+        "/api/admin/homepage/seed/trending_buys",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode }),
+        },
+      );
+    },
+    onSuccess: (res, mode) => {
+      setFormError(null);
+      if (mode === "defaults") {
+        setSectionForm({});
+        setSaveNotice(
+          "Restored default Buy What's Trending settings (Auto mode). Storefront updated!",
+        );
+      } else {
+        setSectionForm((prev) => ({ ...prev, sourceMode: "manual", isActive: true }));
+        setSaveNotice(
+          `Loaded ${res.count ?? 0} live trending products into Manual curation. Edit or reorder cards below.`,
+        );
+      }
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+    onError: (error: Error) => setFormError(error.message),
+  });
+
   const addItemMutation = useMutation({
     mutationFn: async () => {
       if (isGearStoriesSection) {
@@ -544,6 +573,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     activeKey === "browse_by_categories" ||
     activeKey === "category_bento";
   const isShopHighlightsSection = activeKey === "shop_the_highlights";
+  const isTrendingBuysSection = activeKey === "trending_buys";
   const isBentoSection = activeKey === "category_bento";
   const isBrowseSection = activeKey === "browse_by_categories";
   const isProductSection =
@@ -564,8 +594,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
     isGearStoriesSection ||
     isGearAdvisorsSection ||
     isShopHighlightsSection ||
-    isSocialRailSection ||
-    activeKey === "trending";
+    isSocialRailSection;
   const canAddBigNamesItem = !isBigNamesSection || sectionItems.length < BIG_NAMES_DEALS_MAX_ITEMS;
   const canAddHighlightsItem = !isShopHighlightsSection || sectionItems.length < 3;
   const canAddPremiumHeroItem = !isPremiumHeroSection || sectionItems.length < 4;
@@ -581,7 +610,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
       ? IMAGE_SPECS.bentoCategoryCard
       : isBrowseSection
         ? IMAGE_SPECS.browseCategoryCard
-        : isShopHighlightsSection
+        : isShopHighlightsSection || isTrendingBuysSection
           ? IMAGE_SPECS.highlightCard
           : isCategorySection
             ? IMAGE_SPECS.featuredCategoryTile
@@ -743,30 +772,60 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
               </div>
             )}
             {activeKey === "deals_of_the_day" ||
+            activeKey === "new_arrivals" ||
+            activeKey === "best_sellers" ||
+            activeKey === "trending" ||
+            activeKey === "staff_picks" ||
+            isTrendingBuysSection ||
+            isShopHighlightsSection ||
             isBigNamesSection ||
             isBentoSection ||
             isGearAdvisorsSection ? (
               <div className="admin-form-group">
                 <label>
-                  {isBigNamesSection || isGearAdvisorsSection || isShopHighlightsSection
-                    ? "Eyebrow"
-                    : isBentoSection
-                      ? "Card CTA label (Explore Category)"
-                      : "Accent Label"}
+                  {isBentoSection
+                    ? "Card CTA label (Explore Category)"
+                    : activeKey === "deals_of_the_day"
+                      ? "Accent Label"
+                      : "Eyebrow"}
                 </label>
                 <input
                   className="admin-input"
                   style={{ width: "100%" }}
                   value={form.accentLabel}
                   placeholder={
-                    isShopHighlightsSection
-                      ? "TOP PRODUCTS AT VIBE MUSIC"
-                      : isGearAdvisorsSection
-                        ? "GEAR ADVISORS, NOT A WAREHOUSE"
-                        : undefined
+                    isTrendingBuysSection
+                      ? "Trending now"
+                      : activeKey === "trending"
+                        ? "Hot right now"
+                        : activeKey === "best_sellers"
+                          ? "Customer favorites"
+                          : activeKey === "staff_picks"
+                            ? "Curated by us"
+                            : activeKey === "new_arrivals"
+                              ? "New arrivals"
+                              : isShopHighlightsSection
+                                ? "TOP PRODUCTS AT VIBE MUSIC"
+                                : isGearAdvisorsSection
+                                  ? "GEAR ADVISORS, NOT A WAREHOUSE"
+                                  : undefined
                   }
                   onChange={(event) =>
                     setSectionForm((prev) => ({ ...prev, accentLabel: event.target.value }))
+                  }
+                />
+              </div>
+            ) : null}
+            {isTrendingBuysSection ? (
+              <div className="admin-form-group">
+                <label>Card Action Label</label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  value={form.secondaryCtaText}
+                  placeholder="View product"
+                  onChange={(event) =>
+                    setSectionForm((prev) => ({ ...prev, secondaryCtaText: event.target.value }))
                   }
                 />
               </div>
@@ -1014,6 +1073,36 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                       : "Restore Default Gear Advisors"}
                   </button>
                 ) : null}
+                {isTrendingBuysSection ? (
+                  <>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--secondary"
+                      disabled={seedTrendingBuysMutation.isPending}
+                      onClick={() => seedTrendingBuysMutation.mutate("items")}
+                    >
+                      {seedTrendingBuysMutation.isPending
+                        ? "Working…"
+                        : "Load Live Trending into Manual"}
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn admin-btn--secondary"
+                      disabled={seedTrendingBuysMutation.isPending}
+                      onClick={() => {
+                        if (
+                          confirm(
+                            "Restore default Buy What's Trending copy and switch Source Mode to Auto?",
+                          )
+                        ) {
+                          seedTrendingBuysMutation.mutate("defaults");
+                        }
+                      }}
+                    >
+                      Restore Default Copy
+                    </button>
+                  </>
+                ) : null}
               </>
             ) : null}
           </div>
@@ -1034,7 +1123,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                       ? "Editorial Card & Secondary Action"
                       : isShopHighlightsSection
                         ? "Highlight Products (3 Cards)"
-                        : "Curated Items"}
+                        : isTrendingBuysSection
+                          ? "Curated Trending Cards"
+                          : "Curated Items"}
             </h2>
           </div>
           <div className="admin-panel__body">
@@ -1544,7 +1635,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         label={
                           isBrandSection
                             ? "Brand logo"
-                            : isShopHighlightsSection
+                            : isShopHighlightsSection || isTrendingBuysSection
                               ? "Card image (overrides product image)"
                               : isCategorySection
                                 ? "Card / category image"
@@ -1559,7 +1650,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   {!isBigNamesSection ? (
                     <div className="admin-form-group">
                       <label>
-                        {isShopHighlightsSection
+                        {isShopHighlightsSection || isTrendingBuysSection
                           ? "Card Title (Overrides product name)"
                           : "Custom Title"}
                       </label>
@@ -1576,7 +1667,7 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   {!isBigNamesSection ? (
                     <div className="admin-form-group">
                       <label>
-                        {isShopHighlightsSection
+                        {isShopHighlightsSection || isTrendingBuysSection
                           ? "Card Link (Overrides product URL)"
                           : "Custom Link"}
                       </label>
@@ -1593,7 +1684,9 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   {isProductSection && !isBigNamesSection ? (
                     <div className="admin-form-group">
                       <label>
-                        {isShopHighlightsSection ? "Card Description / Excerpt" : "Offer Text"}
+                        {isShopHighlightsSection || isTrendingBuysSection
+                          ? "Card Description / Excerpt"
+                          : "Offer Text"}
                       </label>
                       <input
                         className="admin-input"
@@ -1601,6 +1694,20 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                         value={itemForm.offerText}
                         onChange={(event) =>
                           setItemForm((prev) => ({ ...prev, offerText: event.target.value }))
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  {isShopHighlightsSection || isTrendingBuysSection ? (
+                    <div className="admin-form-group">
+                      <label>Brand / Meta Label (optional override)</label>
+                      <input
+                        className="admin-input"
+                        style={{ width: "100%" }}
+                        value={itemForm.brandId}
+                        placeholder="e.g. ADEON, Hertz, Roland"
+                        onChange={(event) =>
+                          setItemForm((prev) => ({ ...prev, brandId: event.target.value }))
                         }
                       />
                     </div>
@@ -1625,8 +1732,8 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
                   <div className="admin-form-group">
                     {!isBigNamesSection ? (
                       <label>
-                        {isShopHighlightsSection
-                          ? "Card Badge (e.g. Pianos, Guitars, Live Sound)"
+                        {isShopHighlightsSection || isTrendingBuysSection
+                          ? "Card Badge (e.g. Guitars, Audio, Trending)"
                           : "Badge Label"}
                       </label>
                     ) : null}
@@ -1969,10 +2076,24 @@ function HomepageContent({ canWrite }: { canWrite: boolean }) {
         <div className="admin-panel">
           <div className="admin-panel__body">
             <p style={{ color: "var(--admin-muted)", margin: 0 }}>
-              Auto mode pulls live catalog data: new arrivals, trending, featured (staff picks),
-              review-count leaders (best sellers), discounted products (deals), featured categories,
-              or brand list.
+              {isTrendingBuysSection
+                ? "Auto mode pulls live trending products from your catalog (up to Max Items). Switch Source Mode to Manual curation above — or click below — to pick exact products, customize titles, badges, excerpts, brands, and card links."
+                : "Auto mode pulls live catalog data: new arrivals, trending, featured (staff picks), review-count leaders (best sellers), discounted products (deals), featured categories, or brand list."}
             </p>
+            {isTrendingBuysSection && canWrite ? (
+              <div style={{ marginTop: "0.75rem" }}>
+                <button
+                  type="button"
+                  className="admin-btn admin-btn--secondary"
+                  disabled={seedTrendingBuysMutation.isPending}
+                  onClick={() => seedTrendingBuysMutation.mutate("items")}
+                >
+                  {seedTrendingBuysMutation.isPending
+                    ? "Loading…"
+                    : "Load Live Trending Products into Manual Curation"}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

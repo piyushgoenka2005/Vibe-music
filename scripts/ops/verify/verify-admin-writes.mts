@@ -73,7 +73,14 @@ async function login() {
     body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
   });
   if (!res.ok) throw new Error(`Admin login failed: HTTP ${res.status}`);
-  cookie = res.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
+  cookie = res.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .filter((c) => {
+      const parts = c.split("=");
+      return parts.length > 1 && parts[1].trim().length > 0;
+    })
+    .join("; ");
 }
 
 async function main() {

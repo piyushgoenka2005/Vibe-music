@@ -89,12 +89,11 @@ export function ResumePaymentClient({ order, email }: ResumePaymentClientProps) 
       });
 
       if (result.status !== "success") {
-        showToast(
-          result.status === "failed"
-            ? result.message
-            : "Payment cancelled or failed. Please try again.",
-          "error",
-        );
+        if (result.status === "failed") {
+          showToast(result.message || "Unable to complete checkout. Please try again.", "error");
+        } else {
+          showToast("Payment was cancelled. You can try again whenever you're ready.", "info");
+        }
         return;
       }
 

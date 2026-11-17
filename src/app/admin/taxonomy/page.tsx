@@ -29,6 +29,7 @@ import AdminConfirmDialog from "@/components/admin/AdminConfirmDialog";
 import { LoadingState, EmptyState } from "@/components/admin/AdminUi";
 import { ErrorState, adminFetchJson, adminMutateJson } from "@/components/admin/AdminQueryState";
 import type { CatalogTaxonomyItem, TaxonomyStats, TaxonomyImportResult } from "@/types/taxonomy";
+import { useToastStore } from "@/store/toastStore";
 
 interface NodeFormData {
   category: string;
@@ -296,8 +297,11 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
       if (items.length <= 1 && page > 1) {
         setPage((p) => Math.max(1, p - 1));
       }
+      useToastStore.getState().show("Taxonomy node deleted successfully", "success");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete node");
+      useToastStore
+        .getState()
+        .show(err instanceof Error ? err.message : "Failed to delete node", "error");
     }
   };
 
@@ -332,8 +336,11 @@ function TaxonomyContent({ canWrite, canDelete }: { canWrite: boolean; canDelete
       setSelectAllAcrossPages(false);
       setBulkDeleteDialog({ open: false, type: "selected", count: 0 });
       await queryClient.invalidateQueries({ queryKey: ["admin-taxonomy"], refetchType: "all" });
+      useToastStore.getState().show("Taxonomy nodes deleted successfully", "success");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Bulk delete failed");
+      useToastStore
+        .getState()
+        .show(err instanceof Error ? err.message : "Bulk delete failed", "error");
     } finally {
       setIsBulkDeleting(false);
     }

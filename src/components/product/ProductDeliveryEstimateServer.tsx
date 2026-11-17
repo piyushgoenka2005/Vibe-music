@@ -5,7 +5,7 @@ export default function ProductDeliveryEstimateServer() {
   const line = formatFreeDeliveryLine(getDeliveryEstimate());
 
   return (
-    <p className="visually-hidden" data-nosnippet>
+    <p className="visually-hidden" data-nosnippet suppressHydrationWarning>
       {line}
     </p>
   );

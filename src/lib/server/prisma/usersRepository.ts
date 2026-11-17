@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { asJsonValue } from "./mappers";
 import type { Address, CreateAddressInput, UpdateAddressInput } from "@/types/address";
 import type { AdminProfile, AdminRole } from "@/types/admin";
+import { getAdminEmailsFromEnv } from "@/lib/server/admin/adminLoginGate";
 
 export async function listAddressesByUserId(userId: string): Promise<Address[]> {
   const rows = await prisma.address.findMany({
@@ -77,9 +78,44 @@ function mapAdminRow(row: {
 
 /** Active admins only — used for login / session. */
 export async function getAdminProfile(uid: string): Promise<AdminProfile | null> {
+  const adminEmails = getAdminEmailsFromEnv();
+  if (adminEmails.size > 0) {
+    const user = await prisma.user.findUnique({
+      where: { id: uid },
+      select: { email: true, name: true },
+    });
+    if (user?.email && adminEmails.has(user.email.toLowerCase())) {
+      const row = await prisma.admin.findUnique({ where: { uid } });
+      if (row && row.isActive && row.role === "super_admin") {
+        return mapAdminRow(row);
+      }
+      const now = new Date().toISOString();
+      const provisioned = await prisma.admin.upsert({
+        where: { uid },
+        create: {
+          uid,
+          email: user.email,
+          displayName: user.name ?? "Super Admin",
+          role: "super_admin",
+          isActive: true,
+          createdAt: now,
+          updatedAt: now,
+        },
+        update: {
+          email: user.email,
+          role: "super_admin",
+          isActive: true,
+          updatedAt: now,
+        },
+      });
+      return mapAdminRow(provisioned);
+    }
+  }
+
   const row = await prisma.admin.findUnique({ where: { uid } });
-  if (!row || !row.isActive) return null;
-  return mapAdminRow(row);
+  if (row && row.isActive) return mapAdminRow(row);
+
+  return null;
 }
 
 /** Any admin row including inactive — used for admin management. */

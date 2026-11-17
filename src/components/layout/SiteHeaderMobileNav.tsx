@@ -10,6 +10,7 @@ import { isHeaderNavItemActive } from "@/lib/navigation/headerNavActive";
 import { resolveBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
 import { useAuthStore } from "@/store/authStore";
 import { useShallow } from "zustand/react/shallow";
+import CurrencyLocaleSelector from "@/components/layout/CurrencyLocaleSelector";
 
 function MobileSearchParamsWatcher({
   onParamsChange,
@@ -115,7 +116,7 @@ function renderMegaMenuGroup(
               <p className="site-header__mobile-submenu-heading">{column.heading}</p>
               <ul className="site-header__mobile-submenu-list">
                 {column.links.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${link.href}:${link.label}`}>
                     <Link
                       href={link.href}
                       className="site-header__mobile-submenu-link"
@@ -123,6 +124,21 @@ function renderMegaMenuGroup(
                     >
                       {link.label}
                     </Link>
+                    {link.children && link.children.length > 0 ? (
+                      <ul className="site-header__mobile-submenu-child-list">
+                        {link.children.map((child) => (
+                          <li key={`${child.href}:${child.label}`}>
+                            <Link
+                              href={child.href}
+                              className="site-header__mobile-submenu-child-link"
+                              onClick={handleNavigate}
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -253,6 +269,7 @@ export default function SiteHeaderMobileNav({
       </div>
 
       <div className="site-header__mobile-nav-footer">
+        <CurrencyLocaleSelector variant="mobile" onSelect={handleNavigate} />
         <Link
           href={accountHref}
           className="site-header__mobile-nav-footer-link site-header__mobile-nav-footer-link--primary"

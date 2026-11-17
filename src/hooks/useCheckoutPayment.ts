@@ -75,12 +75,13 @@ export function useCheckoutPayment({
   paymentMethod,
   onlineChannel = "upi",
   disabled = false,
-  prefetchEnabled = false,
+  prefetchEnabled: _prefetchEnabled = false,
   checkoutMode = "cart",
 }: UseCheckoutPaymentOptions) {
   const router = useRouter();
   const { isReady, isLoading, error, openCheckout } = useRazorpay();
   const [isProcessing, setIsProcessing] = useState(false);
+  const isProcessingRef = useRef(false);
   const [processingLabel, setProcessingLabel] = useState<string | null>(null);
   const prefetchRef = useRef<{
     key: string;
@@ -126,29 +127,11 @@ export function useCheckoutPayment({
   ]);
 
   useEffect(() => {
-    if (!prefetchEnabled || paymentMethod !== "razorpay" || disabled) {
-      prefetchRef.current = null;
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      const payload = buildPayload();
-      const key = orderPayloadKey(payload);
-
-      if (prefetchRef.current?.key === key) {
-        return;
-      }
-
+    prefetchRef.current = null;
+    if (paymentMethod === "razorpay") {
       void ensureRazorpayScriptLoaded().catch(() => undefined);
-
-      prefetchRef.current = {
-        key,
-        promise: createPaymentOrder(payload),
-      };
-    }, 350);
-
-    return () => window.clearTimeout(timer);
-  }, [prefetchEnabled, paymentMethod, disabled, buildPayload]);
+    }
+  }, [paymentMethod]);
 
   const goToOrderConfirmation = useCallback(
     (orderId: string, trackingToken?: string, orderEmail?: string) => {
@@ -166,8 +149,9 @@ export function useCheckoutPayment({
   );
 
   const pay = useCallback(async () => {
-    if (disabled || isProcessing) return;
+    if (disabled || isProcessingRef.current || isProcessing) return;
 
+    isProcessingRef.current = true;
     setIsProcessing(true);
     setProcessingLabel("Creating order…");
     let pendingOrderId: string | null = null;
@@ -180,13 +164,35 @@ export function useCheckoutPayment({
       const prefetched = prefetchRef.current?.key === key ? prefetchRef.current.promise : null;
       prefetchRef.current = null;
 
-      const [orderResponse] = await Promise.all([
-        prefetched ?? createPaymentOrder(payload),
-        ensureRazorpayScriptLoaded(),
-      ]);
+      // Execute script preparation and order creation concurrently for minimum end-to-end latency
+      const scriptPromise = ensureRazorpayScriptLoaded();
+      const orderPromise = (prefetched ?? createPaymentOrder(payload)).then((res) => {
+        pendingOrderId = res.orderId;
+        pendingTrackingToken = res.trackingToken;
+        return res;
+      });
 
-      pendingOrderId = orderResponse.orderId;
-      pendingTrackingToken = orderResponse.trackingToken;
+      let orderResponse: CreateRazorpayOrderResponse;
+      try {
+        const results = await Promise.all([scriptPromise, orderPromise]);
+        orderResponse = results[1];
+      } catch (firstError) {
+        // If scriptPromise failed fast while orderPromise was still in flight on server,
+        // await orderPromise with timeout to release any created reservation cleanly.
+        try {
+          const res = await Promise.race([
+            orderPromise,
+            new Promise<null>((r) => setTimeout(() => r(null), 4000)),
+          ]);
+          if (res?.orderId && res?.trackingToken) {
+            await releaseOrderReservation(res.orderId, res.trackingToken).catch(() => undefined);
+          }
+        } catch {
+          // ignore
+        }
+        throw firstError;
+      }
+
       const trackingToken = pendingTrackingToken;
       setProcessingLabel("Opening Razorpay…");
 
@@ -260,12 +266,11 @@ export function useCheckoutPayment({
             () => undefined,
           );
         }
-        showToast(
-          result.status === "failed"
-            ? result.message
-            : "Payment cancelled or failed. Please try again.",
-          "error",
-        );
+        if (result.status === "failed") {
+          showToast(result.message || "Unable to complete checkout. Please try again.", "error");
+        } else {
+          showToast("Payment was cancelled. You can try again whenever you're ready.", "info");
+        }
         return;
       }
 
@@ -288,8 +293,12 @@ export function useCheckoutPayment({
       if (pendingOrderId && pendingTrackingToken) {
         await releaseOrderReservation(pendingOrderId, pendingTrackingToken).catch(() => undefined);
       }
-      showToast(err instanceof Error ? err.message : "Payment failed", "error");
+      showToast(
+        err instanceof Error ? err.message : "Unable to complete checkout. Please try again.",
+        "error",
+      );
     } finally {
+      isProcessingRef.current = false;
       setProcessingLabel(null);
       setIsProcessing(false);
     }

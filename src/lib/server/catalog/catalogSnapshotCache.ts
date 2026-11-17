@@ -9,6 +9,7 @@ import {
 } from "@/lib/server/prisma/catalogRepository";
 import type { Brand } from "@/types/brand";
 import type { CatalogProduct } from "@/types/catalog";
+import type { Category } from "@/types/category";
 
 const CATALOG_REVALIDATE_SECONDS = Number(process.env.CATALOG_CACHE_REVALIDATE_SECONDS) || 300;
 
@@ -51,7 +52,7 @@ export const getCachedAllProducts = cache(() => getCachedAllProductsInner());
 const CATEGORY_REVALIDATE_SECONDS =
   Number(process.env.CATEGORY_CACHE_REVALIDATE_SECONDS) || CATALOG_REVALIDATE_SECONDS;
 
-async function loadCategories() {
+async function loadCategories(): Promise<Category[]> {
   const { fetchCategories } = await import("@/lib/server/prisma/catalogRepository");
   return fetchCategories();
 }

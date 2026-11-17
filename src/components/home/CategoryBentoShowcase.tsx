@@ -26,12 +26,12 @@ const gridVariants = {
 };
 
 const tileVariants = {
-  hidden: { opacity: 0, y: 36, scale: 0.96 },
+  hidden: { opacity: 1, y: 12, scale: 0.99 },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { duration: 0.78, ease: EASE_OUT },
+    transition: { duration: 0.45, ease: EASE_OUT },
   },
 };
 
@@ -176,8 +176,8 @@ function CategoryBentoHeroTile({
             <CategoryBentoImage
               alt={cat.imageAlt}
               className="category-bento__image category-bento__image--hero"
+              loading="lazy"
               objectPosition={cat.imagePosition}
-              priority
               sizes={cat.imageSizes}
               src={cat.image}
               srcSet={cat.imageSrcSet}
@@ -354,7 +354,7 @@ export default function CategoryBentoShowcase({
             role="list"
             variants={reduceMotion ? undefined : gridVariants}
             whileInView="visible"
-            viewport={{ once: true, margin: "-40px" }}
+            viewport={{ once: true, amount: 0 }}
           >
             {catalog.map((cat, index) =>
               cat.size === "large" ? (

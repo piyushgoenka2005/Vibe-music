@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { MegaMenuItem } from "@/data/headerMegaMenu";
 import type { MegaMenuLink } from "@/data/headerMegaMenu";
 
@@ -12,27 +12,68 @@ interface HeaderMegaMenuProps {
 
 export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   if (!menu) return null;
+
+  const handleMouseEnter = (key: string) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setHoveredLink(key);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      setHoveredLink(null);
+    }, 150);
+  };
 
   const renderLinks = (links: MegaMenuLink[], parentKey = "") =>
     links.map((link) => {
       const linkKey = `${parentKey}${link.href}:${link.label}`;
       const hasChildren = Boolean(link.children?.length);
+      const isOpen = hasChildren && hoveredLink === linkKey;
+
       return (
         <li
           key={linkKey}
-          className="header-mega__link-item"
-          onMouseEnter={() => setHoveredLink(linkKey)}
-          onMouseLeave={() => setHoveredLink(null)}
+          className={`header-mega__link-item${isOpen ? " header-mega__link-item--open" : ""}`}
+          onMouseEnter={() => handleMouseEnter(linkKey)}
+          onMouseLeave={handleMouseLeave}
         >
-          <Link href={link.href} className="header-mega__link">
-            {link.label}
+          <Link href={link.href} className="header-mega__link" onClick={() => setHoveredLink(null)}>
+            <span>{link.label}</span>
             {hasChildren ? <span className="header-mega__link-indicator">›</span> : null}
           </Link>
-          {hasChildren && hoveredLink === linkKey ? (
-            <div className="header-mega__link-submenu" role="menu">
+          {hasChildren && isOpen ? (
+            <div
+              className="header-mega__link-submenu"
+              role="menu"
+              onMouseEnter={() => handleMouseEnter(linkKey)}
+              onMouseLeave={handleMouseLeave}
+            >
               <p className="header-mega__link-submenu-title">{link.label}</p>
-              {renderLinks(link.children ?? [], `${linkKey}:`)}
+              <ul className="header-mega__links">
+                {link.children?.map((child) => (
+                  <li
+                    key={`${child.href}:${child.label}`}
+                    className="header-mega__link-submenu-item"
+                  >
+                    <Link
+                      href={child.href}
+                      className="header-mega__link-submenu-link"
+                      onClick={() => setHoveredLink(null)}
+                    >
+                      {child.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : null}
         </li>
@@ -63,6 +104,7 @@ export default function HeaderMegaMenu({ menu, open }: HeaderMegaMenuProps) {
                 key={`${card.href}:${card.title}`}
                 href={card.href}
                 className="header-mega__card"
+                onClick={() => setHoveredLink(null)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- mega-menu featured card art */}
                 <img

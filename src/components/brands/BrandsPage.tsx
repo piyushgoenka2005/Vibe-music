@@ -198,11 +198,6 @@ function BrandsPageContent({ brands, initialBrandSlug }: BrandsPageProps) {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
 
-  useEffect(() => {
-    if (!activeBrand || filters.brands.includes(activeBrand.slug)) return;
-    updateFilters({ brands: [activeBrand.slug] });
-  }, [activeBrand, filters.brands, updateFilters]);
-
   const catalogProducts = useMemo(() => {
     if (activeBrand) return activeBrand.products;
     return flattenBrandProducts(brands, letter);

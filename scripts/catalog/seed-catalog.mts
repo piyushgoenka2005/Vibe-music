@@ -70,13 +70,59 @@ async function main() {
     console.log(`  products ${Math.min(i + chunkSize, products.length)}/${products.length}`);
   }
 
-  const [brandCount, categoryCount, productCount] = await Promise.all([
+  // Seed ProductCategory join rows so category navigation and filtering via FK works reliably
+  const categoryMap = new Map(categories.map((c) => [c.id, c]));
+  const slugToCat = new Map(categories.map((c) => [c.slug.toLowerCase(), c]));
+
+  for (const product of products) {
+    const matchedCategories = new Set<string>();
+    if (product.categoryId && categoryMap.has(product.categoryId)) {
+      matchedCategories.add(product.categoryId);
+    }
+    const catBySlug =
+      slugToCat.get((product.categorySlug || "").toLowerCase()) ||
+      slugToCat.get((product.category || "").toLowerCase());
+    if (catBySlug) {
+      matchedCategories.add(catBySlug.id);
+      if (catBySlug.parentId) matchedCategories.add(catBySlug.parentId);
+    }
+    const subBySlug = slugToCat.get((product.subcategory || "").toLowerCase());
+    if (subBySlug) {
+      matchedCategories.add(subBySlug.id);
+      if (subBySlug.parentId) matchedCategories.add(subBySlug.parentId);
+    }
+
+    for (const catId of matchedCategories) {
+      await prisma.productCategory.upsert({
+        where: {
+          productId_categoryId: {
+            productId: product.id,
+            categoryId: catId,
+          },
+        },
+        create: {
+          productId: product.id,
+          categoryId: catId,
+          isPrimary: catId === product.categoryId || catId === catBySlug?.id,
+          sortOrder: 0,
+        },
+        update: {
+          isPrimary: catId === product.categoryId || catId === catBySlug?.id,
+        },
+      });
+    }
+  }
+
+  const [brandCount, categoryCount, productCount, productCategoryCount] = await Promise.all([
     prisma.brand.count(),
     prisma.category.count(),
     prisma.product.count(),
+    prisma.productCategory.count(),
   ]);
 
-  console.log(`Done. brands=${brandCount} categories=${categoryCount} products=${productCount}`);
+  console.log(
+    `Done. brands=${brandCount} categories=${categoryCount} products=${productCount} productCategories=${productCategoryCount}`
+  );
   console.log(
     "Catalog seeded. Restart the dev server (or wait for cache TTL) if homepage products look stale."
   );

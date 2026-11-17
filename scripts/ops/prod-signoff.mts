@@ -14,8 +14,27 @@ const BASE_URL = (process.env.VERIFY_BASE_URL ?? "https://vibemusic.in").replace
 
 type Check = { name: string; ok: boolean; detail: string; blocking: boolean };
 
+async function fetchWithRetry(url: string, options: RequestInit = {}, retries = 3): Promise<Response> {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 30_000);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timer);
+      return res;
+    } catch (e) {
+      lastErr = e;
+      if (attempt < retries - 1) {
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function getJson(path: string): Promise<{ status: number; body: unknown }> {
-  const response = await fetch(`${BASE_URL}${path}`, { cache: "no-store" });
+  const response = await fetchWithRetry(`${BASE_URL}${path}`, { cache: "no-store" });
   const text = await response.text();
   try {
     return { status: response.status, body: JSON.parse(text) as unknown };
@@ -28,7 +47,7 @@ async function postJson(
   path: string,
   data: unknown
 ): Promise<{ status: number; body: unknown }> {
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetchWithRetry(`${BASE_URL}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

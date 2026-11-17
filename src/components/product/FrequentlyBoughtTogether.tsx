@@ -4,7 +4,7 @@ import { useState, useMemo, Fragment } from "react";
 import Link from "next/link";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import { categoryPath, productPath } from "@/lib/routes";
-import { formatCurrency, formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { formatDisplayPrice, isPurchasablePrice, useCurrency } from "@/utils/currency";
 import { useCartStore } from "@/store/cartStore";
 import type { ResolvedProductBundle } from "@/types/bundle";
 import type { Product, ProductDetail, ProductVariant } from "@/types/product";
@@ -20,6 +20,7 @@ export default function FrequentlyBoughtTogether({
   mainVariant,
   bundle,
 }: FrequentlyBoughtTogetherProps) {
+  const { format: formatPrice } = useCurrency();
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
 
@@ -187,7 +188,7 @@ export default function FrequentlyBoughtTogether({
                 =
               </span>
               <div className="pdp-fbt__savings-badge">
-                <span className="pdp-fbt__savings-amount">{formatCurrency(savings)}</span>
+                <span className="pdp-fbt__savings-amount">{formatPrice(savings)}</span>
                 <span className="pdp-fbt__savings-label">
                   Bundle
                   <br />
@@ -202,9 +203,9 @@ export default function FrequentlyBoughtTogether({
           <div className="pdp-fbt__summary-pricing">
             <span className="pdp-fbt__summary-label">Buy all {selectedCount}:</span>
             {savings > 0 && (
-              <span className="pdp-fbt__summary-original">{formatCurrency(subtotal)}</span>
+              <span className="pdp-fbt__summary-original">{formatPrice(subtotal)}</span>
             )}
-            <span className="pdp-fbt__summary-total">{formatCurrency(bundlePrice)}</span>
+            <span className="pdp-fbt__summary-total">{formatPrice(bundlePrice)}</span>
           </div>
           <button
             type="button"
@@ -216,7 +217,7 @@ export default function FrequentlyBoughtTogether({
           </button>
           <span className="pdp-fbt__divider-text">OR</span>
           <Link
-            href={categoryPath("cables-cases-accessories")}
+            href={categoryPath("accessories")}
             className="pdp-btn pdp-btn--secondary pdp-fbt__build-own"
           >
             Build Your Own Bundle and Save

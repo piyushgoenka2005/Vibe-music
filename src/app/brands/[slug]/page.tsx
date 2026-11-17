@@ -20,6 +20,7 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 
 interface BrandRouteProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: BrandRouteProps): Promise<Metadata> {
@@ -45,7 +46,7 @@ export async function generateMetadata({ params }: BrandRouteProps): Promise<Met
 export default async function BrandRoute({ params }: BrandRouteProps) {
   return withServerPageError(async () => {
     const { slug } = await params;
-    const brands = await loadBrandDirectory();
+    const brands = (await loadBrandDirectory()) ?? [];
     const brand = brands.find((b) => b.slug.toLowerCase() === slug.trim().toLowerCase());
     if (!brand) notFound();
     return <BrandsPage brands={brands} initialBrandSlug={brand.slug} />;

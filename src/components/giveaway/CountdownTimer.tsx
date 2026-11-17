@@ -17,11 +17,11 @@ const COUNTDOWN_UNITS: Array<{
 
 function CountdownGrid({ parts }: { parts: CountdownParts | null }) {
   return (
-    <div className="giveaway-countdown__grid">
+    <div className="giveaway-countdown__grid" suppressHydrationWarning>
       {COUNTDOWN_UNITS.map((unit) => (
         <div key={unit.key} className="giveaway-countdown__cell">
-          <strong className="giveaway-countdown__value" aria-hidden={!parts}>
-            {parts ? parts[unit.key] : "–"}
+          <strong className="giveaway-countdown__value" suppressHydrationWarning>
+            {parts ? parts[unit.key] : "00"}
           </strong>
           <span className="giveaway-countdown__unit">{unit.label}</span>
         </div>
@@ -37,8 +37,7 @@ export default function CountdownTimer({
   targetIso: string;
   label?: string;
 }) {
-  // Time-based values must not run during SSR — server clock ≠ client hydrate instant.
-  const [parts, setParts] = useState<CountdownParts | null>(null);
+  const [parts, setParts] = useState<CountdownParts>(() => getCountdownParts(targetIso));
 
   useEffect(() => {
     const tick = () => setParts(getCountdownParts(targetIso));

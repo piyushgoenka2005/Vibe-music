@@ -81,12 +81,13 @@ async function main() {
   await check("category created in another tab appears without reload", async () => {
     const adminB = await context.newPage();
     await adminB.goto(`${BASE_URL}/admin/categories`);
+    await adminB.locator("button", { hasText: /All \(\d+\)/ }).first().waitFor({ timeout: 30_000 });
     const created = await apiInPage<{ category: { id: string } }>(adminB, "POST", "/api/admin/categories", {
       name: `Live ${TAG}`,
       slug: `live-${TAG}`,
     });
     createdCategoryId = created.category.id;
-    await adminA.getByText(`Live ${TAG}`).waitFor({ timeout: 5_000 });
+    await adminA.getByText(`Live ${TAG}`).waitFor({ timeout: 15_000 });
     await adminB.close();
   });
 

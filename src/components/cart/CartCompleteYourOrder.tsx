@@ -275,7 +275,7 @@ export default function CartCompleteYourOrder({ primaryItem }: CartCompleteYourO
               : `Add ${selectedExtras.length} to Cart`}
           </button>
           <span className="cart-fbt__divider-text">OR</span>
-          <Link href={categoryPath("cables-cases-accessories")} className="cart-fbt__build-own">
+          <Link href={categoryPath("accessories")} className="cart-fbt__build-own">
             Build Your Own Bundle and Save
           </Link>
         </div>

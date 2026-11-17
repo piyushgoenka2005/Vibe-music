@@ -1,9 +1,11 @@
 "use client";
 
-import { lazy, Suspense, useLayoutEffect, useMemo, useState, type RefObject } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { formatDisplayPrice, isPurchasablePrice } from "@/utils/currency";
+import { isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import { useIsClient } from "@/hooks/useIsClient";
+import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 
 const NotifyMeButton = lazy(() => import("./NotifyMeButton"));
 
@@ -77,14 +79,16 @@ export default function ProductStickyBar({
   sentinelRef,
 }: ProductStickyBarProps) {
   const isClient = useIsClient();
+  const { formatDisplay } = useCurrency();
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [footerInView, setFooterInView] = useState(false);
   const canPurchase = inStock && isPurchasablePrice(price);
   const isComingSoon = !isPurchasablePrice(price);
-  const priceLabel = useMemo(() => formatDisplayPrice(price), [price]);
+  const priceLabel = useMemo(() => formatDisplay(price), [formatDisplay, price]);
   const showNotify = isComingSoon || !inStock;
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 
@@ -126,7 +130,7 @@ export default function ProductStickyBar({
 
   const showBar = visible && !footerInView;
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!isClient) return;
     document.body.classList.toggle("pdp-mobile-bar-active", showBar);
     return () => document.body.classList.remove("pdp-mobile-bar-active");
@@ -176,10 +180,12 @@ export default function ProductStickyBar({
               {canPurchase ? (
                 <>
                   <CartIcon />
-                  <span className="pdp-mobile-bar__cta-label">Add to Cart</span>
+                  <span className="pdp-mobile-bar__cta-label">
+                    {t("pdp.addToCart", "Add to Cart")}
+                  </span>
                 </>
               ) : (
-                "Out of Stock"
+                t("product.outOfStock", "Out of stock")
               )}
             </button>
             <button
@@ -187,10 +193,13 @@ export default function ProductStickyBar({
               className="pdp-mobile-bar__cta pdp-mobile-bar__cta--buy"
               disabled={!canPurchase}
               onClick={onBuyNow}
+              onMouseEnter={preloadRazorpayCheckout}
+              onTouchStart={preloadRazorpayCheckout}
+              onFocus={preloadRazorpayCheckout}
               aria-label={`Buy ${productName} now`}
             >
               <BagIcon />
-              <span className="pdp-mobile-bar__cta-label">Buy Now</span>
+              <span className="pdp-mobile-bar__cta-label">{t("pdp.buyNow", "Buy Now")}</span>
             </button>
           </>
         )}

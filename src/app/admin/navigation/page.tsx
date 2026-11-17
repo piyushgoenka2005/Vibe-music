@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -35,8 +36,9 @@ import type {
   NavigationMenuRecord,
 } from "@/lib/server/navigation/navigationRepository";
 import type { AdminCategory } from "@/types/admin";
+import { useToastStore } from "@/store/toastStore";
 
-type ActiveTab = "nav" | "utility" | "settings" | "preview";
+type ActiveTab = "nav" | "utility" | "settings" | "preview" | "footer";
 
 interface PromoCardData {
   title: string;
@@ -77,7 +79,9 @@ const EMPTY_ITEM_FORM: ItemFormData = {
 
 function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<ActiveTab>("nav");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as ActiveTab) || "nav";
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab === "footer" ? "footer" : "nav");
   const [editingItem, setEditingItem] = useState<{ id: string | null; menuId: string } | null>(
     null,
   );
@@ -131,7 +135,7 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-navigation"] });
-      alert("Header settings updated successfully!");
+      useToastStore.getState().show("Header settings updated successfully!", "success");
     },
   });
 
@@ -343,7 +347,45 @@ function NavigationManagementContent({ canWrite }: { canWrite: boolean }) {
         >
           Header Live Preview
         </button>
+        <button
+          type="button"
+          className={`admin-btn ${activeTab === "footer" ? "admin-btn--primary" : "admin-btn--ghost"}`}
+          onClick={() => setActiveTab("footer")}
+        >
+          Footer Links & Columns
+        </button>
       </div>
+
+      {/* TAB: Footer Navigation Link */}
+      {activeTab === "footer" && (
+        <div
+          className="admin-card"
+          style={{ padding: "2rem", textAlign: "center", marginBottom: "1.5rem" }}
+        >
+          <h3 style={{ fontSize: "1.25rem", fontWeight: 700, margin: "0 0 0.5rem" }}>
+            Storefront Footer Management Hub
+          </h3>
+          <p
+            style={{
+              color: "var(--admin-muted)",
+              maxWidth: 540,
+              margin: "0 auto 1.5rem",
+              lineHeight: 1.6,
+            }}
+          >
+            Manage the 4 columns of the storefront footer (Programs, Customer Service, Legal,
+            Follow), link URLs, social follow channels, and verified business legal notes in the
+            dedicated Footer Management studio.
+          </p>
+          <a
+            href="/admin/footer"
+            className="admin-btn admin-btn--primary"
+            style={{ display: "inline-flex", textDecoration: "none" }}
+          >
+            Open Footer Management Studio →
+          </a>
+        </div>
+      )}
 
       {/* TAB 1: Primary Navigation */}
       {activeTab === "nav" && (
@@ -1346,11 +1388,13 @@ export default function AdminNavigationPage() {
     <AdminGuard>
       {(admin) => (
         <AdminShell admin={admin} title="Header & Menu Management">
-          <NavigationManagementContent
-            canWrite={
-              admin.role === "super_admin" || (admin.permissions ?? []).includes("settings:write")
-            }
-          />
+          <Suspense fallback={<LoadingState />}>
+            <NavigationManagementContent
+              canWrite={
+                admin.role === "super_admin" || (admin.permissions ?? []).includes("settings:write")
+              }
+            />
+          </Suspense>
         </AdminShell>
       )}
     </AdminGuard>

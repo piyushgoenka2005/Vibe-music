@@ -22,13 +22,13 @@ export default function ProductSimilarEditor({
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<AdminProduct[]>([]);
   const [searching, setSearching] = useState(false);
-  const [labelMap, setLabelMap] = useState<Record<string, string>>({});
+  const [resolvedMap, setResolvedMap] = useState<Record<string, AdminProduct>>({});
 
   const selectedIds = useMemo(() => similarProductIds, [similarProductIds]);
 
   useEffect(() => {
     let active = true;
-    const missing = selectedIds.filter((id) => !labelMap[id] && !results.some((p) => p.id === id));
+    const missing = selectedIds.filter((id) => !resolvedMap[id]);
     if (missing.length === 0) return;
 
     void Promise.all(
@@ -44,17 +44,19 @@ export default function ProductSimilarEditor({
       }),
     ).then((products) => {
       if (!active) return;
-      const next = { ...labelMap };
-      for (const product of products) {
-        if (product) next[product.id] = `${product.brand} — ${product.name}`;
-      }
-      setLabelMap(next);
+      setResolvedMap((prev) => {
+        const next = { ...prev };
+        for (const product of products) {
+          if (product) next[product.id] = product;
+        }
+        return next;
+      });
     });
 
     return () => {
       active = false;
     };
-  }, [labelMap, results, selectedIds]);
+  }, [resolvedMap, selectedIds]);
 
   async function runSearch(query: string) {
     setSearch(query);
@@ -67,7 +69,15 @@ export default function ProductSimilarEditor({
     try {
       const res = await fetch(`/api/admin/products?search=${encodeURIComponent(query)}&limit=12`);
       const data = (await res.json().catch(() => ({}))) as { products?: AdminProduct[] };
-      setResults((data.products ?? []).filter((product) => product.id !== productId));
+      const fetched = (data.products ?? []).filter((product) => product.id !== productId);
+      setResults(fetched);
+      setResolvedMap((prev) => {
+        const next = { ...prev };
+        for (const product of fetched) {
+          next[product.id] = product;
+        }
+        return next;
+      });
     } catch {
       setResults([]);
     } finally {
@@ -77,9 +87,9 @@ export default function ProductSimilarEditor({
 
   function addProduct(product: AdminProduct) {
     if (selectedIds.includes(product.id) || selectedIds.length >= MAX_SIMILAR_PRODUCTS) return;
-    setLabelMap((prev) => ({
+    setResolvedMap((prev) => ({
       ...prev,
-      [product.id]: `${product.brand} — ${product.name}`,
+      [product.id]: product,
     }));
     onChange([...selectedIds, product.id]);
     setSearch("");
@@ -160,52 +170,113 @@ export default function ProductSimilarEditor({
       {selectedIds.length === 0 ? (
         <p className="admin-form-hint">No manual similar products selected.</p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {selectedIds.map((id, index) => {
-            return (
-              <li
-                key={id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  padding: "0.35rem 0",
-                  borderBottom: "1px solid var(--admin-border)",
-                }}
-              >
-                <span style={{ flex: 1, fontSize: "0.875rem" }}>{labelMap[id] ?? id}</span>
-                <button
-                  type="button"
-                  className="admin-btn admin-btn--ghost"
-                  aria-label="Move up"
-                  disabled={index === 0}
-                  onClick={() => moveProduct(index, -1)}
-                >
-                  <ArrowUp size={14} />
-                </button>
-                <button
-                  type="button"
-                  className="admin-btn admin-btn--ghost"
-                  aria-label="Move down"
-                  disabled={index === selectedIds.length - 1}
-                  onClick={() => moveProduct(index, 1)}
-                >
-                  <ArrowDown size={14} />
-                </button>
-                <button
-                  type="button"
-                  className="admin-btn admin-btn--ghost"
-                  aria-label="Remove"
-                  onClick={() => removeProduct(id)}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="admin-table-wrap" style={{ marginTop: "0.75rem" }}>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Price</th>
+                <th>Order</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedIds.map((id, index) => {
+                const item = resolvedMap[id];
+                const thumbUrl = item?.images?.[0] || item?.image || "/placeholder.png";
+                const title = item ? `${item.brand ? `${item.brand} — ` : ""}${item.name}` : id;
+                const sku = item?.sku || item?.variants?.[0]?.sku || "—";
+                const price = item ? (item.salePrice ?? item.price ?? 0) : null;
+
+                return (
+                  <tr key={id}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={thumbUrl}
+                          alt={title}
+                          style={{
+                            width: 44,
+                            height: 44,
+                            objectFit: "cover",
+                            borderRadius: 4,
+                            background: "var(--admin-surface-2)",
+                            border: "1px solid var(--admin-border)",
+                            flexShrink: 0,
+                          }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: "0.875rem" }}>{title}</div>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "var(--admin-muted)",
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {id}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className="admin-badge admin-badge--neutral"
+                        style={{ fontFamily: "monospace" }}
+                      >
+                        {sku}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontWeight: 600 }}>
+                        {price !== null ? `₹${price.toLocaleString("en-IN")}` : "—"}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: "0.25rem" }}>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost"
+                          aria-label="Move up"
+                          disabled={index === 0}
+                          onClick={() => moveProduct(index, -1)}
+                          style={{ padding: "0.25rem" }}
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn--ghost"
+                          aria-label="Move down"
+                          disabled={index === selectedIds.length - 1}
+                          onClick={() => moveProduct(index, 1)}
+                          style={{ padding: "0.25rem" }}
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--danger"
+                        aria-label="Remove"
+                        onClick={() => removeProduct(id)}
+                        style={{ padding: "0.35rem 0.6rem" }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
-      <p className="admin-form-hint">
+      <p className="admin-form-hint" style={{ marginTop: "0.5rem" }}>
         {selectedIds.length}/{MAX_SIMILAR_PRODUCTS} similar picks
       </p>
     </div>

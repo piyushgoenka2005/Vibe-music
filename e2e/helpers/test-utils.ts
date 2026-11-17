@@ -97,12 +97,17 @@ export async function searchAndAwaitSuggestions(page: Page, query: string): Prom
   const suggestion = page.locator("#sw-search-panel-listbox, .sw-search-suggestion").first();
 
   await expect(async () => {
+    let overlayVisible = await overlayInput.isVisible().catch(() => false);
     const headerVisible = await headerInput.isVisible().catch(() => false);
-    const overlayVisible = await overlayInput.isVisible().catch(() => false);
+
     if (!headerVisible && !overlayVisible && (await toggle.isVisible().catch(() => false))) {
       await toggle.click({ timeout: 2_000 });
+      await overlayInput.waitFor({ state: "visible", timeout: 2_000 }).catch(() => {});
+      overlayVisible = await overlayInput.isVisible().catch(() => false);
     }
-    const input = (await overlayInput.isVisible().catch(() => false)) ? overlayInput : headerInput;
+
+    const input = overlayVisible ? overlayInput : headerInput;
+    await expect(input).toBeVisible({ timeout: 2_000 });
     await input.fill(query, { timeout: 3_000 });
     await expect(suggestion).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 30_000 });

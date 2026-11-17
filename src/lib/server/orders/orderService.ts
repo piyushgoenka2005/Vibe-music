@@ -1,10 +1,6 @@
-import Razorpay from "razorpay";
 import { cache } from "react";
-import {
-  isRazorpayConfigured,
-  getRazorpayPublicKey,
-  assertLiveRazorpayKeys,
-} from "@/lib/server/env";
+import { isRazorpayConfigured, getRazorpayPublicKey } from "@/lib/server/env";
+import { createRazorpayOrder, fetchRazorpayOrder } from "@/lib/server/payments/razorpayClient";
 import { verifyRazorpayPaymentSignature } from "@/lib/razorpay/signature";
 import {
   calculateGST,
@@ -20,19 +16,13 @@ import { notifyAdminNewOrder } from "@/lib/server/orderNotificationService";
 import { resolveAuthoritativeShippingCharge } from "@/lib/server/shippingQuoteService";
 import { reserveStockForOrder, releaseReservedStockForOrder } from "@/lib/server/inventoryService";
 import { completeOrderPayment } from "@/lib/server/orderPaymentService";
-import { withTimeout } from "@/lib/server/withTimeout";
 import { allocateNextOrderId } from "@/lib/server/orderIdGenerator";
-import {
-  logPayment,
-  logPaymentError,
-  logRazorpayEnvPresence,
-} from "@/lib/server/paymentDiagnostics";
+import { logPayment, logPaymentError } from "@/lib/server/paymentDiagnostics";
 import {
   fetchOrderById,
   listOrdersForUser as listStoredOrdersForUser,
   persistOrder,
   removeOrder,
-  updateOrderFields,
 } from "@/lib/server/orderRepository";
 import * as pgOrder from "@/lib/server/prisma/orderRepository";
 import { isPlacedOrder } from "@/lib/server/orderAccess";
@@ -47,45 +37,6 @@ import type {
 } from "@/types/order";
 
 const PLATFORM_FEE = 0;
-
-let cachedRazorpayInstance: Razorpay | null = null;
-let cachedKeyId: string | undefined;
-
-function getRazorpayInstance(): Razorpay {
-  logRazorpayEnvPresence();
-  assertLiveRazorpayKeys();
-
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret) {
-    throw new Error("Missing Razorpay env vars: RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET");
-  }
-
-  if (!cachedRazorpayInstance || cachedKeyId !== keyId) {
-    cachedRazorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-    cachedKeyId = keyId;
-    logPayment("Razorpay initialized");
-  }
-
-  return cachedRazorpayInstance;
-}
-
-function extractRazorpayError(error: unknown): string | null {
-  if (!error || typeof error !== "object") return null;
-  const record = error as {
-    error?: { description?: string; reason?: string };
-    description?: string;
-    message?: string;
-  };
-  return (
-    record.error?.description ??
-    record.error?.reason ??
-    record.description ??
-    record.message ??
-    null
-  );
-}
 
 function toInventoryLines(items: CreateOrderPayload["items"]): OrderInventoryLine[] {
   return items.map((item) => ({
@@ -182,28 +133,16 @@ async function createRazorpayPaymentOrder(
   payload: CreateOrderPayload,
   orderId: string,
 ): Promise<string> {
-  const razorpay = getRazorpayInstance();
-  try {
-    const razorpayOrder = (await withTimeout(
-      razorpay.orders.create({
-        amount: toPaise(order.total),
-        currency: "INR",
-        receipt: orderId,
-        notes: {
-          email: payload.email,
-          orderId,
-        },
-      }),
-      15000,
-      "Razorpay order.create",
-    )) as { id: string };
-    return razorpayOrder.id;
-  } catch (razorpayError) {
-    const description = extractRazorpayError(razorpayError);
-    throw new Error(
-      description ? `Razorpay: ${description}` : "Unable to create Razorpay payment order",
-    );
-  }
+  const result = await createRazorpayOrder({
+    amountPaise: toPaise(order.total),
+    currency: "INR",
+    receipt: orderId,
+    notes: {
+      email: payload.email,
+      orderId,
+    },
+  });
+  return result.id;
 }
 
 export async function createOrder(
@@ -219,38 +158,39 @@ export async function createOrder(
     itemCount: payload.items.length,
   });
 
-  logPayment("Allocating order ID");
-  const orderId = await allocateNextOrderId();
-  logPayment("Order ID allocated", { orderId });
-
   const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingMethod = payload.shippingMethod ?? getDefaultShippingMethod();
-  let shippingCharge = await resolveAuthoritativeShippingCharge({
-    method: shippingMethod,
-    subtotal,
-    discount: payload.couponDiscount,
-    postalCode: payload.shippingAddress.postalCode,
-    state: payload.shippingAddress.state,
-  });
 
-  if (payload.couponCode) {
-    const coupon = await getCouponByCode(payload.couponCode);
-    if (coupon) {
-      shippingCharge = resolveShippingChargeWithCoupon(
-        shippingCharge,
-        {
-          type: coupon.type,
-          scope: coupon.scope,
-          productIds: coupon.productIds,
-        },
-        payload.items.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        subtotal,
-      );
-    }
+  logPayment("Allocating order ID and resolving shipping/coupon in parallel");
+  const [orderId, resolvedShippingCharge, coupon] = await Promise.all([
+    allocateNextOrderId(),
+    resolveAuthoritativeShippingCharge({
+      method: shippingMethod,
+      subtotal,
+      discount: payload.couponDiscount,
+      postalCode: payload.shippingAddress.postalCode,
+      state: payload.shippingAddress.state,
+    }),
+    payload.couponCode ? getCouponByCode(payload.couponCode) : Promise.resolve(null),
+  ]);
+  logPayment("Order ID allocated and charges resolved", { orderId });
+
+  let shippingCharge = resolvedShippingCharge;
+  if (coupon) {
+    shippingCharge = resolveShippingChargeWithCoupon(
+      shippingCharge,
+      {
+        type: coupon.type,
+        scope: coupon.scope,
+        productIds: coupon.productIds,
+      },
+      payload.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      subtotal,
+    );
   }
 
   const orderData = buildOrderRecord(orderId, payload, userId, shippingCharge);
@@ -284,10 +224,6 @@ export async function createOrder(
     try {
       logPayment("Inventory reservation started (online)", { orderId });
       await reserveStockForOrder(orderId, inventoryLines);
-      await updateOrderFields(orderId, {
-        inventoryStatus: "reserved",
-        updatedAt: new Date().toISOString(),
-      });
       logPayment("Inventory reservation completed", { orderId });
     } catch (inventoryError) {
       logPaymentError(inventoryError, {
@@ -338,12 +274,7 @@ export function verifyRazorpaySignature(
 }
 
 export async function fetchRazorpayOrderAmountPaise(razorpayOrderId: string): Promise<number> {
-  const razorpay = getRazorpayInstance();
-  const remote = (await withTimeout(
-    razorpay.orders.fetch(razorpayOrderId),
-    15000,
-    "Razorpay orders.fetch",
-  )) as { amount?: number };
+  const remote = await fetchRazorpayOrder(razorpayOrderId);
   if (typeof remote.amount !== "number" || remote.amount <= 0) {
     throw new Error("Unable to read Razorpay order amount");
   }

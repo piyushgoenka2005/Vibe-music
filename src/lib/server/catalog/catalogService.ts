@@ -16,8 +16,9 @@ import {
   isGenericBulkCategoryValue,
   resolveBulkImportCategory,
 } from "@/lib/admin/bulkImportCategoryResolver";
-import { findCategoryInList, normalizeCategorySlug } from "@/lib/categorySlug";
+import { findCategoryInList, normalizeCategorySlug, resolveRootCategory } from "@/lib/categorySlug";
 import { extractListingFilterSpecs } from "@/lib/catalog/listingFilterSpecs";
+import { canonicalSubcategorySlug } from "@/lib/catalog/categoryProductsCore";
 import {
   enrichGuitarSpecifications,
   GUITAR_SHOWCASE_FIELD_LABELS,
@@ -121,6 +122,13 @@ function resolveCategoryFromList(
   categories: Awaited<ReturnType<typeof fetchCategories>>,
   categoryInput: string,
 ): { name: string; slug: string } | null {
+  const root = resolveRootCategory(categories, {
+    categorySlug: categoryInput,
+    category: categoryInput,
+  });
+  if (root) {
+    return { name: root.name, slug: root.slug };
+  }
   const found = findCategoryInList(categories, categoryInput);
   if (!found) return null;
   return { name: found.name, slug: found.slug };
@@ -200,8 +208,8 @@ function applyGuitarSpecifications(
 /** When a product has one default variant, keep it aligned with top-level price/stock edits. */
 export function syncDefaultVariantPatch(
   variants: NonNullable<CreateProductInput["variants"]>,
-  price: number,
-  stock: number,
+  price?: number,
+  stock?: number,
 ): NonNullable<CreateProductInput["variants"]> {
   if (variants.length !== 1) return variants;
   const only = variants[0];
@@ -209,8 +217,8 @@ export function syncDefaultVariantPatch(
   return [
     {
       ...only,
-      price,
-      stock,
+      price: price ?? only.price,
+      stock: stock ?? only.stock,
       isDefault: only.isDefault ?? true,
     },
   ];
@@ -397,6 +405,7 @@ export function toProduct(catalogProduct: CatalogProduct): Product {
     id: catalogProduct.id,
     slug: catalogProduct.slug,
     name: cleanProductName(catalogProduct.name),
+    sku: catalogProduct.sku,
     brand: catalogProduct.brand,
     brandSlug: catalogProduct.brandSlug,
     category: catalogProduct.category,
@@ -620,31 +629,58 @@ export function searchInCatalogProducts(
   }
 
   if (options.categorySlugs && options.categorySlugs.length > 0) {
-    const slugSet = new Set(
-      options.categorySlugs.map((s) => normalizeCategorySlug(s)).filter(Boolean),
-    );
-    source = source.filter(
-      (product) =>
-        slugSet.has(normalizeCategorySlug(product.categorySlug)) ||
-        slugSet.has(normalizeCategorySlug(product.category)),
-    );
+    const slugSet = new Set(options.categorySlugs.map((s) => normalizeCategorySlug(s)));
+    for (const slug of Array.from(slugSet)) {
+      if (slug === "guitars") {
+        slugSet.add("bass");
+        slugSet.add("bass-guitars");
+      }
+      if (slug === "studio-recording") {
+        slugSet.add("keyboards-synthesizers");
+        slugSet.add("midi-controllers");
+      }
+    }
+    source = source.filter((product) => {
+      const pCat = normalizeCategorySlug(product.categorySlug);
+      const pName = normalizeCategorySlug(product.category);
+      const pSub = normalizeCategorySlug(product.subcategory);
+      const pCanonSub = canonicalSubcategorySlug(product.subcategory ?? "");
+      return (
+        slugSet.has(pCat) ||
+        slugSet.has(pName) ||
+        Boolean(pSub && slugSet.has(pSub)) ||
+        Boolean(pCanonSub && slugSet.has(pCanonSub))
+      );
+    });
   } else if (options.category) {
     const resolvedSlug = normalizeCategorySlug(options.category);
-    source = source.filter(
-      (product) =>
-        product.categorySlug === resolvedSlug ||
-        normalizeCategorySlug(product.category) === resolvedSlug,
-    );
-  }
+    const validSlugs = new Set([resolvedSlug]);
+    if (resolvedSlug === "guitars") {
+      validSlugs.add("bass");
+      validSlugs.add("bass-guitars");
+    }
+    if (resolvedSlug === "studio-recording") {
+      validSlugs.add("keyboards-synthesizers");
+      validSlugs.add("midi-controllers");
+    }
+    source = source.filter((product) => {
+      const pCat = normalizeCategorySlug(product.categorySlug);
+      const pName = normalizeCategorySlug(product.category);
+      const pSub = normalizeCategorySlug(product.subcategory);
+      const pCanonSub = canonicalSubcategorySlug(product.subcategory ?? "");
+      return (
+        validSlugs.has(pCat) ||
+        validSlugs.has(pName) ||
+        validSlugs.has(pSub) ||
+        validSlugs.has(pCanonSub)
+      );
+    });
 
-  // Keep guitar amps / multi-effects off the main Guitars PLP — they belong
-  // under Amplifiers / Effects browse paths (`?category=guitars&subcategory=…`).
-  if (
-    options.category &&
-    normalizeCategorySlug(options.category) === "guitars" &&
-    !subcategoryRequestsGuitarAccessories(options.subcategory)
-  ) {
-    source = source.filter((product) => !isNonInstrumentGuitarProduct(product));
+    // Keep guitar amps / multi-effects off the main Guitars PLP — they belong
+    // under Amplifiers / Effects browse paths (`?category=guitars&subcategory=…`).
+    if (resolvedSlug === "guitars" && !subcategoryRequestsGuitarAccessories(options.subcategory)) {
+      source = source.filter((product) => !isNonInstrumentGuitarProduct(product));
+    }
   }
 
   if (options.subcategory) {
@@ -656,14 +692,28 @@ export function searchInCatalogProducts(
       source = source.filter((product) => {
         const sub = (product.subcategory ?? "").toLowerCase();
         const subSlug = normalizeCategorySlug(sub);
+        const canonSub = canonicalSubcategorySlug(sub);
+        const prodName = product.name.toLowerCase();
         return needles.some((needle) => {
           const needleSlug = normalizeCategorySlug(needle);
-          return (
+          const canonNeedle = canonicalSubcategorySlug(needle);
+          if (
             sub.includes(needle) ||
             subSlug === needleSlug ||
+            (canonSub && canonSub === canonNeedle) ||
             subSlug.includes(needleSlug) ||
             needleSlug.includes(subSlug)
-          );
+          ) {
+            return true;
+          }
+          const tokens = needleSlug.split("-").filter((t) => t.length > 2 && t !== "and");
+          if (
+            tokens.length > 0 &&
+            tokens.every((t) => sub.includes(t) || prodName.includes(t) || subSlug.includes(t))
+          ) {
+            return true;
+          }
+          return false;
         });
       });
     }
@@ -741,10 +791,21 @@ export function searchInCatalogProducts(
         .sort((a, b) => b.score - a.score)
         .map((entry) => entry.product);
 
-      // Multi-word queries must match every token (e.g. brand + model), not
-      // just one shared word like "guitar". Relaxed for synonym queries.
-      if (!intent && tokens.length >= 2 && synonymVariations.length === 1) {
-        source = source.filter((product) => productMatchesAllSearchTokens(product, tokens));
+      // Multi-word queries must match every token in the query or all tokens in at least one synonym phrase.
+      // This prevents single-word partial matches (e.g. guitar cable matching when searching "xlr cable").
+      if (!intent && tokens.length >= 2) {
+        source = source.filter((product) => {
+          if (productMatchesAllSearchTokens(product, tokens)) return true;
+          for (const syn of synonymVariations) {
+            if (syn !== normalized) {
+              const synTokens = syn.split(/\s+/).filter(Boolean);
+              if (synTokens.length >= 2 && productMatchesAllSearchTokens(product, synTokens)) {
+                return true;
+              }
+            }
+          }
+          return false;
+        });
       }
 
       // "guitar" should surface instruments — not guitar amplifiers / multi-effects
@@ -922,12 +983,47 @@ export interface ProductSearchOptions {
  */
 const SEARCH_SYNONYMS: Record<string, string[]> = {
   "instrument cable": ["guitar cable", "instrument lead", "instrument cord"],
+  "instrument cables": ["guitar cables", "instrument leads", "instrument cords"],
+  "guitar cable": ["instrument cable", "guitar lead", "guitar cord"],
+  "guitar cables": ["instrument cables", "guitar leads", "guitar cords"],
   "mic cable": ["microphone cable", "xlr cable", "mic cord"],
+  "mic cables": ["microphone cables", "xlr cables", "mic cords"],
+  "microphone cable": ["mic cable", "xlr cable", "microphone cord"],
+  "microphone cables": ["mic cables", "xlr cables", "microphone cords"],
+  "xlr cable": ["mic cable", "microphone cable", "balanced audio cable"],
+  "xlr cables": ["mic cables", "microphone cables", "balanced audio cables"],
   "patch cable": ["pedal patch cable", "patch cord"],
+  "patch cables": ["pedal patch cables", "patch cords"],
   "power adapter": ["power supply", "adapter", "power brick"],
+  "power adapters": ["power supplies", "adapters", "power bricks"],
   "speaker cable": ["speaker cord", "speaker wire"],
+  "speaker cables": ["speaker cords", "speaker wires"],
   "midi cable": ["midi cord"],
+  "midi cables": ["midi cords"],
   "audio cable": ["audio cord", "sound cable"],
+  "audio cables": ["audio cords", "sound cables"],
+  "studio desk": ["studio furniture", "workstation desk", "studio workstation"],
+  "studio desks": ["studio furniture", "workstation desks", "studio workstations"],
+  "studio furniture": ["studio desk", "studio workstation", "workstation desk"],
+  "drum kit": ["drum set", "acoustic drum kit", "electronic drum kit"],
+  "drum kits": ["drum sets", "acoustic drum kits", "electronic drum kits"],
+  "acoustic drum kit": ["acoustic drum kits", "acoustic drums", "drum kit", "drum set"],
+  "acoustic drum kits": ["acoustic drum kit", "acoustic drums", "drum kits", "drum sets"],
+  "electronic drum kit": ["electronic drum kits", "electronic drums", "e-drums", "v-drums"],
+  "electronic drum kits": ["electronic drum kit", "electronic drums", "e-drums", "v-drums"],
+  "midi controller": ["midi keyboard", "keyboard controller", "midi keyboard controller"],
+  "midi controllers": ["midi keyboards", "keyboard controllers", "midi keyboard controllers"],
+  "midi keyboard": ["midi controller", "keyboard controller", "usb keyboard"],
+  "midi keyboards": ["midi controllers", "keyboard controllers", "usb keyboards"],
+  "audio interface": ["recording interface", "sound card", "usb audio interface"],
+  "audio interfaces": ["recording interfaces", "sound cards", "usb audio interfaces"],
+  "studio monitor": ["studio monitors", "monitor speaker", "reference monitor", "studio speaker"],
+  "studio monitors": [
+    "studio monitor",
+    "monitor speakers",
+    "reference monitors",
+    "studio speakers",
+  ],
 };
 
 /**
@@ -975,7 +1071,7 @@ function subcategoryRequestsGuitarAccessories(subcategory?: string): boolean {
   );
 }
 
-/** True when the shopper is explicitly looking for amps / effects / pedals. */
+/** True when the shopper is explicitly looking for amps / effects / pedals / accessories. */
 function queryRequestsGuitarAccessories(query: string): boolean {
   const value = query.toLowerCase().trim();
   if (!value) return false;
@@ -989,7 +1085,27 @@ function queryRequestsGuitarAccessories(query: string): boolean {
     value.includes("effects pedal") ||
     value.includes("effect pedal") ||
     /(^|\s)pedals?(\s|$)/.test(value) ||
-    value.includes("stomp")
+    value.includes("stomp") ||
+    value.includes("cable") ||
+    value.includes("cables") ||
+    value.includes("lead") ||
+    value.includes("case") ||
+    value.includes("cases") ||
+    value.includes("bag") ||
+    value.includes("bags") ||
+    value.includes("stand") ||
+    value.includes("stands") ||
+    value.includes("strap") ||
+    value.includes("straps") ||
+    value.includes("string") ||
+    value.includes("strings") ||
+    value.includes("pick") ||
+    value.includes("picks") ||
+    value.includes("adapter") ||
+    value.includes("tuner") ||
+    value.includes("tuners") ||
+    value.includes("accessory") ||
+    value.includes("accessories")
   );
 }
 
@@ -1013,7 +1129,18 @@ function scoreProductMatch(product: CatalogProduct, tokens: string[], rawQuery =
   let score = 0;
 
   const fieldIncludes = (field: string, token: string) =>
-    expandSearchToken(token).some((variant) => field.includes(variant));
+    expandSearchToken(token).some((variant) => {
+      if (!variant) return false;
+      // Exact substring if 6 or more characters or contains special SKU/model characters
+      if (variant.length >= 6 || /[-./_0-9]/.test(variant)) {
+        return field.includes(variant);
+      }
+      // Word/prefix boundary match for shorter tokens to prevent false positives (e.g. "recording" matching "cord")
+      const words = field.split(/[^a-z0-9]+/);
+      return words.some(
+        (word) => word === variant || (word.length >= variant.length && word.startsWith(variant)),
+      );
+    });
 
   // Prefer exact / contiguous phrase hits over scattered token matches.
   if (query.length >= 4) {
@@ -1065,7 +1192,18 @@ function productMatchesAllSearchTokens(product: CatalogProduct, tokens: string[]
   const sku = (product.sku ?? "").toLowerCase();
 
   const fieldIncludes = (field: string, token: string) =>
-    expandSearchToken(token).some((variant) => field.includes(variant));
+    expandSearchToken(token).some((variant) => {
+      if (!variant) return false;
+      // Exact substring if 6 or more characters or contains special SKU/model characters
+      if (variant.length >= 6 || /[-./_0-9]/.test(variant)) {
+        return field.includes(variant);
+      }
+      // Word/prefix boundary match for shorter tokens to prevent false positives (e.g. "recording" matching "cord")
+      const words = field.split(/[^a-z0-9]+/);
+      return words.some(
+        (word) => word === variant || (word.length >= variant.length && word.startsWith(variant)),
+      );
+    });
 
   return tokens.every(
     (token) =>
@@ -1102,6 +1240,14 @@ async function resolveCategorySlugSet(category: string): Promise<string[] | unde
         queue.push(child.id);
       }
     }
+  }
+  if (resolved === "guitars") {
+    slugs.add("bass");
+    slugs.add("bass-guitars");
+  }
+  if (resolved === "studio-recording") {
+    slugs.add("keyboards-synthesizers");
+    slugs.add("midi-controllers");
   }
   return Array.from(slugs);
 }
@@ -1464,7 +1610,7 @@ export async function updateProduct(
 
   const stock = patch.stock ?? current.stock;
   const price = patch.price ?? current.price;
-  const originalPrice = patch.originalPrice ?? current.originalPrice;
+  const originalPrice = Math.max(patch.originalPrice ?? current.originalPrice, price);
 
   const nextSpecifications = applyGuitarSpecifications(
     patch.name ?? current.name,
@@ -1533,9 +1679,9 @@ export async function updateProduct(
 
   if (patch.variants !== undefined) {
     const existingSkus = await fetchAllVariantSkus(id);
-    const variantsForWrite = syncDefaultVariantPatch(patch.variants, price, stock);
+    const variantsForWrite = syncDefaultVariantPatch(patch.variants, patch.price, patch.stock);
     const withVariants = applyVariantsToProduct(
-      { ...updated, detail: preservedDetail, price, stock },
+      { ...updated, detail: preservedDetail, price, stock, originalPrice },
       variantsForWrite,
       existingSkus,
     );
@@ -1543,10 +1689,12 @@ export async function updateProduct(
       ...preservedDetail,
       ...withVariants.detail,
       specs: withVariants.detail?.specs ?? preservedDetail.specs,
-      msrp: originalPrice > withVariants.price ? originalPrice : null,
-      salePrice: originalPrice > withVariants.price ? withVariants.price : null,
+      msrp: withVariants.originalPrice > withVariants.price ? withVariants.originalPrice : null,
+      salePrice: withVariants.originalPrice > withVariants.price ? withVariants.price : null,
     };
     updated.price = withVariants.price;
+    updated.originalPrice = withVariants.originalPrice;
+    updated.discountPercentage = withVariants.discountPercentage;
     updated.stock = withVariants.stock;
     updated.availability = withVariants.availability;
   } else if (
@@ -2027,6 +2175,12 @@ export async function bulkImportProducts(
   for (const row of createRows) {
     const category =
       (row.resolvedCategorySlug ? categoryBySlug.get(row.resolvedCategorySlug) : undefined) ??
+      resolveRootCategory(categories, {
+        categorySlug: row.resolvedCategorySlug ?? row.category,
+        category: row.category,
+        subcategory: row.subcategory,
+        name: row.name,
+      }) ??
       findCategoryInList(categories, row.category);
     if (!category) {
       runtimeFailures.push({ ...row, reason: `Category "${row.category}" not found in catalog` });
@@ -2034,6 +2188,9 @@ export async function bulkImportProducts(
     }
     try {
       const product = buildBulkImportCatalogProduct(row, category, importOptions.publishStatus);
+      if (!row.subcategory && row.category && row.category !== category.name) {
+        product.subcategory = row.category;
+      }
       if (!candidatesByCategory.has(category.slug)) {
         candidatesByCategory.set(
           category.slug,

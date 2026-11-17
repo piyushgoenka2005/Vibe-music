@@ -23,6 +23,7 @@
     "seed:e2e-admin": "npx tsx scripts/db/seed-e2e-admin.mts",
     "seed:e2e-customers": "npx tsx scripts/db/seed-e2e-customers.mts",
     "seed:catalog": "npx tsx --env-file=.env.local scripts/catalog/seed-catalog.mts",
+    "catalog:reconcile-categories": "npx tsx scripts/catalog/reconcile-product-categories.mts",
     "seed:homepage": "npx tsx --env-file=.env.local scripts/db/seed-homepage-curated-defaults.mts",
     "generate:reviews": "npx tsx scripts/catalog/generate-synthetic-reviews.mts",
     "generate:amazon-import-template": "npx tsx scripts/catalog/generate-amazon-import-template.mts",

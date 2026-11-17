@@ -11,6 +11,7 @@ import { categoryPath } from "@/lib/routes";
 import { withServerPageError } from "@/lib/serverPageError";
 import { DEFAULT_FILTERS } from "@/types/filters";
 import { BRAND } from "@/lib/brand";
+import { slugify } from "@/lib/slug";
 
 export const dynamicParams = true;
 export const revalidate = 60;
@@ -27,17 +28,31 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 
 interface CategoryRouteProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{
+    subcat?: string;
+    brand?: string;
+    cat?: string;
+    sort?: string;
+    view?: string;
+    page?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    rating?: string;
+    condition?: string;
+    availability?: string;
+  }>;
 }
 
-export async function generateMetadata({ params }: CategoryRouteProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   try {
     const { slug } = await params;
     const category = await resolveCategoryBySlug(slug);
     if (!category) {
-      return {
-        title: "Category not found | Vibe Music",
-        robots: { index: false, follow: false },
-      };
+      notFound();
     }
 
     const title = `${category.name} | Vibe Music`;
@@ -65,6 +80,18 @@ export async function generateMetadata({ params }: CategoryRouteProps): Promise<
       },
     };
   } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      (("digest" in error &&
+        typeof (error as { digest?: unknown }).digest === "string" &&
+        (error as { digest: string }).digest.startsWith("NEXT_")) ||
+        ("message" in error &&
+          typeof (error as { message?: unknown }).message === "string" &&
+          (error as { message: string }).message.startsWith("NEXT_")))
+    ) {
+      throw error;
+    }
     console.error("[category:generateMetadata] error generating category metadata", error);
     return {
       title: "Category | Vibe Music",
@@ -73,19 +100,21 @@ export async function generateMetadata({ params }: CategoryRouteProps): Promise<
   }
 }
 
-export default async function CategoryRoute({ params }: CategoryRouteProps) {
+export default async function CategoryRoute({ params, searchParams }: CategoryRouteProps) {
+  const { slug } = await params;
+  const sp = searchParams ? await searchParams : {};
+  const activeSubcat = sp.subcat ? sp.subcat.trim() : undefined;
+  const category = await resolveCategoryBySlug(slug);
+
+  if (!category) {
+    notFound();
+  }
+
+  if (!isCanonicalCategorySlug(category, slug)) {
+    redirect(categoryPath(category.slug));
+  }
+
   return withServerPageError(async () => {
-    const { slug } = await params;
-    const category = await resolveCategoryBySlug(slug);
-
-    if (!category) {
-      notFound();
-    }
-
-    if (!isCanonicalCategorySlug(category, slug)) {
-      redirect(categoryPath(category.slug));
-    }
-
     // Resolve parent category if this is a child category
     const categories = category.parentId ? await getCategoryCatalog() : undefined;
     const parentCategory = categories?.find((candidate) => candidate.id === category.parentId);
@@ -97,12 +126,19 @@ export default async function CategoryRoute({ params }: CategoryRouteProps) {
     const listingCategory = category.parentId
       ? categories?.find((candidate) => candidate.id === category.parentId)
       : category;
-    const childFilters = { ...DEFAULT_FILTERS, subcategories: [category.slug] };
+    const initialFilters = {
+      ...DEFAULT_FILTERS,
+      subcategories: category.parentId
+        ? [category.slug, slugify(category.name)].filter(Boolean)
+        : activeSubcat
+          ? [activeSubcat]
+          : [],
+    };
 
     // FIX: For subcategories, use the parent category slug with subcategory filters
     const initialData = await loadCategoryProducts(
       listingCategory?.slug ?? category.slug,
-      category.parentId ? childFilters : DEFAULT_FILTERS,
+      initialFilters,
     );
 
     return (

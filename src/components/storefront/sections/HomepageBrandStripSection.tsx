@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import Marquee from "@/components/common/Marquee";
+import { getBrandLogoUrl } from "@/lib/brandLogos";
 import { resolveLinkHref } from "@/lib/routes";
 import type { HomepageBrandItem, ResolvedHomepageSection } from "@/types/homepage";
 
@@ -13,6 +14,10 @@ interface HomepageBrandStripSectionProps {
 
 function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
   const [imgError, setImgError] = useState(false);
+  const logoSrc =
+    brand.logoUrl && /^\/images\/brands\/[^/]+\.png(?:\?.*)?$/i.test(brand.logoUrl)
+      ? (getBrandLogoUrl(brand.slug) ?? brand.logoUrl)
+      : brand.logoUrl;
 
   return (
     <Link
@@ -20,18 +25,18 @@ function BrandStripLink({ brand }: { brand: HomepageBrandItem }) {
       data-hp-section="brand-strip"
       href={resolveLinkHref(brand.href)}
     >
-      {brand.logoUrl && !imgError ? (
+      {logoSrc && !imgError ? (
         <>
           <span className="homepage-brand-strip__logo-wrap">
             <Image
               alt={brand.name}
               className="homepage-brand-strip__logo"
               height={140}
-              loading="eager"
+              loading="lazy"
               unoptimized
               decoding="async"
               sizes="(max-width: 479px) 200px, (max-width: 767px) 210px, 260px"
-              src={brand.logoUrl}
+              src={logoSrc}
               width={260}
               onError={() => setImgError(true)}
             />

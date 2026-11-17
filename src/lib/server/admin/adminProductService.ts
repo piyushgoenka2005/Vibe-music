@@ -30,7 +30,7 @@ import { prismaToProduct } from "@/lib/server/prisma/mappers";
 import type { Prisma } from "@prisma/client";
 
 async function purgeProductSideData(productIds: string[]): Promise<void> {
-  if (productIds.length === 0) return;
+  if (productIds.length === 0 || !isPostgresConfigured()) return;
 
   const reviewIds = (
     await prisma.review.findMany({
@@ -477,9 +477,7 @@ export async function updateAdminProduct(
     let mrp = patch.originalPrice ?? existing.originalPrice;
     if (mrp <= 0 || (isSuperAdminOrAdmin && nextPrice > mrp)) {
       mrp = Math.max(mrp, nextPrice);
-      if (patch.originalPrice === undefined) {
-        patch.originalPrice = mrp;
-      }
+      patch.originalPrice = mrp;
     }
 
     const guard = evaluatePriceChangeGuard(

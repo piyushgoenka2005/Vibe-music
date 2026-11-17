@@ -5,6 +5,7 @@ import { RATE_LIMITS } from "@/lib/security/rate-limit";
 import { isShippingMethod, type ShippingMethod } from "@/lib/shipping/shippingMethods";
 import { getShippingQuotes } from "@/lib/server/shippingQuoteService";
 import { publicApiError } from "@/lib/server/publicApiError";
+import { prewarmRazorpayConnection } from "@/lib/server/payments/razorpayClient";
 
 const quoteSchema = z.object({
   subtotal: z.number().nonnegative(),
@@ -21,6 +22,8 @@ export async function POST(request: Request) {
 
     const parsed = await parseJsonBody(request, quoteSchema);
     if ("error" in parsed) return parsed.error;
+
+    prewarmRazorpayConnection();
 
     const method: ShippingMethod =
       parsed.data.method && isShippingMethod(parsed.data.method) ? parsed.data.method : "standard";

@@ -730,6 +730,9 @@ npm run db:migrate || {
 log "Production ops banner sync"
 npx tsx --env-file=.env scripts/ops/seed-production-ops.mts || true
 
+log "Reconcile product categories taxonomy"
+NODE_ENV=production npx tsx --env-file=.env scripts/catalog/reconcile-product-categories.mts || true
+
 log "Reconcile product review aggregates"
 npx tsx --env-file=.env scripts/ops/reconcile-product-review-aggregates.mts
 

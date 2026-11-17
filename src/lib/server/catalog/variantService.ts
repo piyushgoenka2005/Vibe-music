@@ -82,6 +82,18 @@ export function applyVariantsToProduct(
 
   const normalized = normalizeVariants(variants, product.sku, product.price, product.stock);
   const aggregates = syncProductAggregatesFromVariants(normalized);
+  const maxVariantPrice =
+    normalized.length > 0 ? Math.max(...normalized.map((v) => v.price)) : aggregates.price;
+  const nextOriginalPrice = Math.max(
+    product.originalPrice ?? aggregates.price,
+    aggregates.price,
+    maxVariantPrice,
+  );
+  const discountPercentage =
+    nextOriginalPrice > aggregates.price
+      ? Math.round(((nextOriginalPrice - aggregates.price) / nextOriginalPrice) * 100)
+      : 0;
+
   const detail = {
     ...(product.detail ?? {
       msrp: null,
@@ -97,11 +109,15 @@ export function applyVariantsToProduct(
       relatedProductIds: [],
     }),
     variants: normalized,
+    msrp: nextOriginalPrice > aggregates.price ? nextOriginalPrice : null,
+    salePrice: nextOriginalPrice > aggregates.price ? aggregates.price : null,
   };
 
   return {
     ...product,
     price: aggregates.price,
+    originalPrice: nextOriginalPrice,
+    discountPercentage,
     stock: aggregates.stock,
     availability: aggregates.availability,
     detail,

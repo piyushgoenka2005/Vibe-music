@@ -23,6 +23,6 @@ describe("DealProductCard (L-12)", () => {
     );
     expect(html).toContain("homepage-deals-card__img");
     expect(html).toContain('src="/images/test.jpg"');
-    expect(html).toContain('fetchPriority="high"');
+    expect(html).toContain('loading="lazy"');
   });
 });

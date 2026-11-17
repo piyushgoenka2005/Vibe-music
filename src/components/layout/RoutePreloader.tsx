@@ -4,8 +4,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SPLASH_ACTIVE_CLASS } from "@/components/layout/PageLoadSplash";
 
-import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
-
 /** High-intent routes only — avoid prefetch storms during LCP. */
 const ROUTES_TO_PREFETCH = [
   "/deals",
@@ -55,7 +53,6 @@ export default function RoutePreloader() {
 
     const prefetchTask = () => {
       if (cancelled || shouldDeferPrefetch()) return;
-      preloadRazorpayCheckout();
 
       let index = 0;
 

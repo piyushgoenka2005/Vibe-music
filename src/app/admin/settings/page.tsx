@@ -100,6 +100,21 @@ function SettingsContent({
       ) : null}
 
       <div className="admin-panel">
+        <div className="admin-panel__header">
+          <h2 className="admin-panel__title">Search Engine Optimization (SEO)</h2>
+        </div>
+        <div className="admin-panel__body">
+          <p style={{ margin: "0 0 0.75rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>
+            Configure default site meta titles, descriptions, Open Graph preview tags, robots.txt
+            directives, and XML sitemaps.
+          </p>
+          <Link href="/admin/seo" className="admin-btn admin-btn--secondary">
+            Manage SEO & Sitemap Settings →
+          </Link>
+        </div>
+      </div>
+
+      <div className="admin-panel">
         <div className="admin-panel__body">
           {!settingsWrite ? (
             <p style={{ margin: "0 0 1rem", color: "var(--admin-muted)", fontSize: "0.875rem" }}>

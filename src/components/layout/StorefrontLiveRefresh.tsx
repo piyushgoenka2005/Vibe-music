@@ -3,7 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-const POLL_MS = 5_000;
+const POLL_MS = 60_000;
+const INITIAL_DELAY_MS = 5_000;
 /** Pages with in-progress forms — a server refresh there could reset what the shopper is typing. */
 const SKIP_PATHS = /^\/(admin|checkout|login|register|forgot-password|reset-password)(\/|$)/;
 
@@ -22,9 +23,11 @@ export default function StorefrontLiveRefresh() {
     if (skip) return;
     let cancelled = false;
     let inFlight = false;
+    let initialTimer = 0;
+    let intervalTimer = 0;
 
     const check = async () => {
-      if (inFlight || document.visibilityState !== "visible") return;
+      if (cancelled || inFlight || document.visibilityState !== "visible") return;
       inFlight = true;
       try {
         const response = await fetch("/api/storefront/version", { cache: "no-store" });
@@ -46,13 +49,26 @@ export default function StorefrontLiveRefresh() {
       if (document.visibilityState === "visible") void check();
     };
 
-    void check();
-    const timer = window.setInterval(() => void check(), POLL_MS);
+    const startPolling = () => {
+      if (cancelled) return;
+      initialTimer = window.setTimeout(() => {
+        void check();
+        intervalTimer = window.setInterval(() => void check(), POLL_MS);
+      }, INITIAL_DELAY_MS);
+    };
+
+    if (document.readyState === "complete") {
+      startPolling();
+    } else {
+      window.addEventListener("load", startPolling, { once: true });
+    }
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      window.removeEventListener("load", startPolling);
+      if (initialTimer) window.clearTimeout(initialTimer);
+      if (intervalTimer) window.clearInterval(intervalTimer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };

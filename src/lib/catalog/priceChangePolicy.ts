@@ -29,10 +29,22 @@ export function evaluatePriceChangeGuard(
     options?.role === "admin";
 
   if (isPrivilegedAdmin) {
-    if (!Number.isFinite(nextPrice) || nextPrice <= 0) {
+    if (!Number.isFinite(nextPrice) || nextPrice < 0) {
       return {
         allowed: false,
-        reason: "Sale price must be a positive number.",
+        reason: "Sale price must be a non-negative number.",
+      };
+    }
+    if (!Number.isFinite(mrp) || mrp < 0) {
+      return {
+        allowed: false,
+        reason: "MRP must be a non-negative number.",
+      };
+    }
+    if (nextPrice > mrp) {
+      return {
+        allowed: false,
+        reason: "Sale price cannot exceed MRP.",
       };
     }
     return { allowed: true };

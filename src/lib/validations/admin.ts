@@ -273,6 +273,7 @@ const homepageSectionKeySchema = z.enum([
   "gear_stories",
   "shop_the_highlights",
   "gear_advisors",
+  "trending_buys",
   "store_network",
   "find_your_product",
   "social_rail",

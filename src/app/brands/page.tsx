@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 };
 
 interface BrandsDirectoryRouteProps {
-  searchParams: Promise<{ brand?: string }>;
+  searchParams: Promise<{ brand?: string; [key: string]: string | string[] | undefined }>;
 }
 
 export default async function BrandsRoute({ searchParams }: BrandsDirectoryRouteProps) {

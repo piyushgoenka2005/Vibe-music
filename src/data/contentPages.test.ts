@@ -20,7 +20,11 @@ describe("contentPages", () => {
     const body = terms.sections.flatMap((section) => section.paragraphs).join("\n");
 
     expect(body).toContain(BRAND.address);
-    expect(terms.sections.some((section) => section.heading === "Registered business")).toBe(true);
+    expect(
+      terms.sections.some(
+        (section) => section.heading && section.heading.includes("Registered business"),
+      ),
+    ).toBe(true);
   });
 
   it("returns page uses canonical support email", () => {

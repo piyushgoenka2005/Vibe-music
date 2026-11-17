@@ -9,6 +9,7 @@ export {
   VIBEMUSIC_BULK_IMAGE_HEADERS,
   VIBEMUSIC_BULK_COLUMN_COUNT,
   VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+  VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
   VIBEMUSIC_BULK_SIGNATURE_HEADERS,
   type VibemusicBulkHeader,
   buildVibemusicBulkTemplateCsv,
@@ -54,8 +55,9 @@ export function buildBulkImportIntroCopy(
   coreColumns = 69,
   fullColumns = 81,
   maxImages = 12,
+  maxColumns = 100,
 ): string {
-  return `Upload products using the official vibemusic bulk spreadsheet — up to ${maxProducts.toLocaleString()} products per upload. Download the ${fullColumns}-column template (${coreColumns} core fields + image1–image${maxImages}), or re-import older ${coreColumns}-column sheets. Up to ${maxImages} images per SKU from the sheet columns or an optional images ZIP.`;
+  return `Upload products using the official vibemusic bulk spreadsheet — up to ${maxProducts.toLocaleString()} products per upload. Download the ${fullColumns}-column template (${coreColumns} core fields + image1–image${maxImages}), or re-import sheets with up to ${maxColumns} columns. Up to ${maxImages} images per SKU from the sheet columns or an optional images ZIP.`;
 }
 
 export function buildBulkImportTemplateHintCopy(
@@ -73,10 +75,10 @@ export function buildBulkImportZipHintCopy(maxZipMb = 100, maxImages = 12): stri
 export function buildBulkImportSheetHintCopy(
   maxSheetMb = 25,
   maxProducts = 2000,
-  coreColumns = 69,
+  maxColumns = 100,
   fullColumns = 81,
 ): string {
-  return `Drag & drop .xlsx / .csv here, or browse. Accepts ${coreColumns}-column legacy sheets or the full ${fullColumns}-column template · up to ${maxProducts.toLocaleString()} rows · max ${maxSheetMb} MB.`;
+  return `Drag & drop .xlsx / .csv here, or browse. Accepts sheets up to ${maxColumns} columns or the full ${fullColumns}-column template · up to ${maxProducts.toLocaleString()} rows · max ${maxSheetMb} MB.`;
 }
 
 export function vibemusicBulkExportFilename(ext = "csv"): string {

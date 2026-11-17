@@ -1,6 +1,10 @@
 import "server-only";
 
-import { getUpstashConfig, upstashPipeline } from "@/lib/security/upstashRedis";
+import {
+  getUpstashConfig,
+  markUpstashAuthFailed,
+  upstashPipeline,
+} from "@/lib/security/upstashRedis";
 import { redisCircuitBreaker } from "@/lib/security/circuit-breaker";
 
 // v2: values are stored with `SET key <json> EX <ttl>` (raw-body semantics),
@@ -214,6 +218,9 @@ async function getCachedRedis<T>(
       cache: "no-store",
       signal: AbortSignal.timeout(1500),
     });
+    if (result.status === 401 || result.status === 403) {
+      markUpstashAuthFailed();
+    }
     if (result.ok) {
       const text = await result.text();
       // Upstash REST answers HTTP 200 with `{"result":null}` for a MISSING

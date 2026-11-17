@@ -7,7 +7,6 @@
   min-height: 100vh;
   position: relative;
   max-width: 100%;
-  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -22,7 +21,6 @@
   isolation: isolate;
   min-width: 0;
   max-width: 100%;
-  overflow-x: hidden;
   overflow-x: clip;
 }
 
@@ -1037,6 +1035,8 @@ body.site-nav-open .site-header--scroll-hidden {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.5rem 2rem;
+  position: relative;
+  z-index: 2;
 }
 
 .header-mega__heading {
@@ -1061,6 +1061,10 @@ body.site-nav-open .site-header--scroll-hidden {
   position: relative;
 }
 
+.header-mega__link-item--open {
+  z-index: 30;
+}
+
 .header-mega__link {
   display: inline-flex;
   position: relative;
@@ -1083,7 +1087,7 @@ body.site-nav-open .site-header--scroll-hidden {
 
 .header-mega__link-submenu {
   position: absolute;
-  z-index: 3;
+  z-index: 30;
   top: -0.75rem;
   left: calc(100% - 0.25rem);
   min-width: 220px;
@@ -1096,6 +1100,16 @@ body.site-nav-open .site-header--scroll-hidden {
   border: 1px solid var(--border-default);
   border-radius: 0.65rem;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.16);
+  pointer-events: auto;
+}
+
+.header-mega__link-submenu::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -0.75rem;
+  width: 0.75rem;
 }
 
 .header-mega__link-submenu .header-mega__links {
@@ -1820,6 +1834,38 @@ body.site-nav-open .site-header--hidden {
 
   .site-header__mobile-submenu-link:hover,
   .site-header__mobile-submenu-link:focus-visible {
+    background: var(--brand-primary-muted);
+    color: var(--brand-primary);
+  }
+
+  .site-header__mobile-submenu-child-list {
+    margin: 0.2rem 0 0.5rem 1.35rem;
+    padding: 0 0 0 0.85rem;
+    list-style: none;
+    border-left: 2px solid var(--border-subtle, rgba(226, 232, 240, 0.8));
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .site-header__mobile-submenu-child-link {
+    display: flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.65rem;
+    color: var(--text-tertiary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.3;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition:
+      background var(--duration-fast),
+      color var(--duration-fast);
+  }
+
+  .site-header__mobile-submenu-child-link:hover,
+  .site-header__mobile-submenu-child-link:focus-visible {
     background: var(--brand-primary-muted);
     color: var(--brand-primary);
   }

@@ -17,7 +17,6 @@ export function useBrandsBrowseFilters() {
   const searchParams = useSearchParams();
 
   const letter = searchParams.get("letter")?.trim() ?? "";
-  const brandParam = searchParams.get("brand")?.split(",")[0]?.trim() ?? "";
 
   const filters = useMemo(() => parseFiltersFromSearchParams(searchParams), [searchParams]);
 
@@ -25,11 +24,9 @@ export function useBrandsBrowseFilters() {
     (params: URLSearchParams) => {
       if (letter) params.set("letter", letter);
       else params.delete("letter");
-      if (brandParam) params.set("brand", brandParam);
-      else params.delete("brand");
       return params;
     },
-    [brandParam, letter],
+    [letter],
   );
 
   const updateFilters = useCallback(
@@ -61,10 +58,9 @@ export function useBrandsBrowseFilters() {
   const clearAllFilters = useCallback(() => {
     const params = new URLSearchParams();
     if (letter) params.set("letter", letter);
-    if (brandParam) params.set("brand", brandParam);
     const qs = params.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [brandParam, letter, pathname, router]);
+  }, [letter, pathname, router]);
 
   const clearBrowse = useCallback(() => {
     router.push(pathname, { scroll: false });

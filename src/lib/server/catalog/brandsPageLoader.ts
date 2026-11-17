@@ -35,7 +35,11 @@ const getCachedBrandDirectory = unstable_cache(loadBrandDirectoryUncached, ["bra
 export const loadBrandDirectory = cache(async function loadBrandDirectory(): Promise<
   BrandDirectoryGroup[]
 > {
-  return getCachedBrandDirectory();
+  try {
+    return (await getCachedBrandDirectory()) ?? [];
+  } catch {
+    return [];
+  }
 });
 
 const getCachedBrandsWithCounts = unstable_cache(

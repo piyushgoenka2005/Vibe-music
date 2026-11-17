@@ -165,9 +165,35 @@ describe("vibemusic bulk import", () => {
     expect(parsed.rows[0]!.originalPrice).toBe(81454);
   });
 
-  it("accepts 69 core headers or the full 81-column template with image1–image12", () => {
+  it("accepts sheets with up to 100 columns (69 core headers, 81-column template, or extended up to 100)", () => {
     expect(validateVibemusicBulkHeaders([...VIBEMUSIC_BULK_CORE_HEADERS])).toBeNull();
     expect(validateVibemusicBulkHeaders([...VIBEMUSIC_BULK_HEADERS])).toBeNull();
+
+    // 75 columns (69 core + 6 custom attributes)
+    const custom75 = [
+      ...VIBEMUSIC_BULK_CORE_HEADERS,
+      "Custom 1",
+      "Custom 2",
+      "Custom 3",
+      "Custom 4",
+      "Custom 5",
+      "Custom 6",
+    ];
+    expect(validateVibemusicBulkHeaders(custom75)).toBeNull();
+
+    // 100 columns (81 template + 19 custom attributes)
+    const custom100 = [
+      ...VIBEMUSIC_BULK_HEADERS,
+      ...Array.from({ length: 19 }, (_, i) => `Attr_${i + 1}`),
+    ];
+    expect(validateVibemusicBulkHeaders(custom100)).toBeNull();
+
+    // 101 columns (exceeds 100 column limit)
+    const custom101 = [
+      ...VIBEMUSIC_BULK_HEADERS,
+      ...Array.from({ length: 20 }, (_, i) => `Attr_${i + 1}`),
+    ];
+    expect(validateVibemusicBulkHeaders(custom101)).toMatch(/accepts up to 100 columns/);
 
     expect(validateVibemusicBulkHeaders(["Brand", "SKU", "ITEM TITLE", "Selling Price"])).toMatch(
       /requires exactly 69 core columns/,

@@ -13,6 +13,7 @@ import {
   buildBulkImportZipHintCopy,
   VIBEMUSIC_BULK_COLUMN_COUNT,
   VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+  VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
   VIBEMUSIC_BULK_FAILED_ROWS_FILENAME,
   VIBEMUSIC_BULK_IMPORT_TITLE,
   VIBEMUSIC_BULK_TEMPLATE_CSV_FILE,
@@ -189,6 +190,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
         VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
         VIBEMUSIC_BULK_COLUMN_COUNT,
         DEFAULT_MAX_BULK_IMPORT_IMAGES,
+        VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
       ),
     [],
   );
@@ -206,7 +208,7 @@ export default function BulkImportModal({ open, onClose, onComplete }: BulkImpor
       buildBulkImportSheetHintCopy(
         MAX_SHEET_MB,
         MAX_IMPORT_ROWS,
-        VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
+        VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
         VIBEMUSIC_BULK_COLUMN_COUNT,
       ),
     [],

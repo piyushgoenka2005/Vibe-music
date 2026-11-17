@@ -4,7 +4,8 @@ import ProductDeliveryEstimateServer from "@/components/product/ProductDeliveryE
 import ProductDetailPage from "@/components/product/ProductDetailPage";
 import { loadProductCorePage, loadProductDetailPage } from "@/lib/server/productDetailLoader";
 import { resolveCanonicalProductSlug } from "@/services/catalogService";
-import { buildProductJsonLd } from "@/lib/seo/productJsonLd";
+import { buildProductJsonLd, buildBreadcrumbListJsonLd } from "@/lib/seo/productJsonLd";
+import { buildProductBreadcrumb } from "@/lib/product/productBreadcrumb";
 import { buildProductMetadata } from "@/lib/seo/productMetadata";
 import { resolveStoreShippingPolicy } from "@/lib/storefront/resolveStoreShippingPolicy";
 import { SHIPPING_POLICY } from "@/lib/storefront/shippingPolicy";
@@ -71,6 +72,13 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
     const defaultVariant = variants.find((v) => v.availability !== "out-of-stock") ?? variants[0];
 
     const jsonLd = buildProductJsonLd(initialData.product, defaultVariant);
+    const breadcrumbs = buildProductBreadcrumb(initialData.product);
+    const breadcrumbJsonLd = buildBreadcrumbListJsonLd(breadcrumbs);
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@graph": [jsonLd, breadcrumbJsonLd],
+    };
+
     let shippingDetail = SHIPPING_POLICY.pdpDetail;
     try {
       const shippingPolicy = await resolveStoreShippingPolicy();
@@ -83,7 +91,7 @@ export default async function ProductRoute({ params }: ProductRouteProps) {
       <main className="storefront-page">
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
         <ProductDeliveryEstimateServer />
         <ProductDetailPage slug={slug} initialData={initialData} shippingDetail={shippingDetail} />

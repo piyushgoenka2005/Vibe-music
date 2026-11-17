@@ -25,30 +25,51 @@ export default function RevealGroup({
     const node = ref.current;
     if (!node) return;
 
-    const markVisible = (observer: IntersectionObserver) => {
+    let done = false;
+    let observer: IntersectionObserver | null = null;
+    let fallbackTimer = 0;
+
+    const markVisible = () => {
+      if (done) return;
+      done = true;
       setVisible(true);
-      observer.disconnect();
+      observer?.disconnect();
+      if (fallbackTimer) {
+        window.clearTimeout(fallbackTimer);
+        fallbackTimer = 0;
+      }
     };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          markVisible(observer);
-        }
-      },
-      { threshold: 0.08, rootMargin: "0px 0px -16px 0px" }
-    );
-
-    observer.observe(node);
-
     const rect = node.getBoundingClientRect();
-    const inView =
-      rect.top < window.innerHeight - 32 && rect.bottom > 0;
-    if (inView) {
-      markVisible(observer);
+    if (rect.top < window.innerHeight + 250 && rect.bottom > -120) {
+      markVisible();
+      return;
     }
 
-    return () => observer.disconnect();
+    if (typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            markVisible();
+          }
+        },
+        { threshold: 0, rootMargin: "250px 0px 250px 0px" },
+      );
+      observer.observe(node);
+    } else {
+      markVisible();
+      return;
+    }
+
+    fallbackTimer = window.setTimeout(markVisible, 600);
+
+    return () => {
+      done = true;
+      observer?.disconnect();
+      if (fallbackTimer) {
+        window.clearTimeout(fallbackTimer);
+      }
+    };
   }, []);
 
   return (

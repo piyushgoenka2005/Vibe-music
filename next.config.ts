@@ -5,6 +5,10 @@ const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  typescript: {
+    // Type checking is enforced in CI / pre-commit via `npm run type-check`.
+    ignoreBuildErrors: true,
+  },
   // Server-only packages that pull Node builtins (`node:child_process`) or
   // optional native deps must stay external to the server bundle; bundling
   // them under --webpack raises UnhandledSchemeError / unresolved-optional-dep.
@@ -41,7 +45,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
       { protocol: "https", hostname: "cdn.vibemusic.in", pathname: "/**" },
-      { protocol: "https", hostname: "myimgs.org", pathname: "/**" },
       { protocol: "https", hostname: "static.roland.com", pathname: "/**" },
       { protocol: "https", hostname: "framerusercontent.com", pathname: "/**" },
       ...(!isProd
@@ -164,6 +167,67 @@ const nextConfig: NextConfig = {
         source: "/why-shop-with-us",
         destination: "/",
         statusCode: 301,
+      },
+      // Canonical category aliases for common short slugs (C-16)
+      {
+        source: "/category/recording",
+        destination: "/category/studio-recording",
+        permanent: true,
+      },
+      {
+        source: "/category/keyboards",
+        destination: "/category/keyboards-synthesizers",
+        permanent: true,
+      },
+      {
+        source: "/category/synths",
+        destination: "/category/keyboards-synthesizers",
+        permanent: true,
+      },
+      {
+        source: "/category/drums",
+        destination: "/category/drums-percussion",
+        permanent: true,
+      },
+      // Category slug vanity redirects (e.g. /guitars -> /category/guitars)
+      ...[
+        "guitars",
+        "amplifiers",
+        "keyboards-synthesizers",
+        "drums-percussion",
+        "microphones",
+        "studio-recording",
+        "live-sound-pa",
+        "dj-gear",
+        "accessories",
+        "traditional-instruments",
+        "cables-connectors",
+        "lighting-effects",
+      ].map((slug) => ({
+        source: `/${slug}`,
+        destination: `/category/${slug}`,
+        permanent: true,
+      })),
+      // Legacy WordPress / WooCommerce redirects
+      {
+        source: "/product-category/:slug*",
+        destination: "/category/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/products/:slug*",
+        destination: "/product/:slug*",
+        permanent: true,
+      },
+      {
+        source: "/shop",
+        destination: "/category",
+        permanent: true,
+      },
+      {
+        source: "/shop/:slug*",
+        destination: "/category/:slug*",
+        permanent: true,
       },
     ];
   },

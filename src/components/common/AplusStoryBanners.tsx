@@ -27,6 +27,8 @@ export default function AplusStoryBanners({ banners }: AplusStoryBannersProps) {
             width={1280}
             height={427}
             className="aplus-story__image"
+            loading="lazy"
+            decoding="async"
             unoptimized
             sizes="(max-width: 767px) 100vw, (max-width: 1280px) 100vw, 1280px"
           />

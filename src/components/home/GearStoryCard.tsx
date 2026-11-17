@@ -33,9 +33,11 @@ export default function GearStoryCard({
   onOpen,
 }: GearStoryCardProps) {
   const containerRef = useRef<HTMLElement>(null);
+  const posterImgRef = useRef<HTMLImageElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const userPausedRef = useRef(false);
   const [userPaused, setUserPaused] = useState(false);
+  const [posterFailed, setPosterFailed] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [nearViewport, setNearViewport] = useState(false);
@@ -64,9 +66,17 @@ export default function GearStoryCard({
 
   useEffect(() => {
     setCandidateIndex(0);
+    setPosterFailed(false);
     setVideoFailed(false);
     setVideoReady(false);
-  }, [story.id, story.videoUrl]);
+  }, [story.id, story.posterUrl, story.videoUrl]);
+
+  useEffect(() => {
+    const img = posterImgRef.current;
+    if (img && img.complete && img.naturalWidth === 0 && !posterFailed) {
+      setPosterFailed(true);
+    }
+  }, [posterFailed, story.posterUrl]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -156,6 +166,10 @@ export default function GearStoryCard({
     setVideoReady(true);
   }, []);
 
+  const resolvedPoster = !posterFailed
+    ? story.posterUrl || story.image || "/images/guitar-1.webp"
+    : story.image || "/images/guitar-1.webp";
+
   return (
     <article
       ref={containerRef}
@@ -173,16 +187,20 @@ export default function GearStoryCard({
       }
     >
       <div className="gear-story-card__media">
-        {story.posterUrl ? (
+        {resolvedPoster ? (
           <Image
+            ref={posterImgRef}
             className="gear-story-card__poster"
-            src={story.posterUrl}
+            src={resolvedPoster}
             alt=""
             aria-hidden="true"
             fill
-            sizes="(max-width: 768px) 22vw, 260px"
+            sizes="(max-width: 768px) 220px, 260px"
             loading="lazy"
             unoptimized
+            onError={() => {
+              if (!posterFailed) setPosterFailed(true);
+            }}
           />
         ) : null}
         {shouldMountVideo ? (
@@ -192,12 +210,12 @@ export default function GearStoryCard({
               .filter(Boolean)
               .join(" ")}
             src={videoSrc}
-            poster={story.posterUrl}
+            poster={resolvedPoster}
             autoPlay
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             disablePictureInPicture
             controls={false}
             aria-hidden="true"

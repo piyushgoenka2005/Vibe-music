@@ -215,12 +215,112 @@ export async function listCategories(): Promise<AdminCategory[]> {
   }
 
   try {
-    const rows = await prisma.category.findMany({ orderBy: { sortOrder: "asc" } });
+    const [rows, productCategories, activeProducts] = await Promise.all([
+      prisma.category.findMany({ orderBy: { sortOrder: "asc" } }),
+      prisma.productCategory.findMany({ select: { productId: true, categoryId: true } }),
+      prisma.product.findMany({
+        where: { status: "active" },
+        select: { id: true, categorySlug: true, subcategory: true },
+      }),
+    ]);
 
     // Return categories from database - never automatically re-seed on empty,
     // so deletions remain permanent and do not revert back.
-    console.debug("[categoryRepository] Returning", rows.length, "categories from database");
-    return rows.map(mapAdminCategory);
+    if (rows.length === 0) {
+      console.debug("[categoryRepository] Returning 0 categories from database (explicitly empty)");
+      return [];
+    }
+
+    // Compute live product counts dynamically
+    const countSets = new Map<string, Set<string>>();
+    for (const cat of rows) {
+      countSets.set(cat.id, new Set<string>());
+    }
+
+    // 1. Join table mappings
+    for (const pc of productCategories) {
+      countSets.get(pc.categoryId)?.add(pc.productId);
+    }
+
+    // 2. Direct product attributes (categorySlug and subcategory)
+    for (const p of activeProducts) {
+      const pCatSlug = p.categorySlug ? slugify(p.categorySlug) : "";
+      const pSubSlug = p.subcategory ? slugify(p.subcategory) : "";
+      const pSubLower = p.subcategory ? p.subcategory.trim().toLowerCase() : "";
+
+      for (const cat of rows) {
+        const catSlug = slugify(cat.slug);
+        const catNameLower = cat.name.trim().toLowerCase();
+
+        if (cat.parentId) {
+          // Subcategory
+          if (
+            (pSubSlug &&
+              (catSlug === pSubSlug ||
+                catSlug.endsWith(`-${pSubSlug}`) ||
+                pSubSlug.endsWith(`-${catSlug}`))) ||
+            (pSubLower &&
+              (catNameLower === pSubLower ||
+                pSubLower.includes(catNameLower) ||
+                catNameLower.includes(pSubLower)))
+          ) {
+            countSets.get(cat.id)?.add(p.id);
+          }
+        } else {
+          // Main category
+          if (
+            pCatSlug &&
+            (catSlug === pCatSlug ||
+              catSlug.includes(pCatSlug) ||
+              pCatSlug.includes(catSlug) ||
+              cat.id === `cat_${pCatSlug}` ||
+              cat.id === `cat-${pCatSlug}`)
+          ) {
+            countSets.get(cat.id)?.add(p.id);
+          }
+        }
+      }
+    }
+
+    // 3. Roll up subcategory counts to parent category
+    for (const cat of rows) {
+      if (cat.parentId) {
+        const parentSet = countSets.get(cat.parentId);
+        const childSet = countSets.get(cat.id);
+        if (parentSet && childSet) {
+          for (const pid of childSet) {
+            parentSet.add(pid);
+          }
+        }
+      }
+    }
+
+    // Synchronize count updates to database in background
+    void (async () => {
+      try {
+        for (const cat of rows) {
+          const liveCount = countSets.get(cat.id)?.size ?? 0;
+          if (liveCount !== cat.productCount) {
+            await prisma.category.update({
+              where: { id: cat.id },
+              data: { productCount: liveCount },
+            });
+          }
+        }
+      } catch {
+        /* background sync handles concurrency silently */
+      }
+    })();
+
+    console.debug(
+      "[categoryRepository] Returning",
+      rows.length,
+      "categories with dynamic product counts",
+    );
+    return rows.map((row) => {
+      const liveCount = countSets.get(row.id)?.size ?? row.productCount;
+      return mapAdminCategory({ ...row, productCount: liveCount });
+    });
   } catch (err) {
     console.error(
       "[categoryRepository] Failed to list categories from database, falling back to in-memory static categories:",

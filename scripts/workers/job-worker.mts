@@ -5,15 +5,23 @@
  *   npx tsx --tsconfig scripts/workers/tsconfig.json scripts/workers/job-worker.mts
  *   pm2 start deploy/ecosystem.config.cjs --only vibe-worker
  */
-import { closeJobQueue, isJobQueueEnabled, startJobWorker } from "@/lib/server/jobQueue";
+import { closeJobQueue, isJobQueueEnabled, startJobWorker } from "@/lib/server/platform/jobQueue";
 import { disconnectPrisma } from "@/lib/db/prisma";
 
 async function main(): Promise<void> {
   if (!isJobQueueEnabled()) {
     console.log(
-      "[vibe-worker] REDIS_URL is not set — webhooks run synchronously in the API; worker not needed.",
+      "[vibe-worker] REDIS_URL is not set — webhooks run synchronously in the API; worker idle.",
     );
-    process.exit(0);
+    // Keep process alive without consuming CPU so PM2 does not restart-loop
+    const idleTimer = setInterval(() => {}, 60_000 * 60);
+    const stopIdle = () => {
+      clearInterval(idleTimer);
+      process.exit(0);
+    };
+    process.once("SIGTERM", stopIdle);
+    process.once("SIGINT", stopIdle);
+    return;
   }
 
   const worker = startJobWorker();

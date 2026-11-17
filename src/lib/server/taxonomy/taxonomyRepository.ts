@@ -456,9 +456,11 @@ export async function getTaxonomySubcategoriesForHeader(): Promise<
     }
     const productType = row.productType.trim();
     if (productType) {
-      const childLabel = row.variant?.trim()
-        ? `${productType} - ${row.variant.trim()}`
-        : productType;
+      const vTrim = row.variant?.trim();
+      const childLabel =
+        vTrim && vTrim !== "null" && vTrim.toLowerCase() !== productType.toLowerCase()
+          ? `${productType} - ${vTrim}`
+          : productType;
       if (!entry.children.some((child) => child.name.toLowerCase() === childLabel.toLowerCase())) {
         entry.children.push({
           id: `${row.id}:${childLabel}`,
@@ -659,7 +661,20 @@ export async function getSubcategoriesByCategory(category: string): Promise<stri
   });
   const fromTaxonomy = taxonomyItems.map((item) => item.subcategory).filter(Boolean);
 
-  return mergeSubcategoryNames(fromCategories, fromTaxonomy);
+  const productRows = await prisma.product.findMany({
+    where: {
+      OR: [
+        { categorySlug: parentCat?.slug ?? slugify(category) },
+        { category: { equals: category, mode: "insensitive" } },
+      ],
+    },
+    select: { subcategory: true },
+    distinct: ["subcategory"],
+    orderBy: { subcategory: "asc" },
+  });
+  const fromProducts = productRows.map((p) => p.subcategory).filter(Boolean);
+
+  return mergeSubcategoryNames(fromCategories, fromTaxonomy, fromProducts);
 }
 
 /**

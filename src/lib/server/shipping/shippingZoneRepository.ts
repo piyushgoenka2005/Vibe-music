@@ -79,9 +79,20 @@ function defaultZonesWithTimestamps(): ShippingZone[] {
   return DEFAULT_ZONES.map((zone) => ({ ...zone, createdAt: now, updatedAt: now }));
 }
 
+let cachedActiveZones: { data: ShippingZone[]; expiresAt: number } | null = null;
+
+export function invalidateShippingZonesCache(): void {
+  cachedActiveZones = null;
+}
+
 export async function listShippingZones(): Promise<ShippingZone[]> {
   if (!isPostgresConfigured()) {
     return defaultZonesWithTimestamps();
+  }
+
+  const now = Date.now();
+  if (cachedActiveZones && cachedActiveZones.expiresAt > now) {
+    return cachedActiveZones.data;
   }
 
   try {
@@ -89,8 +100,9 @@ export async function listShippingZones(): Promise<ShippingZone[]> {
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
     });
-    if (rows.length === 0) return defaultZonesWithTimestamps();
-    return rows.map(mapShippingZone);
+    const result = rows.length === 0 ? defaultZonesWithTimestamps() : rows.map(mapShippingZone);
+    cachedActiveZones = { data: result, expiresAt: now + 60_000 };
+    return result;
   } catch {
     return defaultZonesWithTimestamps();
   }
@@ -168,9 +180,11 @@ export async function upsertShippingZone(
     },
   });
 
+  invalidateShippingZonesCache();
   return record;
 }
 
 export async function deleteShippingZone(id: string): Promise<void> {
   await prisma.shippingZone.delete({ where: { id } });
+  invalidateShippingZonesCache();
 }

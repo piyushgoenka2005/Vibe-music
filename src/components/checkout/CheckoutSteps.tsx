@@ -11,6 +11,7 @@ import CheckoutGlassButton from "@/components/checkout/CheckoutGlassButton";
 import CheckoutPaymentMethods from "@/components/checkout/CheckoutPaymentMethods";
 import CheckoutStepActions from "@/components/checkout/CheckoutStepActions";
 import { getPanelPayLabel } from "@/components/checkout/checkoutPayLabels";
+import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 import StorefrontThumbImage from "@/components/common/StorefrontThumbImage";
 import AddressAutocompleteField from "@/components/checkout/AddressAutocompleteField";
 import { INDIAN_STATES } from "@/lib/address/indianStates";
@@ -460,6 +461,8 @@ export function PaymentStep({
         <CheckoutGlassButton
           variant="solid"
           disabled={!canPay || payLoading}
+          onMouseEnter={preloadRazorpayCheckout}
+          onTouchStart={preloadRazorpayCheckout}
           onClick={() => void onPay()}
         >
           {payLoading ? (payLoadingLabel ?? "Opening Razorpay…") : getPanelPayLabel(onlineChannel)}

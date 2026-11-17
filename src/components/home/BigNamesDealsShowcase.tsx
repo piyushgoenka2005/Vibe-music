@@ -69,9 +69,10 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
         <div className="big-names-deals__logo-wrap">
           {!logoFailed && item.logo ? (
             <Image
-              alt=""
+              alt={`${item.brand} logo`}
               className="big-names-deals__logo"
               height={28}
+              loading="lazy"
               onError={() => setLogoFailed(true)}
               src={item.logo}
               style={{ width: "auto", height: "auto" }}
@@ -91,11 +92,12 @@ function BigNamesDealItem({ item, index }: { item: BigNamesDealItem; index: numb
                 className={`big-names-deals__product-wrap${blendMultiply ? " big-names-deals__product-wrap--blend" : ""}`}
               >
                 <StorefrontThumbImage
+                  alt={item.productAlt || `${item.brand} guitar showcase`}
                   className="big-names-deals__product"
                   fallbackSrc={item.productFallback}
-                  fetchPriority={index < 5 ? "high" : "auto"}
+                  fetchPriority="auto"
                   height={480}
-                  loading={index < 5 ? "eager" : "lazy"}
+                  loading="lazy"
                   sizes="(max-width: 1023px) 82vw, 18vw"
                   src={item.product}
                   width={480}

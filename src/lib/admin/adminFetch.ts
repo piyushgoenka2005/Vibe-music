@@ -1,11 +1,12 @@
 /** Shared admin client fetch helpers — surface API error messages in the UI safely without JSON parse crashes. */
 
+import { notifyAdminUnauthorized } from "@/lib/admin/adminLiveSync";
+
 export async function readAdminApiError(res: Response): Promise<string> {
   const status = res.status;
   if (status === 401 && typeof window !== "undefined") {
     try {
-      sessionStorage.removeItem("vibe_admin_session");
-      window.dispatchEvent(new CustomEvent("vibe:admin:unauthorized"));
+      notifyAdminUnauthorized();
     } catch {
       /* ignore */
     }
@@ -72,8 +73,7 @@ export async function safeReadApiResponse<T>(
 
   if (status === 401 && typeof window !== "undefined") {
     try {
-      sessionStorage.removeItem("vibe_admin_session");
-      window.dispatchEvent(new CustomEvent("vibe:admin:unauthorized"));
+      notifyAdminUnauthorized();
     } catch {
       /* ignore */
     }

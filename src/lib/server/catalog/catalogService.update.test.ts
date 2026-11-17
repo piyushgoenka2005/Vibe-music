@@ -29,7 +29,7 @@ import {
   resolveCatalogImageUrls,
   syncDefaultVariantPatch,
   updateProduct,
-} from "@/services/catalogService";
+} from "./catalogService";
 
 const baseProduct: CatalogProduct = {
   id: "prod-1",
@@ -81,6 +81,7 @@ const baseProduct: CatalogProduct = {
 
 describe("catalog product image updates", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(fetchProductById).mockResolvedValue(baseProduct);
     vi.mocked(fetchAllProducts).mockResolvedValue([baseProduct]);
     vi.mocked(writeProduct).mockImplementation(async (product) => product);
@@ -132,5 +133,62 @@ describe("catalog product image updates", () => {
       image: "",
     });
     expect(resolved).toEqual(["https://cdn.example/a.jpg", "https://cdn.example/b.jpg"]);
+  });
+
+  it("lifts originalPrice and syncs discountPercentage when variants raise price above stored MRP", async () => {
+    await updateProduct("prod-1", {
+      variants: [
+        {
+          id: "var-premium",
+          label: "Custom Shop",
+          sku: "VM-BOSS-GX100-CS",
+          price: 20000,
+          stock: 3,
+          attributes: [],
+          isDefault: true,
+        },
+      ],
+    });
+
+    expect(writeProduct).toHaveBeenCalledTimes(1);
+    const saved = vi.mocked(writeProduct).mock.calls[0]?.[0];
+    expect(saved?.price).toBe(20000);
+    expect(saved?.originalPrice).toBe(20000);
+    expect(saved?.discountPercentage).toBe(0);
+    expect(saved?.detail?.msrp).toBeNull();
+    expect(saved?.detail?.salePrice).toBeNull();
+  });
+
+  it("lifts originalPrice to cover higher-priced non-default variants in multi-variant product", async () => {
+    await updateProduct("prod-1", {
+      variants: [
+        {
+          id: "var-std",
+          label: "Standard",
+          sku: "VM-BOSS-GX100-STD",
+          price: 10000,
+          stock: 5,
+          attributes: [],
+          isDefault: true,
+        },
+        {
+          id: "var-custom",
+          label: "Custom",
+          sku: "VM-BOSS-GX100-CUST",
+          price: 18000,
+          stock: 2,
+          attributes: [],
+          isDefault: false,
+        },
+      ],
+    });
+
+    expect(writeProduct).toHaveBeenCalledTimes(1);
+    const saved = vi.mocked(writeProduct).mock.calls[0]?.[0];
+    expect(saved?.price).toBe(10000);
+    expect(saved?.originalPrice).toBe(18000);
+    expect(saved?.discountPercentage).toBe(44);
+    expect(saved?.detail?.msrp).toBe(18000);
+    expect(saved?.detail?.salePrice).toBe(10000);
   });
 });

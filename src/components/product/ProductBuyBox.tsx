@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState, type RefObject } from "react";
+import { useEffect, useMemo, useState, type RefObject } from "react";
 import { MapPin, Truck } from "lucide-react";
-import { formatCurrencyPrecise, isPurchasablePrice } from "@/utils/currency";
+import { isPurchasablePrice, useCurrency } from "@/utils/currency";
+import { useTranslation } from "@/lib/i18n";
 import type { ProductDetail, ProductVariant } from "@/types/product";
 import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import { useToastStore } from "@/store/toastStore";
 import NotifyMeButton from "./NotifyMeButton";
 import { getDeliveryEstimate } from "@/lib/shipping/deliveryEstimate";
+import { preloadRazorpayCheckout } from "@/hooks/useRazorpay";
 
 interface ProductBuyBoxProps {
   product: ProductDetail;
@@ -22,13 +24,11 @@ interface ProductBuyBoxProps {
   atcSentinelRef?: RefObject<HTMLDivElement | null>;
 }
 
-function splitPriceParts(price: number) {
-  const formatted = formatCurrencyPrecise(price);
+function splitPriceParts(formatted: string, defaultSymbol = "₹") {
   const match = formatted.match(/^([^\d]*)([\d,]+)(?:\.(\d{2}))?$/);
-  if (!match) return { symbol: "₹", whole: formatted, fraction: null };
+  if (!match) return { symbol: defaultSymbol, whole: formatted, fraction: null };
 
-  // en-IN often emits "₹ 11,180" — strip spaces so ₹ sits tight against digits.
-  const symbol = (match[1] || "₹").replace(/\s+/g, "") || "₹";
+  const symbol = (match[1] || defaultSymbol).replace(/\s+/g, "") || defaultSymbol;
 
   return {
     symbol,
@@ -59,6 +59,8 @@ export default function ProductBuyBox({
   isWishlisted,
   atcSentinelRef,
 }: ProductBuyBoxProps) {
+  const { formatPrecise, symbol } = useCurrency();
+  const { t } = useTranslation();
   const displayPrice = selectedVariant.price;
   const lineTotal = displayPrice * quantity;
   const canPurchase =
@@ -66,8 +68,20 @@ export default function ProductBuyBox({
   const isComingSoon = !isPurchasablePrice(displayPrice);
 
   const maxQuantity = Math.max(1, Math.min(99, selectedVariant.stock || 99));
-  const { dateLabel, orderWindow } = useMemo(() => getDeliveryEstimate(), []);
-  const priceParts = splitPriceParts(lineTotal);
+  const { dateLabel } = useMemo(() => getDeliveryEstimate(), []);
+  const [orderWindow, setOrderWindow] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => {
+      const est = getDeliveryEstimate();
+      if (est.orderWindow && est.orderWindow !== "today") {
+        setOrderWindow(est.orderWindow);
+      }
+    });
+    return () => cancelAnimationFrame(handle);
+  }, []);
+  const formattedLineTotal = formatPrecise(lineTotal);
+  const priceParts = splitPriceParts(formattedLineTotal, symbol);
 
   const [pincode, setPincode] = useState("");
   const [locationLabel, setLocationLabel] = useState("India");
@@ -119,11 +133,21 @@ export default function ProductBuyBox({
               <span className="pdp-buybox__coming-soon-label">Coming Soon</span>
             </div>
           ) : (
-            <div className="pdp-buybox__price pdp-buybox__price--tag" aria-label="Current price">
-              <span className="pdp-buybox__price-symbol">{priceParts.symbol}</span>
-              <span className="pdp-buybox__price-whole">{priceParts.whole}</span>
+            <div
+              className="pdp-buybox__price pdp-buybox__price--tag"
+              aria-label="Current price"
+              suppressHydrationWarning
+            >
+              <span className="pdp-buybox__price-symbol" suppressHydrationWarning>
+                {priceParts.symbol}
+              </span>
+              <span className="pdp-buybox__price-whole" suppressHydrationWarning>
+                {priceParts.whole}
+              </span>
               {priceParts.fraction ? (
-                <span className="pdp-buybox__price-fraction">.{priceParts.fraction}</span>
+                <span className="pdp-buybox__price-fraction" suppressHydrationWarning>
+                  .{priceParts.fraction}
+                </span>
               ) : null}
             </div>
           )}
@@ -131,12 +155,12 @@ export default function ProductBuyBox({
 
         {canPurchase ? (
           <div className="pdp-buybox__delivery">
-            <p className="pdp-buybox__delivery-line">
+            <p className="pdp-buybox__delivery-line" suppressHydrationWarning>
               <span className="pdp-buybox__delivery-free">FREE delivery</span>{" "}
-              <strong>{dateLabel}</strong>
-              {orderWindow !== "today" ? (
+              <strong suppressHydrationWarning>{dateLabel}</strong>
+              {orderWindow ? (
                 <>
-                  . Order within <span>{orderWindow}</span>.
+                  . Order within <span suppressHydrationWarning>{orderWindow}</span>.
                 </>
               ) : null}{" "}
               <button
@@ -191,8 +215,14 @@ export default function ProductBuyBox({
           </div>
         ) : null}
 
-        <p className={`pdp-buybox__stock pdp-buybox__stock--${selectedVariant.availability}`}>
-          {availabilityLabel(selectedVariant.availability)}
+        <p
+          className={`pdp-buybox__stock ${
+            isComingSoon
+              ? "pdp-buybox__stock--coming-soon"
+              : `pdp-buybox__stock--${selectedVariant.availability}`
+          }`}
+        >
+          {isComingSoon ? "Coming Soon" : availabilityLabel(selectedVariant.availability)}
         </p>
 
         {!isComingSoon ? (
@@ -246,15 +276,18 @@ export default function ProductBuyBox({
                 onClick={onAddToCart}
                 disabled={!canPurchase}
               >
-                Add to cart
+                {t("pdp.addToCart", "Add to cart")}
               </button>
               <button
                 type="button"
                 className="pdp-buybox__btn pdp-buybox__btn--buy"
                 onClick={onBuyNow}
+                onMouseEnter={preloadRazorpayCheckout}
+                onTouchStart={preloadRazorpayCheckout}
+                onFocus={preloadRazorpayCheckout}
                 disabled={!canPurchase}
               >
-                Buy Now
+                {t("pdp.buyNow", "Buy Now")}
               </button>
             </>
           )}

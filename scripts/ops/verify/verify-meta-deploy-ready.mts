@@ -46,7 +46,7 @@ function main() {
     "scripts/ops/verify/verify-meta-integration.mts",
     "scripts/ops/verify/verify-meta-ad-landing.mts",
     "scripts/ops/verify/verify-meta-pixel.mts",
-    ".env.local.example",
+    ".env.example",
     "docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md",
   ];
 

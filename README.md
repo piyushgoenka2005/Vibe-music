@@ -90,14 +90,6 @@ bash deploy/update.sh
 bash deploy/production.sh certify
 ```
 
-### GitHub Actions deploy
-
-Push to `main` triggers `.github/workflows/deploy-production.yml`.
-
-**Secrets:** `VPS_HOST=109.122.56.126`, `VPS_USER=root`, `VPS_PORT=22`, `VPS_SSH_KEY` (private key from `%USERPROFILE%\.ssh\vibe_vps_deploy`).
-
-Generate key: `powershell -ExecutionPolicy Bypass -File scripts/ops/setup-deploy-access.ps1`
-
 ### Rollback
 
 ```bash
@@ -127,7 +119,7 @@ Update SPF TXT when IP changes: use `a:mail.vibemusic.in` or `ip4:109.122.56.126
 
 ## Environment variables
 
-Copy [`.env.production.example`](.env.production.example) to the VPS `.env`. Merge secrets from `deploy/ops-secrets.env`:
+Copy [`.env.example`](.env.example) to the VPS `.env`. Merge secrets from `deploy/ops-secrets.env`:
 
 ```bash
 node scripts/ops/merge-ops-secrets.mjs
@@ -251,8 +243,6 @@ VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 REQUIRE_COMPLIANCE=true VERIFY_BASE_URL=https://vibemusic.in npm run verify:prod-signoff
 ```
 
-CI: `.github/workflows/validate.yml` blocks merge on test failure.
-
 ---
 
 ## Local development
@@ -282,7 +272,6 @@ scripts/
   ops/               Env check, SSH helpers, verification
   assets/            Image download, favicons
 e2e/                 Playwright tests
-.github/workflows/   CI + production deploy
 docs/
   README.md          Documentation index
   ARCHITECTURE.md    System design reference
@@ -318,7 +307,7 @@ Implementation is **deployment-ready** on `main`. Pre-flight:
 npm run verify:meta-deploy-ready
 ```
 
-Local dev: copy `.env.local.example` → `.env.local`, add Meta credentials, restart `npm run dev`, then `npm run verify:meta-integration`.
+Local dev: copy `.env.example` → `.env.local`, add Meta credentials, restart `npm run dev`, then `npm run verify:meta-integration`.
 
 Deploy checklist: **[docs/META_PIXEL_DEPLOY_READY.md](docs/META_PIXEL_DEPLOY_READY.md)**  
 Full reference: **[docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md](docs/Vibe_Music_Meta_Pixel_CAPI_Setup.md)**

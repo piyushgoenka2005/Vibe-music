@@ -58,6 +58,14 @@ export async function POST(request: Request) {
         });
         if (parsed.password) {
           await updateUserPassword(existingUser.id, parsed.password);
+        } else if (!existingUser.passwordHash) {
+          return NextResponse.json(
+            {
+              error:
+                "Password is required to reactivate an admin account that has no password set (e.g. registered via Google)",
+            },
+            { status: 400 },
+          );
         }
         await updateUserDisplayName(existingUser.id, parsed.displayName);
         const emailResult = await sendAdminInviteEmail({
@@ -76,6 +84,14 @@ export async function POST(request: Request) {
       // Promote existing storefront / OAuth user to admin
       if (parsed.password) {
         await updateUserPassword(existingUser.id, parsed.password);
+      } else if (!existingUser.passwordHash) {
+        return NextResponse.json(
+          {
+            error:
+              "Password is required to promote an account that has no password set (e.g. registered via Google)",
+          },
+          { status: 400 },
+        );
       }
       await updateUserDisplayName(existingUser.id, parsed.displayName);
 

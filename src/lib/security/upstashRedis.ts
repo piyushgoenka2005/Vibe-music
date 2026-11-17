@@ -1,4 +1,24 @@
+let upstashAuthFailed = false;
+
+export function isUpstashAuthFailed(): boolean {
+  return upstashAuthFailed;
+}
+
+export function markUpstashAuthFailed(): void {
+  if (!upstashAuthFailed) {
+    upstashAuthFailed = true;
+    console.warn(
+      "[upstash] Upstash Redis credentials unauthorized (401/403). Falling back to in-memory cache/rate-limiter.",
+    );
+  }
+}
+
+export function resetUpstashAuthState(): void {
+  upstashAuthFailed = false;
+}
+
 export function getUpstashConfig(): { url: string; token: string } | null {
+  if (upstashAuthFailed) return null;
   const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (!url || !token) return null;
@@ -25,6 +45,9 @@ export async function upstashPipeline(
   });
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      markUpstashAuthFailed();
+    }
     throw new Error(`Upstash request failed: ${response.status}`);
   }
 

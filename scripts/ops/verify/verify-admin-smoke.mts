@@ -51,7 +51,13 @@ async function login(): Promise<string> {
     body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
   });
   if (!res.ok) throw new Error(`Admin login failed: HTTP ${res.status} ${await res.text()}`);
-  const cookies = res.headers.getSetCookie().map((c) => c.split(";")[0]);
+  const cookies = res.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .filter((c) => {
+      const parts = c.split("=");
+      return parts.length > 1 && parts[1].trim().length > 0;
+    });
   return cookies.join("; ");
 }
 

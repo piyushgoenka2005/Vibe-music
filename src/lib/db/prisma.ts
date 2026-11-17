@@ -22,9 +22,11 @@ const globalForPrisma = globalThis as unknown as {
  *   For 2K concurrent users, this prevents 20,000s of wasted wait time.
  */
 const isProd = process.env.NODE_ENV === "production";
-// Production: 30 connections per process; PM2 cluster multiplies across CPU cores
-// With 4 cores * 30 = 120 connections, supports ~12K concurrent users
-const CONNECTION_LIMIT = isProd ? 30 : 10;
+// Production: 25 connections per process; PM2 cluster of 6 workers = 150 total connections
+// Safely fits within Postgres max_connections = 300, leaving headroom for worker/CLI/migrations.
+const parsedLimit = Number.parseInt(process.env.PRISMA_CONNECTION_LIMIT ?? "", 10);
+const CONNECTION_LIMIT =
+  Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : isProd ? 25 : 10;
 const POOL_TIMEOUT_MS = 10_000;
 
 function createPrismaClient(): PrismaClient {

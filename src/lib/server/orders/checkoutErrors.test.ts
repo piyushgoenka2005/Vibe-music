@@ -21,6 +21,18 @@ describe("formatCheckoutError", () => {
     expect(formatCheckoutError(new Error("RAZORPAY_KEY not set"))).toContain("not configured yet");
   });
 
+  it("wraps gateway timeout and network errors", () => {
+    expect(formatCheckoutError(new Error("The operation was aborted due to timeout"))).toBe(
+      "Payment gateway took too long to respond. Please try again in a moment.",
+    );
+    expect(
+      formatCheckoutError(new Error("Razorpay SDK order.create timed out after 10000ms")),
+    ).toBe("Payment gateway took too long to respond. Please try again in a moment.");
+    expect(formatCheckoutError(new Error("fetch failed: ECONNRESET"))).toBe(
+      "Unable to connect to payment gateway. Please check your connection and try again.",
+    );
+  });
+
   it("wraps Razorpay auth errors", () => {
     expect(formatCheckoutError(new Error("authentication failed for Razorpay API"))).toBe(
       "Payment gateway authentication failed. Check Razorpay keys on the server.",
@@ -71,6 +83,20 @@ describe("formatCheckoutError", () => {
         error: { description: "authentication failed for razorpay" },
       }),
     ).toBe("Payment gateway authentication failed. Check Razorpay keys on the server.");
+  });
+
+  it("handles structured Razorpay error objects from SDK", () => {
+    expect(
+      formatCheckoutError({
+        statusCode: 400,
+        error: { code: "BAD_REQUEST_ERROR", description: "Order amount exceeds limit" },
+      }),
+    ).toBe("Payment gateway: Order amount exceeds limit");
+    expect(
+      formatCheckoutError({
+        error: { description: "Invalid currency passed" },
+      }),
+    ).toBe("Payment gateway: Invalid currency passed");
   });
 
   it("handles Razorpay error objects with nested reason", () => {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import CheckoutPageContent from "@/components/checkout/CheckoutPageContent";
 import { BRAND } from "@/lib/brand";
+import { prewarmRazorpayConnection } from "@/lib/server/payments/razorpayClient";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutPage() {
+  prewarmRazorpayConnection();
+
   return (
     <main className="storefront-page storefront-page--subtle">
       <Suspense fallback={null}>

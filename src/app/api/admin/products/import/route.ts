@@ -18,6 +18,7 @@ import {
   validateVibemusicBulkHeaders,
   VIBEMUSIC_BULK_CORE_COLUMN_COUNT,
   VIBEMUSIC_BULK_COLUMN_COUNT,
+  VIBEMUSIC_BULK_MAX_COLUMN_COUNT,
 } from "@/lib/amazonListingImport";
 import { resolveBulkImportImages } from "@/lib/server/bulkImportImageResolver";
 import {
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
     } else {
       return NextResponse.json(
         {
-          error: `Upload must use vibemusic bulk.csv or vibemusic bulk.xlsx with ${VIBEMUSIC_BULK_CORE_COLUMN_COUNT} core columns (or ${VIBEMUSIC_BULK_COLUMN_COUNT} including image1–image12) in the official template order. Download the template from the Import dialog.`,
+          error: `Upload must use vibemusic bulk.csv or vibemusic bulk.xlsx with up to ${VIBEMUSIC_BULK_MAX_COLUMN_COUNT} columns (${VIBEMUSIC_BULK_CORE_COLUMN_COUNT} core columns, or ${VIBEMUSIC_BULK_COLUMN_COUNT} including image1–image12) in the official template order. Download the template from the Import dialog.`,
         },
         { status: 400 },
       );

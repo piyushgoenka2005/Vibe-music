@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 const RAZORPAY_SCRIPT_URL = "https://checkout.razorpay.com/v1/checkout.js";
 const SCRIPT_LOAD_TIMEOUT_MS = 15_000;
 const CHECKOUT_SESSION_TIMEOUT_MS = 15 * 60 * 1000;
-const RAZORPAY_POLL_INTERVAL_MS = 50;
+const RAZORPAY_POLL_INTERVAL_MS = 16;
 
 export interface RazorpaySuccessResponse {
   razorpay_order_id: string;
@@ -120,26 +120,45 @@ function markScriptLoaded(script: HTMLScriptElement): void {
 function isScriptAlreadyLoaded(script: HTMLScriptElement): boolean {
   return (
     script.dataset.razorpayLoaded === "true" ||
-    script.getAttribute("data-razorpay-loaded") === "true" ||
-    script.getAttribute("data-nscript") === "afterInteractive"
+    script.getAttribute("data-razorpay-loaded") === "true"
   );
 }
 
+function isScriptElementReady(script: HTMLScriptElement): boolean {
+  if (isScriptAlreadyLoaded(script)) return true;
+  const readyState = (script as HTMLScriptElement & { readyState?: string }).readyState;
+  return readyState === "complete" || readyState === "loaded";
+}
+
 function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("Razorpay can only load in the browser"));
+  }
   if (window.Razorpay) {
     return Promise.resolve();
   }
-  if (isScriptAlreadyLoaded(script)) {
+  if (script.dataset.razorpayFailed === "true") {
+    return Promise.reject(
+      new Error(
+        "Failed to load Razorpay payment gateway script. Please disable ad blockers and try again.",
+      ),
+    );
+  }
+  if (isScriptElementReady(script)) {
     return pollForRazorpayGlobal(3000);
   }
 
   return new Promise((resolve, reject) => {
     let settled = false;
+    const timers: {
+      pollTimer?: ReturnType<typeof setInterval> | number;
+      timeoutId?: ReturnType<typeof setTimeout> | number;
+    } = {};
 
     const cleanup = () => {
       if (typeof window !== "undefined") {
-        window.clearInterval(pollTimer);
-        window.clearTimeout(timeoutId);
+        if (timers.pollTimer !== undefined) window.clearInterval(timers.pollTimer);
+        if (timers.timeoutId !== undefined) window.clearTimeout(timers.timeoutId);
       }
       script.removeEventListener?.("load", onLoad);
       script.removeEventListener?.("error", onError);
@@ -156,32 +175,46 @@ function waitForScriptElement(script: HTMLScriptElement): Promise<void> {
     const fail = (err: Error) => {
       if (settled) return;
       settled = true;
+      script.dataset.razorpayFailed = "true";
       cleanup();
       reject(err);
     };
 
     const onLoad = () => {
+      markScriptLoaded(script);
+      if (window.Razorpay) {
+        succeed();
+        return;
+      }
       void pollForRazorpayGlobal(3000).then(succeed).catch(fail);
     };
 
     const onError = () => {
-      fail(new Error("Failed to load Razorpay SDK"));
+      fail(
+        new Error(
+          "Failed to load Razorpay payment gateway script. Please disable ad blockers and try again.",
+        ),
+      );
     };
 
     script.addEventListener?.("load", onLoad, { once: true });
     script.addEventListener?.("error", onError, { once: true });
 
-    const pollTimer = window.setInterval(() => {
+    timers.pollTimer = window.setInterval(() => {
       if (window.Razorpay) {
         succeed();
       }
     }, RAZORPAY_POLL_INTERVAL_MS);
 
-    const timeoutId = window.setTimeout(() => {
+    timers.timeoutId = window.setTimeout(() => {
       if (window.Razorpay) {
         succeed();
       } else {
-        fail(new Error("Razorpay SDK load timed out"));
+        fail(
+          new Error(
+            "Payment gateway took too long to load. Please check your connection and try again.",
+          ),
+        );
       }
     }, SCRIPT_LOAD_TIMEOUT_MS);
   });
@@ -196,9 +229,9 @@ function injectRazorpayScript(): Promise<void> {
     return Promise.resolve();
   }
 
-  const existing = document.querySelector<HTMLScriptElement>(
-    `script[src="${RAZORPAY_SCRIPT_URL}"]`,
-  );
+  const existing =
+    document.querySelector<HTMLScriptElement>(`script[src="${RAZORPAY_SCRIPT_URL}"]`) ||
+    document.querySelector<HTMLScriptElement>("#razorpay-checkout-js");
 
   if (existing) {
     return waitForScriptElement(existing);
@@ -211,17 +244,24 @@ function injectRazorpayScript(): Promise<void> {
     script.dataset.razorpayCheckout = "true";
 
     const timeoutId = window.setTimeout(() => {
+      scriptLoadPromise = null;
       reject(new Error("Razorpay SDK load timed out"));
     }, SCRIPT_LOAD_TIMEOUT_MS);
 
     script.onload = () => {
       window.clearTimeout(timeoutId);
       markScriptLoaded(script);
+      if (window.Razorpay) {
+        resolve();
+        return;
+      }
       void pollForRazorpayGlobal().then(resolve).catch(reject);
     };
 
     script.onerror = () => {
       window.clearTimeout(timeoutId);
+      scriptLoadPromise = null;
+      script.remove();
       reject(new Error("Failed to load Razorpay SDK"));
     };
 
@@ -251,18 +291,26 @@ export function ensureRazorpayScriptLoaded(): Promise<void> {
 
 export function preloadRazorpayCheckout(): void {
   if (typeof window === "undefined") return;
-  void ensureRazorpayScriptLoaded().catch(() => undefined);
 
   for (const href of ["https://checkout.razorpay.com", "https://api.razorpay.com"]) {
-    if (document.querySelector(`link[data-razorpay-preconnect="${href}"]`)) {
-      continue;
+    if (!document.querySelector(`link[data-razorpay-preconnect="${href}"]`)) {
+      const preconnect = document.createElement("link");
+      preconnect.rel = "preconnect";
+      preconnect.href = href;
+      preconnect.crossOrigin = "anonymous";
+      preconnect.dataset.razorpayPreconnect = href;
+      document.head.appendChild(preconnect);
     }
-    const preconnect = document.createElement("link");
-    preconnect.rel = "preconnect";
-    preconnect.href = href;
-    preconnect.dataset.razorpayPreconnect = href;
-    document.head.appendChild(preconnect);
+    if (!document.querySelector(`link[data-razorpay-dns="${href}"]`)) {
+      const dnsPrefetch = document.createElement("link");
+      dnsPrefetch.rel = "dns-prefetch";
+      dnsPrefetch.href = href;
+      dnsPrefetch.dataset.razorpayDns = href;
+      document.head.appendChild(dnsPrefetch);
+    }
   }
+
+  void ensureRazorpayScriptLoaded().catch(() => undefined);
 }
 
 export function useRazorpay() {
@@ -325,41 +373,42 @@ export function useRazorpay() {
             resolve(value);
           };
 
-          const razorpay = new window.Razorpay!({
-            ...options,
-            handler: (response) => {
-              options.handler(response);
-              finish({ status: "success", response });
-            },
-            modal: {
-              confirm_close: true,
-              ...options.modal,
-              ondismiss: () => {
-                options.modal?.ondismiss?.();
-                if (lastFailureReason) {
-                  finish({ status: "failed", message: lastFailureReason });
-                } else {
-                  finish({ status: "cancelled" });
-                }
-              },
-            },
-          });
-
-          instanceRef.current = razorpay;
-
-          razorpay.on("payment.failed", (response) => {
-            const message =
-              response.error.description ||
-              response.error.reason ||
-              "Payment failed. Please try another method.";
-            setError(message);
-            lastFailureReason = message;
-            // Do NOT call finish() here. The Razorpay modal stays open and allows the
-            // customer to retry or choose another payment method. Only upon dismissal
-            // (modal.ondismiss) without a successful payment does the flow finish.
-          });
-
           try {
+            const razorpay = new window.Razorpay!({
+              ...options,
+              handler: (response) => {
+                options.handler(response);
+                finish({ status: "success", response });
+              },
+              modal: {
+                confirm_close: true,
+                ...options.modal,
+                ondismiss: () => {
+                  options.modal?.ondismiss?.();
+                  if (lastFailureReason) {
+                    finish({ status: "failed", message: lastFailureReason });
+                  } else {
+                    finish({ status: "cancelled" });
+                  }
+                },
+              },
+            });
+
+            instanceRef.current = razorpay;
+
+            razorpay.on("payment.failed", (response) => {
+              const message =
+                response?.error?.description ||
+                response?.error?.reason ||
+                (response as unknown as { description?: string })?.description ||
+                "Payment failed. Please try another method.";
+              setError(message);
+              lastFailureReason = message;
+              // Do NOT call finish() here. The Razorpay modal stays open and allows the
+              // customer to retry or choose another payment method. Only upon dismissal
+              // (modal.ondismiss) without a successful payment does the flow finish.
+            });
+
             razorpay.open();
           } catch (openError) {
             const message =

@@ -129,6 +129,8 @@ body.is-scroll-restoring .premium-home > * {
   contain-intrinsic-size: auto none;
 }
 
+/* Render homepage sections eagerly so tall mobile viewports never show
+   320px intrinsic placeholders or stall scroll/IntersectionObserver reveals. */
 .premium-home > .gear-stories,
 .premium-home > .big-names-deals,
 .premium-home > .category-bento,
@@ -141,8 +143,8 @@ body.is-scroll-restoring .premium-home > * {
 .premium-home > .service-status-carousel,
 .premium-home > .premium-product-carousel,
 .premium-home > .new-arrivals-section {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 320px;
+  content-visibility: visible;
+  contain-intrinsic-size: auto none;
 }
 
 /* Shared section heading accent */

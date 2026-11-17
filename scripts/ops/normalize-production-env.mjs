@@ -98,7 +98,9 @@ if (fs.existsSync(localEnvPath)) {
         !/^AUTH_GOOGLE_(ID|SECRET)=/.test(trimmed) &&
         !/^RAZORPAY_/.test(trimmed) &&
         !/^NEXT_PUBLIC_RAZORPAY_KEY_ID=/.test(trimmed) &&
-        !/^ALLOW_DEMO_PAYMENTS=/.test(trimmed)
+        !/^ALLOW_DEMO_PAYMENTS=/.test(trimmed) &&
+        !/^AUTH_URL=/.test(trimmed) &&
+        !(/^NEXT_PUBLIC_SITE_URL=/.test(trimmed) && /localhost|127\.0\.0\.1/i.test(trimmed))
       );
     })
     .join("\n");
