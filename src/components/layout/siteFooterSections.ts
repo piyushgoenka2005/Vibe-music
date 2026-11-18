@@ -2,6 +2,7 @@ import { STOREFRONT_PROGRAMS } from "@/data/storefrontPrograms";
 import { BRAND } from "@/lib/brand";
 import {
   CANONICAL_BUSINESS_ADDRESS,
+  CANONICAL_GSTIN,
   GRIEVANCE_OFFICER_EMAIL,
   GRIEVANCE_OFFICER_NAME,
 } from "@/lib/brand/businessIdentity";
@@ -14,13 +15,11 @@ import type { PublicLegalInfo } from "@/types/publicLegal";
 export const FOOTER_FOLLOW_SECTION_ENABLED = true;
 
 export function buildFooterSections(legal: PublicLegalInfo): FooterAccordionSection[] {
-  const gstinDisplay = legal.gstin || process.env.NEXT_PUBLIC_GSTIN?.trim() || "";
+  const gstinDisplay = legal.gstin || process.env.NEXT_PUBLIC_GSTIN?.trim() || CANONICAL_GSTIN;
   const legalNoteLines = [
     legal.legalName || BRAND.name,
     legal.address || CANONICAL_BUSINESS_ADDRESS,
-    gstinDisplay
-      ? `GSTIN: ${gstinDisplay}`
-      : "Registered entity: Sikkim Commerce House Pvt Ltd (WB, India)",
+    `GSTIN: ${gstinDisplay}`,
     `Grievance officer: ${GRIEVANCE_OFFICER_NAME} (${GRIEVANCE_OFFICER_EMAIL})`,
     "Grievance redressal: Acknowledgement within 48 hours, resolution within 30 days.",
   ].filter(Boolean);

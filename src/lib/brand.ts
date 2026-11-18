@@ -1,5 +1,6 @@
 import {
   CANONICAL_BUSINESS_ADDRESS,
+  CANONICAL_GSTIN,
   CANONICAL_LEGAL_ENTITY_NAME,
 } from "@/lib/brand/businessIdentity";
 
@@ -74,7 +75,7 @@ const whatsappMobileUrl = buildWhatsAppApiUrl(
 export const BRAND = {
   name: "Vibe Music",
   legalName: process.env.NEXT_PUBLIC_LEGAL_ENTITY_NAME?.trim() || CANONICAL_LEGAL_ENTITY_NAME,
-  gstin: process.env.NEXT_PUBLIC_GSTIN?.trim() || "",
+  gstin: process.env.NEXT_PUBLIC_GSTIN?.trim() || CANONICAL_GSTIN,
   shortName: "VibeMusic",
   tagline: "Your Sound, Delivered",
   description:

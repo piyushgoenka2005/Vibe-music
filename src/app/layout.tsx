@@ -3,6 +3,11 @@ import { Suspense } from "react";
 import { primaryFont } from "@/lib/fonts";
 import AppShell from "@/components/layout/AppShell";
 import { resolvePublicLegal } from "@/lib/brand/resolvePublicLegal";
+import {
+  CANONICAL_BUSINESS_ADDRESS,
+  CANONICAL_GSTIN,
+  CANONICAL_LEGAL_ENTITY_NAME,
+} from "@/lib/brand/businessIdentity";
 import brandsCatalog from "@/data/catalog/brands.json";
 import { buildBrandsMegaMenu } from "@/lib/navigation/buildBrandsMegaMenu";
 import { loadBrandsWithCounts } from "@/lib/server/brandsPageLoader";
@@ -87,7 +92,11 @@ export default async function RootLayout({
     };
   } catch (error) {
     console.error("[layout] error resolving layout data, using safe defaults", error);
-    legal = { legalName: "Vibe Music", address: "India", gstin: "" };
+    legal = {
+      legalName: CANONICAL_LEGAL_ENTITY_NAME,
+      address: CANONICAL_BUSINESS_ADDRESS,
+      gstin: CANONICAL_GSTIN,
+    };
     shippingPolicy = {
       freeShippingThreshold: 0,
       standardShippingCharge: 0,

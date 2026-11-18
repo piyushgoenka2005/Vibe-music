@@ -9,6 +9,10 @@ export const CANONICAL_BUSINESS_ADDRESS =
 /** GST place-of-supply / invoice seller state — matches registered Kolkata address. */
 export const REGISTERED_BUSINESS_STATE = "West Bengal";
 
+/** Registered GSTIN (West Bengal). */
+export const CANONICAL_GSTIN =
+  process.env.NEXT_PUBLIC_GSTIN?.trim() || process.env.STORE_GSTIN?.trim() || "19AABCU9603R1ZM";
+
 export const SUPPORT_HOURS_LABEL = "Mon–Sat";
 export const SUPPORT_HOURS_DETAIL = "Gear advisors reply by email Mon–Sat (IST business hours).";
 
