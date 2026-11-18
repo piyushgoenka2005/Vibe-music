@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   HOMEPAGE_BANNER_ROTATION_MS,
   HOMEPAGE_BANNER_SLIDES,
@@ -15,6 +15,69 @@ import { useIsClient } from "@/hooks/useIsClient";
 
 const FALLBACK_BANNER_SRC = "/independence-day-special.png";
 const FALLBACK_BANNER_WEBP = "/independence-day-special.webp";
+
+interface HeroVideoProps {
+  src: string;
+  poster?: string;
+  isActive: boolean;
+  reduceMotion: boolean;
+  preload: "auto" | "metadata";
+  fit?: "contain" | "cover";
+  objectPosition?: string;
+  onError: () => void;
+}
+
+function HeroVideo({
+  src,
+  poster,
+  isActive,
+  reduceMotion,
+  preload,
+  fit,
+  objectPosition,
+  onError,
+}: HeroVideoProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isActive && !reduceMotion) {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Handled: browser autoplay restrictions or power saver
+        });
+      }
+    } else {
+      video.pause();
+    }
+  }, [isActive, reduceMotion]);
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      poster={poster}
+      autoPlay={isActive && !reduceMotion}
+      muted
+      loop
+      playsInline
+      preload={preload}
+      onError={onError}
+      className="homepage-banner-hero__video"
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: fit ?? "cover",
+        ...(objectPosition ? { objectPosition } : {}),
+      }}
+    />
+  );
+}
 
 /** Keep in sync with `PageLoadSplash` class names. */
 function isSplashCovering(): boolean {
@@ -34,6 +97,7 @@ export default function HomepageBannerHero({
 }: HomepageBannerHeroProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedSlideIds, setFailedSlideIds] = useState<Record<string, boolean>>({});
+  const [failedVideoIds, setFailedVideoIds] = useState<Record<string, boolean>>({});
   const ready = useIsClient();
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const reduceMotion = useHydrationSafeReducedMotion();
@@ -49,6 +113,10 @@ export default function HomepageBannerHero({
 
   const handleImageError = useCallback((id: string) => {
     setFailedSlideIds((prev) => ({ ...prev, [id]: true }));
+  }, []);
+
+  const handleVideoError = useCallback((id: string) => {
+    setFailedVideoIds((prev) => ({ ...prev, [id]: true }));
   }, []);
 
   useEffect(() => {
@@ -193,7 +261,18 @@ export default function HomepageBannerHero({
               }
             >
               <div className="homepage-banner-hero__media">
-                {currentSrcOptimized ? (
+                {slide.videoUrl && !failedVideoIds[slide.id] ? (
+                  <HeroVideo
+                    src={slide.videoUrl}
+                    poster={currentSrcOptimized || currentSrc}
+                    isActive={isActive}
+                    reduceMotion={reduceMotion}
+                    preload={shouldPreload ? "auto" : "metadata"}
+                    fit={slide.fit}
+                    objectPosition={slide.objectPosition}
+                    onError={() => handleVideoError(slide.id)}
+                  />
+                ) : currentSrcOptimized ? (
                   <picture className="homepage-banner-hero__picture">
                     {currentMobileSrc ? (
                       <source media="(max-width: 767px)" srcSet={currentMobileSrc} />

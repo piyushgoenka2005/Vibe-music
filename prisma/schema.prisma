@@ -459,6 +459,7 @@ model Banner {
   subtitle    String?
   image       String
   mobileImage String? @map("mobile_image")
+  videoUrl    String? @map("video_url")
   ctaText     String  @map("cta_text")
   ctaLink     String  @map("cta_link")
   startDate   String  @map("start_date")

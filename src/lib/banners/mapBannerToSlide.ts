@@ -8,17 +8,20 @@ export function mapBannerToSlide(banner: HomepageBanner): HomepageBannerSlide {
     ? `${banner.title} — ${banner.subtitle}`
     : banner.title?.trim() || "Promotion at Vibe Music";
 
-  const src = sanitizeStorefrontImageUrl(banner.image) || banner.image;
+  const rawSrc = banner.image?.trim() || "/independence-day-special.png";
+  const src = sanitizeStorefrontImageUrl(rawSrc) || rawSrc;
   const mobileRaw = banner.mobileImage?.trim();
   const mobileSrc = mobileRaw ? sanitizeStorefrontImageUrl(mobileRaw) || mobileRaw : undefined;
   const isWebp = src.endsWith(".webp") || src.includes(".webp?");
   const srcOptimized = isWebp ? src : undefined;
+  const videoUrl = banner.videoUrl?.trim() || undefined;
 
   return {
     id: `admin-banner-${banner.id}`,
     src,
     srcOptimized,
     mobileSrc,
+    videoUrl,
     alt,
     href: banner.ctaLink?.trim() || "/search",
     title: banner.title?.trim() || undefined,
@@ -38,7 +41,7 @@ export function slidesFingerprint(slides: HomepageBannerSlide[]): string {
   return slides
     .map(
       (slide) =>
-        `${slide.id}|${slide.src}|${slide.srcOptimized ?? ""}|${slide.mobileSrc ?? ""}|${slide.href}|${slide.title ?? ""}|${slide.subtitle ?? ""}|${slide.ctaText ?? ""}|${slide.updatedAt ?? ""}`,
+        `${slide.id}|${slide.src}|${slide.srcOptimized ?? ""}|${slide.mobileSrc ?? ""}|${slide.videoUrl ?? ""}|${slide.href}|${slide.title ?? ""}|${slide.subtitle ?? ""}|${slide.ctaText ?? ""}|${slide.updatedAt ?? ""}`,
     )
     .join(";;");
 }

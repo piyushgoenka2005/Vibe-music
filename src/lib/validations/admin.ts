@@ -240,11 +240,15 @@ export const adminInventoryAdjustSchema = z.object({
 
 export { adminReviewStatusSchema } from "@/lib/validations/review";
 
-export const adminBannerSchema = z.object({
+export const adminBannerInputSchema = z.object({
   title: z.string().max(200).optional().default(""),
   subtitle: z.string().max(500).optional().or(z.literal("")),
-  image: z.string().url("Desktop image URL is required"),
-  mobileImage: z.string().url().optional().or(z.literal("")),
+  image: z
+    .union([z.string().url(), safeStorefrontHref, z.literal("")])
+    .optional()
+    .default(""),
+  mobileImage: z.union([z.string().url(), safeStorefrontHref, z.literal("")]).optional(),
+  videoUrl: z.union([z.string().url(), safeStorefrontHref, z.literal("")]).optional(),
   ctaText: z.string().max(100).optional().default(""),
   ctaLink: safeStorefrontHref.optional().or(z.literal("")).default("/search"),
   startDate: z.string().optional().nullable(),
@@ -252,6 +256,14 @@ export const adminBannerSchema = z.object({
   priority: z.number().int().min(0).optional(),
   status: z.enum(["active", "inactive"]),
 });
+
+export const adminBannerSchema = adminBannerInputSchema.refine(
+  (data) => Boolean((data.image && data.image.trim()) || (data.videoUrl && data.videoUrl.trim())),
+  {
+    message: "Either a desktop image or a hero video URL is required",
+    path: ["image"],
+  },
+);
 
 export const adminBannerReorderSchema = z.object({
   orderedIds: z.array(z.string().min(1)).min(1),

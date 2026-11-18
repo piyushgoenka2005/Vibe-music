@@ -38,6 +38,7 @@ function mapBanner(row: {
   subtitle: string | null;
   image: string;
   mobileImage: string | null;
+  videoUrl?: string | null;
   ctaText: string;
   ctaLink: string;
   startDate: string;
@@ -53,6 +54,7 @@ function mapBanner(row: {
     subtitle: row.subtitle ?? undefined,
     image: row.image,
     mobileImage: row.mobileImage ?? undefined,
+    videoUrl: row.videoUrl ?? undefined,
     ctaText: row.ctaText,
     ctaLink: row.ctaLink,
     startDate: row.startDate,
@@ -424,6 +426,7 @@ export async function createBanner(input: CreateBannerInput): Promise<HomepageBa
     subtitle: input.subtitle?.trim() || undefined,
     image: input.image.trim(),
     mobileImage: input.mobileImage?.trim() || undefined,
+    videoUrl: input.videoUrl?.trim() || undefined,
     ctaText: input.ctaText?.trim() || "",
     ctaLink: input.ctaLink?.trim() || "/search",
     startDate: input.startDate ?? null,
@@ -441,6 +444,7 @@ export async function createBanner(input: CreateBannerInput): Promise<HomepageBa
       subtitle: banner.subtitle ?? null,
       image: banner.image,
       mobileImage: banner.mobileImage ?? null,
+      videoUrl: banner.videoUrl ?? null,
       ctaText: banner.ctaText ?? "",
       ctaLink: banner.ctaLink ?? "/search",
       startDate: bannerDate(banner.startDate),
@@ -472,6 +476,8 @@ export async function updateBannerRecord(
       input.mobileImage !== undefined
         ? input.mobileImage.trim() || undefined
         : existing.mobileImage,
+    videoUrl:
+      input.videoUrl !== undefined ? input.videoUrl?.trim() || undefined : existing.videoUrl,
     ctaText: input.ctaText !== undefined ? input.ctaText.trim() : (existing.ctaText ?? ""),
     ctaLink:
       input.ctaLink !== undefined
@@ -491,6 +497,7 @@ export async function updateBannerRecord(
       subtitle: updated.subtitle ?? null,
       image: updated.image,
       mobileImage: updated.mobileImage ?? null,
+      videoUrl: updated.videoUrl ?? null,
       ctaText: updated.ctaText ?? "",
       ctaLink: updated.ctaLink ?? "/search",
       startDate: bannerDate(updated.startDate),

@@ -7,6 +7,8 @@ export interface HomepageBannerSlide {
   srcOptimized?: string;
   /** Optional mobile-specific artwork; falls back to `src`. */
   mobileSrc?: string;
+  /** Optional video URL for animated/video hero banners. */
+  videoUrl?: string;
   alt: string;
   href: string;
   title?: string;

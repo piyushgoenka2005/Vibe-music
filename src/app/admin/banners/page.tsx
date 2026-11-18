@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, Video } from "lucide-react";
 import AdminGuard from "@/components/admin/AdminGuard";
 import AdminShell from "@/components/admin/AdminShell";
 import BannerImageUpload from "@/components/admin/BannerImageUpload";
@@ -25,6 +25,7 @@ const EMPTY_FORM = {
   subtitle: "",
   image: "",
   mobileImage: "",
+  videoUrl: "",
   ctaText: "",
   ctaLink: "/search",
   startDate: "",
@@ -32,6 +33,15 @@ const EMPTY_FORM = {
   priority: 0,
   status: "active" as "active" | "inactive",
 };
+
+function notifyStorefrontUpdated() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("vibe:banners-updated"));
+    try {
+      localStorage.setItem("vibe:banners-updated", String(Date.now()));
+    } catch {}
+  }
+}
 
 function toDatetimeLocal(value?: string | null): string {
   if (!value) return "";
@@ -70,6 +80,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
+  const [videoUploading, setVideoUploading] = useState(false);
   const { cursor, pageIndex, canGoPrev, reset, goNext, goPrev } = useAdminCursorPagination();
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
@@ -91,13 +102,47 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     [data?.banners],
   );
 
+  async function handleVideoUpload(file: File) {
+    const isMp4 = file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
+    const isWebm = file.type === "video/webm" || file.name.toLowerCase().endsWith(".webm");
+    if (!isMp4 && !isWebm) {
+      setFormError("Please select an MP4 or WebM video file");
+      return;
+    }
+    if (file.size > 60 * 1024 * 1024) {
+      setFormError("Video must be smaller than 60MB");
+      return;
+    }
+    setVideoUploading(true);
+    setFormError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/admin/upload/video", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload video");
+      }
+      setForm((prev) => ({ ...prev, videoUrl: data.url }));
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Video upload failed");
+    } finally {
+      setVideoUploading(false);
+    }
+  }
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
         ...form,
         title: form.title || "",
         subtitle: form.subtitle || undefined,
+        image: form.image || "",
         mobileImage: form.mobileImage || "",
+        videoUrl: form.videoUrl || undefined,
         ctaText: form.ctaText || "",
         ctaLink: form.ctaLink || "/search",
         startDate: fromDatetimeLocal(form.startDate),
@@ -118,6 +163,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       setFormError(null);
       reset();
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      notifyStorefrontUpdated();
     },
     onError: (error: Error) => setFormError(error.message),
   });
@@ -129,6 +175,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
     onSuccess: () => {
       reset();
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      notifyStorefrontUpdated();
     },
   });
 
@@ -142,7 +189,10 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
         }),
       });
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      notifyStorefrontUpdated();
+    },
   });
 
   const reorderMutation = useMutation({
@@ -153,7 +203,10 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
         body: JSON.stringify({ orderedIds }),
       });
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: QUERY_KEY }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      notifyStorefrontUpdated();
+    },
   });
 
   function openCreate() {
@@ -172,6 +225,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
       subtitle: banner.subtitle ?? "",
       image: banner.image,
       mobileImage: banner.mobileImage ?? "",
+      videoUrl: banner.videoUrl ?? "",
       ctaText: banner.ctaText ?? "",
       ctaLink: banner.ctaLink ?? "/search",
       startDate: toDatetimeLocal(banner.startDate),
@@ -330,8 +384,115 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                   <option value="inactive">Inactive</option>
                 </select>
               </div>
+              <div className="admin-form-group" style={{ gridColumn: "1 / -1" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <Video size={16} />
+                  <span>Hero Video (Optional)</span>
+                  <span
+                    className="admin-badge"
+                    style={{
+                      background: "rgba(59,130,246,0.15)",
+                      color: "#60a5fa",
+                      border: "1px solid rgba(59,130,246,0.3)",
+                      fontSize: 11,
+                    }}
+                  >
+                    MP4 / WebM
+                  </span>
+                </label>
+                <p className="admin-form-hint" style={{ margin: "0.25rem 0 0.75rem" }}>
+                  Upload or paste a looping video URL (recommended 1920×720 or 16:9, max 60 MB). If
+                  set, this video plays edge-to-edge automatically on the homepage hero. Desktop
+                  Image acts as the loading poster.
+                </p>
+
+                {form.videoUrl ? (
+                  <div style={{ marginBottom: 12 }}>
+                    <div
+                      style={{
+                        width: "100%",
+                        maxWidth: 420,
+                        aspectRatio: "16 / 9",
+                        borderRadius: 8,
+                        border: "1px solid var(--admin-border)",
+                        background: "var(--admin-surface-2, #111)",
+                        overflow: "hidden",
+                        position: "relative",
+                      }}
+                    >
+                      <video
+                        src={form.videoUrl}
+                        controls
+                        muted
+                        playsInline
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--ghost"
+                        onClick={() => setForm({ ...form, videoUrl: "" })}
+                      >
+                        Remove Video
+                      </button>
+                      <span
+                        style={{
+                          fontSize: 12,
+                          color: "var(--admin-muted)",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        Active Video: {form.videoUrl}
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <label
+                    className={`admin-btn ${videoUploading ? "admin-btn--disabled" : "admin-btn--secondary"}`}
+                    style={{
+                      cursor: videoUploading ? "not-allowed" : "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <Video size={14} />
+                    {videoUploading
+                      ? "Uploading video…"
+                      : form.videoUrl
+                        ? "Replace video file"
+                        : "Upload video (MP4/WebM)"}
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm"
+                      style={{ display: "none" }}
+                      disabled={videoUploading}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void handleVideoUpload(file);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+
+                <label style={{ display: "block", marginTop: 10, marginBottom: 4 }}>
+                  Or paste a direct video URL / path
+                </label>
+                <input
+                  className="admin-input"
+                  style={{ width: "100%" }}
+                  type="text"
+                  value={form.videoUrl}
+                  placeholder="https://cdn.vibemusic.in/… or /videos/…"
+                  onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
+                />
+              </div>
               <BannerImageUpload
-                label="Desktop Image"
+                label={form.videoUrl ? "Desktop Image (Poster / Fallback)" : "Desktop Image"}
                 spec={IMAGE_SPECS.heroDesktop}
                 value={form.image}
                 onChange={(url) => setForm({ ...form, image: url })}
@@ -347,7 +508,7 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
               <button
                 type="button"
                 className="admin-btn admin-btn--primary"
-                disabled={saveMutation.isPending || !form.image}
+                disabled={saveMutation.isPending || (!form.image && !form.videoUrl)}
                 onClick={() => saveMutation.mutate()}
               >
                 {saveMutation.isPending ? "Saving…" : "Save Banner"}
@@ -389,32 +550,94 @@ function BannersContent({ canWrite, canDelete }: { canWrite: boolean; canDelete:
                 {banners.map((banner, index) => (
                   <tr key={banner.id}>
                     <td>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={banner.image}
-                        alt={banner.title || "Homepage Banner"}
+                      <div
                         style={{
+                          position: "relative",
                           width: 96,
                           height: 48,
-                          objectFit: "cover",
                           borderRadius: 6,
+                          overflow: "hidden",
+                          background: "#222",
                         }}
-                      />
-                    </td>
-                    <td>
-                      <strong>
-                        {banner.title?.trim() || (
+                      >
+                        {banner.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={banner.image}
+                            alt={banner.title || "Homepage Banner"}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : banner.videoUrl ? (
+                          <video
+                            src={banner.videoUrl}
+                            muted
+                            playsInline
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : null}
+                        {banner.videoUrl ? (
                           <span
                             style={{
-                              color: "var(--admin-muted)",
-                              fontStyle: "italic",
-                              fontWeight: 400,
+                              position: "absolute",
+                              bottom: 2,
+                              right: 2,
+                              background: "rgba(0,0,0,0.85)",
+                              color: "#60a5fa",
+                              fontSize: 9,
+                              fontWeight: 700,
+                              padding: "1px 4px",
+                              borderRadius: 3,
+                              letterSpacing: 0.5,
+                              textTransform: "uppercase",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 2,
                             }}
                           >
-                            Image only (No text overlay)
+                            <Video size={9} />
+                            VIDEO
                           </span>
-                        )}
-                      </strong>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td>
+                      <div
+                        style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}
+                      >
+                        <strong>
+                          {banner.title?.trim() || (
+                            <span
+                              style={{
+                                color: "var(--admin-muted)",
+                                fontStyle: "italic",
+                                fontWeight: 400,
+                              }}
+                            >
+                              {banner.videoUrl
+                                ? "Video banner (No text overlay)"
+                                : "Image only (No text overlay)"}
+                            </span>
+                          )}
+                        </strong>
+                        {banner.videoUrl ? (
+                          <span
+                            className="admin-badge"
+                            style={{
+                              background: "rgba(59, 130, 246, 0.15)",
+                              color: "#60a5fa",
+                              border: "1px solid rgba(59, 130, 246, 0.3)",
+                              fontSize: 10,
+                              padding: "1px 6px",
+                            }}
+                          >
+                            Video
+                          </span>
+                        ) : null}
+                      </div>
                       {banner.subtitle ? (
                         <div style={{ fontSize: 12, color: "var(--admin-muted)" }}>
                           {banner.subtitle}

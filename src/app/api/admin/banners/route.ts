@@ -36,8 +36,9 @@ export async function POST(request: Request) {
     const folder = bannerUploadFolder();
     const banner = await createBanner({
       ...parsed,
-      image: await mirrorExternalImageToCdn(parsed.image, folder),
+      image: parsed.image ? await mirrorExternalImageToCdn(parsed.image, folder) : "",
       mobileImage: (await mirrorOptionalExternalImage(parsed.mobileImage, folder)) || undefined,
+      videoUrl: parsed.videoUrl?.trim() || undefined,
       startDate: parsed.startDate ?? null,
       endDate: parsed.endDate ?? null,
     });

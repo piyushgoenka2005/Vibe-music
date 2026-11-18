@@ -18,8 +18,7 @@
   aspect-ratio: 1920 / 720;
   min-height: clamp(12rem, 36vw, 42rem);
   max-height: min(42rem, 70vh);
-  background:
-    linear-gradient(135deg, #2a2a2a 0%, #111 55%, #1c2430 100%);
+  background: linear-gradient(135deg, #2a2a2a 0%, #111 55%, #1c2430 100%);
 }
 
 .homepage-banner-hero__slide {
@@ -120,6 +119,16 @@
   object-position: center center;
 }
 
+.homepage-banner-hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center;
+  pointer-events: none;
+}
+
 .homepage-banner-hero__nav {
   position: absolute;
   top: 50%;
@@ -203,6 +212,10 @@
     height: 100% !important;
     object-fit: contain !important;
     object-position: center center;
+  }
+
+  .homepage-banner-hero__video {
+    object-fit: contain !important;
   }
 
   .homepage-banner-hero__nav {

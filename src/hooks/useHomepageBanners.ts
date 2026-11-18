@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { HomepageBannerSlide } from "@/data/homepageBannerHero";
 import { mapBannersToSlides, slidesFingerprint } from "@/lib/banners/mapBannerToSlide";
@@ -7,9 +8,9 @@ import { pickHomepageBannerSlides } from "@/lib/banners/pickHomepageBannerSlides
 import type { HomepageBanner } from "@/types/banner";
 
 const HOMEPAGE_BANNERS_QUERY_KEY = ["homepage-banners"] as const;
-/** SSR slides are fresh; only re-check occasionally between deploys/edits. */
-const HOMEPAGE_BANNERS_STALE_MS = 5 * 60_000;
-const HOMEPAGE_BANNERS_REFETCH_MS = 5 * 60_000;
+/** Storefront polls every 30 seconds matching the admin banner publication window. */
+const HOMEPAGE_BANNERS_STALE_MS = 15_000;
+const HOMEPAGE_BANNERS_REFETCH_MS = 30_000;
 
 async function fetchActiveBannerSlides(): Promise<HomepageBannerSlide[]> {
   try {
@@ -32,9 +33,31 @@ export function useHomepageBanners(initialSlides: HomepageBannerSlide[]) {
     staleTime: HOMEPAGE_BANNERS_STALE_MS,
     refetchInterval: HOMEPAGE_BANNERS_REFETCH_MS,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleCustomEvent = () => {
+      void query.refetch();
+    };
+
+    const handleStorageEvent = (event: StorageEvent) => {
+      if (event.key === "vibe:banners-updated") {
+        void query.refetch();
+      }
+    };
+
+    window.addEventListener("vibe:banners-updated", handleCustomEvent);
+    window.addEventListener("storage", handleStorageEvent);
+
+    return () => {
+      window.removeEventListener("vibe:banners-updated", handleCustomEvent);
+      window.removeEventListener("storage", handleStorageEvent);
+    };
+  }, [query]);
 
   const slides = pickHomepageBannerSlides(query.data, initialSlides);
 

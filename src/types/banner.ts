@@ -6,6 +6,7 @@ export interface HomepageBanner {
   subtitle?: string;
   image: string;
   mobileImage?: string;
+  videoUrl?: string | null;
   ctaText?: string;
   ctaLink?: string;
   startDate?: string | null;
