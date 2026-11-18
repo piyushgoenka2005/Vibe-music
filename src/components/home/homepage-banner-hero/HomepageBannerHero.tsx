@@ -24,6 +24,8 @@ interface HeroVideoProps {
   preload: "auto" | "metadata";
   fit?: "contain" | "cover";
   objectPosition?: string;
+  isSingleSlide: boolean;
+  onEnded: () => void;
   onError: () => void;
 }
 
@@ -35,6 +37,8 @@ function HeroVideo({
   preload,
   fit,
   objectPosition,
+  isSingleSlide,
+  onEnded,
   onError,
 }: HeroVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -44,6 +48,11 @@ function HeroVideo({
     if (!video) return;
 
     if (isActive && !reduceMotion) {
+      try {
+        video.currentTime = 0;
+      } catch {
+        // Safe ignore if seeking fails before metadata loads
+      }
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
@@ -55,6 +64,19 @@ function HeroVideo({
     }
   }, [isActive, reduceMotion]);
 
+  const handleEnded = useCallback(() => {
+    if (isSingleSlide) {
+      if (videoRef.current) {
+        try {
+          videoRef.current.currentTime = 0;
+        } catch {}
+        videoRef.current.play().catch(() => {});
+      }
+    } else {
+      onEnded();
+    }
+  }, [isSingleSlide, onEnded]);
+
   return (
     <video
       ref={videoRef}
@@ -62,9 +84,10 @@ function HeroVideo({
       poster={poster}
       autoPlay={isActive && !reduceMotion}
       muted
-      loop
+      loop={isSingleSlide}
       playsInline
       preload={preload}
+      onEnded={handleEnded}
       onError={onError}
       className="homepage-banner-hero__video"
       style={{
@@ -166,47 +189,72 @@ export default function HomepageBannerHero({
     };
   }, [activeIndex, slides, slideCount]);
 
-  // Always open on slide 0. Do not advance while the page-load
-  // splash covers the storefront, then reset and start rotation when it lifts.
-  useEffect(() => {
-    if (reduceMotion || slideCount <= 1) return;
+  const [splashLifted, setSplashLifted] = useState(!isSplashCovering());
 
-    let timer = 0;
+  useEffect(() => {
+    if (splashLifted) return;
+
     let observer: MutationObserver | null = null;
     let failsafeTimer = 0;
 
-    const startRotation = () => {
-      if (timer) return;
-      setActiveIndex(0);
-      timer = window.setInterval(() => {
-        setActiveIndex((current) => (current + 1) % slideCount);
-      }, HOMEPAGE_BANNER_ROTATION_MS);
+    const onLift = () => {
+      setSplashLifted(true);
+      observer?.disconnect();
+      observer = null;
+      if (failsafeTimer) window.clearTimeout(failsafeTimer);
     };
 
     if (!isSplashCovering()) {
-      startRotation();
-    } else {
-      observer = new MutationObserver(() => {
-        if (!isSplashCovering()) {
-          observer?.disconnect();
-          observer = null;
-          startRotation();
-        }
-      });
-      observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ["class"],
-      });
-      // Safety net: start rotation after 2.5s even if splash class was not cleared
-      failsafeTimer = window.setTimeout(startRotation, 2500);
+      onLift();
+      return;
     }
 
+    observer = new MutationObserver(() => {
+      if (!isSplashCovering()) {
+        onLift();
+      }
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    failsafeTimer = window.setTimeout(onLift, 2500);
+
     return () => {
-      if (timer) window.clearInterval(timer);
-      if (failsafeTimer) window.clearTimeout(failsafeTimer);
       observer?.disconnect();
+      if (failsafeTimer) window.clearTimeout(failsafeTimer);
     };
-  }, [reduceMotion, slideCount]);
+  }, [splashLifted]);
+
+  // Automatic rotation:
+  // - Video slides play completely until the end (onEnded triggers goTo(next)).
+  // - Static image slides advance after HOMEPAGE_BANNER_ROTATION_MS (4s).
+  // - If reduced motion is enabled or there is only 1 slide, rotation is disabled.
+  useEffect(() => {
+    if (!splashLifted || reduceMotion || slideCount <= 1) return;
+
+    const currentSlide = slides[activeIndex];
+    const isVideoSlide = Boolean(currentSlide?.videoUrl && !failedVideoIds[currentSlide.id]);
+
+    // If current slide is a video, rotation is driven by video playback ending (onEnded).
+    // Set a generous safety failsafe in case an external stream hangs indefinitely.
+    if (isVideoSlide) {
+      const failsafe = window.setTimeout(() => {
+        goTo(activeIndex + 1);
+      }, 120_000);
+      return () => window.clearTimeout(failsafe);
+    }
+
+    // Static image slide: advance after standard rotation interval
+    const timer = window.setTimeout(() => {
+      goTo(activeIndex + 1);
+    }, HOMEPAGE_BANNER_ROTATION_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [activeIndex, splashLifted, reduceMotion, slideCount, slides, failedVideoIds, goTo]);
 
   if (slideCount === 0) return null;
 
@@ -270,6 +318,8 @@ export default function HomepageBannerHero({
                     preload={shouldPreload ? "auto" : "metadata"}
                     fit={slide.fit}
                     objectPosition={slide.objectPosition}
+                    isSingleSlide={slideCount <= 1}
+                    onEnded={() => goTo(activeIndex + 1)}
                     onError={() => handleVideoError(slide.id)}
                   />
                 ) : currentSrcOptimized ? (
