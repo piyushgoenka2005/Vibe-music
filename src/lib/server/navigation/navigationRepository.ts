@@ -147,12 +147,12 @@ export async function ensureDefaultNavigationMenus(): Promise<void> {
         },
         {
           label: "100% Genuine Products",
-          url: "/",
+          url: "/pages/authenticity",
           icon: "ShieldCheck",
           sortOrder: 1,
         },
         { label: "Expert Support", url: "/contact", icon: "Headphones", sortOrder: 2 },
-        { label: "Track Order", url: "/account/orders", icon: "Package", sortOrder: 3 },
+        { label: "Track Order", url: "/track-order", icon: "Package", sortOrder: 3 },
         { label: "Help & Support", url: "/contact", icon: "HelpCircle", sortOrder: 4 },
       ];
 

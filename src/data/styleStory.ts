@@ -13,6 +13,8 @@ export interface StyleStoryItem {
 const FALLBACK_THUMBS = [
   "/images/guitar-1.webp",
   "/images/guitar-2.webp",
+  "/images/browse-categories/amplifiers.jpg",
+  "/images/browse-categories/guitars.jpg",
   "/images/drum-1.webp",
   "/images/drum-2.webp",
 ] as const;
@@ -39,7 +41,7 @@ export const STYLE_STORY_REELS: StyleStoryItem[] = [
     reelUrl: "https://www.instagram.com/vibemusicindia/reel/DXyefWnTR1u/",
     reelInstagramHandle: "@vibemusicindia",
     videoSrc: getMirroredReelVideoUrl(2),
-    thumbnailSrc: FALLBACK_THUMBS[0],
+    thumbnailSrc: FALLBACK_THUMBS[2],
     alt: "Vibe Music India reel — bass guitar performance",
   },
   {
@@ -47,7 +49,7 @@ export const STYLE_STORY_REELS: StyleStoryItem[] = [
     reelUrl: "https://www.instagram.com/vibemusicindia/reel/DZDKCzlIvux/",
     reelInstagramHandle: "@vibemusicindia",
     videoSrc: getMirroredReelVideoUrl(3),
-    thumbnailSrc: FALLBACK_THUMBS[1],
+    thumbnailSrc: FALLBACK_THUMBS[3],
     alt: "Vibe Music India reel — electric guitar in store",
   },
   {
@@ -55,7 +57,7 @@ export const STYLE_STORY_REELS: StyleStoryItem[] = [
     reelUrl: "https://www.instagram.com/vibemusicindia/reel/DXeh-R9D-s-/",
     reelInstagramHandle: "@vibemusicindia",
     videoSrc: getMirroredReelVideoUrl(4),
-    thumbnailSrc: FALLBACK_THUMBS[2],
+    thumbnailSrc: FALLBACK_THUMBS[4],
     alt: "Vibe Music India reel — drum kit showcase",
   },
   {
@@ -63,7 +65,7 @@ export const STYLE_STORY_REELS: StyleStoryItem[] = [
     reelUrl: "https://www.instagram.com/vibemusicindia/reel/DXMnMBDyvdP/",
     reelInstagramHandle: "@vibemusicindia",
     videoSrc: getMirroredReelVideoUrl(5),
-    thumbnailSrc: FALLBACK_THUMBS[3],
+    thumbnailSrc: FALLBACK_THUMBS[5],
     alt: "Vibe Music India reel — studio gear highlight",
   },
 ];

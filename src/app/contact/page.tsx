@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import ContactPageContent from "@/components/contact/ContactPageContent";
 import { BRAND } from "@/lib/brand";
@@ -21,20 +20,26 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ContactPage() {
-  const legal = await resolvePublicLegal();
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ subject?: string; body?: string }>;
+}) {
+  const [legal, resolvedParams] = await Promise.all([
+    resolvePublicLegal(),
+    searchParams
+      ? searchParams.catch((): { subject?: string; body?: string } => ({}))
+      : Promise.resolve<{ subject?: string; body?: string }>({}),
+  ]);
+
+  const initialSubject =
+    typeof resolvedParams.subject === "string" ? resolvedParams.subject.trim().slice(0, 160) : "";
+  const initialBody =
+    typeof resolvedParams.body === "string" ? resolvedParams.body.trim().slice(0, 4000) : "";
 
   return (
     <main className="storefront-page storefront-page--subtle">
-      <Suspense
-        fallback={
-          <div className="storefront-page__inner contact-page">
-            <div className="contact-page__submit">Send message</div>
-          </div>
-        }
-      >
-        <ContactPageContent legal={legal} />
-      </Suspense>
+      <ContactPageContent legal={legal} initialSubject={initialSubject} initialBody={initialBody} />
     </main>
   );
 }

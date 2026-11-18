@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
 import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import { trackGenerateLead } from "@/lib/analytics/events";
@@ -11,17 +10,22 @@ import { SUPPORT_HOURS_DETAIL, SUPPORT_HOURS_LABEL } from "@/lib/brand/businessI
 import { BRAND } from "@/lib/brand";
 import type { PublicLegalInfo } from "@/types/publicLegal";
 
-export default function ContactPageContent({ legal }: { legal: PublicLegalInfo }) {
-  const searchParams = useSearchParams();
+interface ContactPageContentProps {
+  legal: PublicLegalInfo;
+  initialSubject?: string;
+  initialBody?: string;
+}
+
+export default function ContactPageContent({
+  legal,
+  initialSubject = "",
+  initialBody = "",
+}: ContactPageContentProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const querySubject = searchParams.get("subject")?.trim().slice(0, 160) ?? "";
-  const queryMessage = searchParams.get("body")?.trim().slice(0, 4000) ?? "";
-  const [subjectOverride, setSubjectOverride] = useState<string | null>(null);
-  const [messageOverride, setMessageOverride] = useState<string | null>(null);
-  const subject = subjectOverride ?? querySubject;
-  const message = messageOverride ?? queryMessage;
+  const [subject, setSubject] = useState(initialSubject);
+  const [message, setMessage] = useState(initialBody);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -46,8 +50,8 @@ export default function ContactPageContent({ legal }: { legal: PublicLegalInfo }
       setName("");
       setEmail("");
       setPhone("");
-      setSubjectOverride("");
-      setMessageOverride("");
+      setSubject("");
+      setMessage("");
     } catch (error) {
       setStatus("error");
       setFeedback(error instanceof Error ? error.message : "Unable to send message");
@@ -113,6 +117,7 @@ export default function ContactPageContent({ legal }: { legal: PublicLegalInfo }
               <span>Name</span>
               <input
                 required
+                name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
@@ -123,6 +128,7 @@ export default function ContactPageContent({ legal }: { legal: PublicLegalInfo }
               <input
                 required
                 type="email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
@@ -130,23 +136,30 @@ export default function ContactPageContent({ legal }: { legal: PublicLegalInfo }
             </label>
             <label>
               <span>Phone (optional)</span>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+              <input
+                name="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
+              />
             </label>
             <label>
               <span>Subject</span>
               <input
                 required
+                name="subject"
                 value={subject}
-                onChange={(e) => setSubjectOverride(e.target.value)}
+                onChange={(e) => setSubject(e.target.value)}
               />
             </label>
             <label>
               <span>Message</span>
               <textarea
                 required
+                name="message"
                 rows={6}
                 value={message}
-                onChange={(e) => setMessageOverride(e.target.value)}
+                onChange={(e) => setMessage(e.target.value)}
               />
             </label>
             <button

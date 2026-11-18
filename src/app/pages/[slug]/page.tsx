@@ -12,6 +12,7 @@ import "@/styles/cms-page.css";
 export const dynamicParams = true;
 
 const RELATED_POLICY_PAGES = [
+  { slug: "authenticity", label: "100% Genuine Guarantee" },
   { slug: "shipping", label: "Shipping & Delivery" },
   { slug: "returns", label: "Returns & Exchanges" },
   { slug: "privacy", label: "Privacy Policy" },

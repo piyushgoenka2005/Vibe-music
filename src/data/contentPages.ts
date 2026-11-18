@@ -276,6 +276,56 @@ export const CONTENT_PAGES: Record<string, ContentPage> = {
       },
     ],
   },
+  authenticity: {
+    slug: "authenticity",
+    title: "100% Genuine Guarantee & Authorized Distribution",
+    eyebrow: "Customer Service",
+    sections: [
+      {
+        paragraphs: [
+          `At Vibe Music, operated by ${BRAND.legalName} (${BRAND.address}), we guarantee that every single musical instrument, studio recording gear, amplifier, synthesizer, drum kit, microphone, cable, and accessory displayed and sold across our storefront is 100% genuine, brand-new, and sourced through official manufacturer channels.`,
+          `We maintain an uncompromising zero-tolerance policy against grey-market imports, counterfeit products, parallel unauthorized distribution, and refurbished goods passed off as new. When you invest in your sound through Vibe Music, you receive authentic equipment backed by full legal protection and manufacturer warranties.`,
+        ],
+      },
+      {
+        heading: "Direct Manufacturer & Authorized Distribution Partnerships",
+        paragraphs: [
+          `Vibe Music works hand-in-hand with verified Indian national distributors and original equipment manufacturers. Our official catalog features authorized gear from premier musical brands, including Hertz, Roland, Adeon, Gibraltar, Avus, M-Audio, Zoom, Boss, Nord, Trinity, and more.`,
+          "Every item leaves our logistics warehouse in original, tamper-evident factory packaging complete with all manufacturer seals, user documentation, warranty registrations, and factory-bundled accessories intact.",
+        ],
+      },
+      {
+        heading: "Serial Number Tracking & GST-Compliant Invoicing",
+        paragraphs: [
+          `Every serialized product dispatched by Vibe Music is scanned and recorded in our fulfillment management system. The specific serial numbers are printed directly onto your official tax invoice issued by ${BRAND.legalName}.`,
+          BRAND.gstin
+            ? `Your purchase is validated with our canonical Goods and Services Tax Identification Number (GSTIN: ${BRAND.gstin}), establishing an unbroken chain of custody and providing the statutory proof of purchase required for official manufacturer support.`
+            : "Your purchase is validated with our registered Goods and Services Tax credentials, providing statutory proof of purchase required for official manufacturer support.",
+        ],
+      },
+      {
+        heading: "Full Manufacturer Warranty Protection Across India",
+        paragraphs: [
+          "Because Vibe Music is an authorized retail partner, your purchase carries the complete, uncompromised official manufacturer warranty valid at authorized service centers throughout India.",
+          "Unlike unauthorized online marketplace sellers whose goods may be rejected by brand service centers due to illegitimate sourcing, Vibe Music purchases are recognized and serviced without exception. If you ever require warranty assistance, our support team will help you locate the nearest service facility or coordinate service on your behalf.",
+        ],
+      },
+      {
+        heading: "Multi-Point Quality Control & Secure Logistics",
+        paragraphs: [
+          `Before courier handover at our Kolkata central distribution hub, all packages undergo comprehensive physical inspection to verify carton integrity, structural seals, and weight calibration.`,
+          "Instruments and sensitive audio electronics are encased in heavy-duty multi-layer bubble wrap, edge protectors, and corrugated outer cartons engineered to absorb transport vibration and shield your gear across transit.",
+        ],
+      },
+      {
+        heading: "100% Authenticity Money-Back Guarantee",
+        paragraphs: [
+          "We stake our reputation on the authenticity of our equipment. In the improbable event that any product purchased from vibemusic.in is verified to be non-genuine or unauthorized, we will immediately issue a complete 100% refund, including all shipping fees, and arrange complimentary reverse logistics pickup.",
+          `For questions regarding product authenticity, brand authorizations, or warranty registration, please reach out directly to our customer care team at ${BRAND.email} or call ${BRAND.phoneDisplay}. Inquiries may also be escalated to our statutory Grievance Officer (${GRIEVANCE_OFFICER_NAME}, ${GRIEVANCE_OFFICER_EMAIL}).`,
+        ],
+      },
+    ],
+  },
   careers: {
     slug: "careers",
     title: "Careers at Vibe Music",

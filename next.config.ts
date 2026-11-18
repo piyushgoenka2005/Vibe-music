@@ -68,7 +68,13 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/(.*)",
-        headers: [...SECURITY_HEADERS],
+        headers: [
+          ...SECURITY_HEADERS,
+          {
+            key: "x-build-id",
+            value: process.env.GIT_COMMIT_SHA || "vibe-production",
+          },
+        ],
       },
       {
         source:
@@ -165,7 +171,17 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/why-shop-with-us",
-        destination: "/",
+        destination: "/pages/authenticity",
+        statusCode: 301,
+      },
+      {
+        source: "/category/Amplifier-Effects",
+        destination: "/category/amplifiers",
+        statusCode: 301,
+      },
+      {
+        source: "/category/amplifier-effects",
+        destination: "/category/amplifiers",
         statusCode: 301,
       },
       // Canonical category aliases for common short slugs (C-16)
